@@ -1,0 +1,13 @@
+genome=(mm8|mm9|hg18|hg19}
+binsize=(bin size) # genome-wide grid size
+clonal_mode=(0|>0|-1) # 0:no limit, >0:specified value, -1:follow pre-specified rule
+fragmentLength=(homer|common|individual)  # Homer:Follow Homer result strictly, Common:Follow given single value, Individual:Follow individual value 
+shiftMode=(extend|shift|equal)  # Extend: just extend,  Shift: shift by fragLen/2, Equal: shift and extend to make equal fragment length (how to give fixed length?)
+>FG1	BG1	Name1	fragLen1	RepName(not yet)
+#example
+Data1r1	Input1	Data1_Rep1	100	Data1
+Data1r2	Input1	Data1_Rep2	100	Data1
+Data2	Input2	DataName3	0	Data2
+Input1	NaN	DataName4	50	Input1
+Input2	NaN	DataName5	60	Input2
+

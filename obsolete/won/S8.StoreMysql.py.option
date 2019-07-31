@@ -1,0 +1,49 @@
+#!/usr/bin/python
+
+import sys 
+from string import *
+import os
+import os.path
+sys.path.append("/home/won/WON/")
+import Util
+import math
+import ChIP
+import time
+import operator
+import SQLUTIL
+
+dbHS = SQLUTIL.GetCursor("kj")
+
+
+
+U = Util.ReadColumn("name.cell",[0])
+try:
+	sql_drop = 'drop table hMSC'
+	SQLUTIL.execute(dbHS,sql_drop)
+except: pass 
+sql_create = 'create table hMSC ( chr VARCHAR(5), pos int not null,'
+for i in xrange(len(U)):
+	sql_create += ' %s float not null'%U[i]
+	if i<len(U)-1: sql_create+=", ";
+	else: sql_create+=");"
+print sql_create
+	
+###################################
+# check if uncreated
+SQLUTIL.execute(dbHS,sql_create)
+
+Flist = ["HomerTmp/hMSC.bin"]
+print "load start"
+for flist in Flist:
+		sql = "load data local infile '%s' into table %s"%(flist,"hMSC")
+		print sql
+		SQLUTIL.execute(dbHS,sql)
+print "load end"
+sql_idx = "create index chr_pos using btree on %s(chr,pos)"%("hMSC")
+print sql_idx
+SQLUTIL.execute(dbHS,sql_idx)
+	
+
+sys.exit(1)
+
+

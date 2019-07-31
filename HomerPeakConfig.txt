@@ -1,0 +1,9 @@
+#chip	input	name	outDir	optionStr
+
+
+#mlme_1086_7_CTTGTA/TSVu.20M	mlme_0988_8_GCCAAT.50bp/TSVu.20M	BAT_HDAC3_rKO_29C_5pm	mlme_1086_7_CTTGTA/HomerPeak_u.20M.vsKO	-inputtbp 0
+#mlme_1086_7_GCCAAT/TSVu.20M	mlme_0988_8_GCCAAT.50bp/TSVu.20M	BAT_HDAC3_WT_29C_5pm	mlme_1086_7_GCCAAT/HomerPeak_u.20M.vsKO	-inputtbp 0
+#mlme_1086_7_CTTGTA/TSVu.20M	mlme_0988_8_GCCAAT.50bp/TSVu.20M	BAT_HDAC3_rKO_29C_5pm	mlme_1086_7_CTTGTA/HomerPeak_u.20M.vsKO.F3	-inputtbp 0 -F 3
+#mlme_1086_7_GCCAAT/TSVu.20M	mlme_0988_8_GCCAAT.50bp/TSVu.20M	BAT_HDAC3_WT_29C_5pm	mlme_1086_7_GCCAAT/HomerPeak_u.20M.vsKO.F3	-inputtbp 0 -F 3
+
+mlme_1086_7_GCCAAT/TSVu.20M	mlme_1086_7_CTTGTA/TSVu.20M	BAT_HDAC3_WT_29C_5pm.vs_rKO	mlme_1086_7_GCCAAT/HomerPeak_u.20M.vs_rKO.F3	-inputtbp 0 -F 3

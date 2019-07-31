@@ -1,0 +1,5 @@
+#chip	input	name	outDir	optionStr(comma-separated or NULL)	genome
+
+LN229_H3K27ac_Glu1mM_pool/TSV.fl150	kwjl_0969_5_TGACCA/TSVu.fl150	LN229_H3K27ac_Glu1mM_pool	LN229_H3K27ac_Glu1mM_pool/HomerPeak.fl150	-tbp,0	hg19
+kwjl_0969_6_GTGGCC/TSVu.fl150	kwjl_0969_5_TGACCA/TSVu.fl150	LN229_H3K4me1_Glu1mM_r1	kwjl_0969_6_GTGGCC/HomerPeak_u.fl150.nfr	-nfr	hg19
+kwjl_0969_5_GTCCGC/TSVu.fl150	kwjl_0969_6_CTTGTA/TSVu.fl150	LN229_H3K27ac_Glu10mM_r1	kwjl_0969_5_GTCCGC/HomerPeak_u.fl150	NULL	hg19

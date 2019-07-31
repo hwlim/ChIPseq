@@ -1,0 +1,5 @@
+#SampleID	DataDir	Name	FastQ	FastQ	Align
+# 6th column (Align) is not for setting alignment output but for manual setting input alignment file for tagDirectory generation
+WT_RT_B1	WT_RT_B1	WT_RT_B1	B1_1.fq.gz	B1_2.fq.gz	WT_RT_B1.bam
+WT_RT_B2	WT_RT_B2	WT_RT_B2	B2_1.fq.gz	B2_2.fq.gz	WT_RT_B2.bam
+

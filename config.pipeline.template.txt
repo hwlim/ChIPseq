@@ -1,0 +1,13 @@
+#SampleID	DataDir	Name	FastQ(separatedBy(;))	Genome	Align.Option(sepratedBy(;))	Alignment	Pipeline
+mlzg_0344_1_AAGTGC	mlzg_0344_1_AAGTGC	BAT_RevErbA_WT_4C_5pm_r1	FGC0344_s_1_AAGTGC.fastq.gz	mm9	NULL	FGC0344_s_1_AAGTGC.default.bam	-t
+mlzg_0344_1_CTTGTA	mlzg_0344_1_CTTGTA	BAT_RevErbA_WT_TN_5pm_r1	FGC0344_s_1_CTTGTA.fastq.gz	mm9	NULL	FGC0344_s_1_CTTGTA.default.bam	-t
+mlzg_0344_1_GCCAAT	mlzg_0344_1_GCCAAT	BAT_Input_WT_4C_5pm_r1	FGC0344_s_1_GCCAAT.fastq.gz	mm9	NULL	FGC0344_s_1_GCCAAT.default.bam	-t
+mlzg_0344_1_TGACCA	mlzg_0344_1_TGACCA	BAT_Input_WT_TN_5pm_r1	FGC0344_s_1_TGACCA.fastq.gz	mm9	NULL	FGC0344_s_1_TGACCA.default.bam	-t
+mlzg_0366_6_CAGATC	mlzg_0366_6_CAGATC	BAT_RevErbA_rKO_TN_5pm_r1	FGC0366_s_6_CAGATC.fastq.gz	mm9	NULL	FGC0366_s_6_CAGATC.default.bam	-t
+mlzg_0366_6_CTTGTA	mlzg_0366_6_CTTGTA	BAT_RevErbA_WT_TN_5pm_r2	FGC0366_s_6_CTTGTA.fastq.gz	mm9	NULL	FGC0366_s_6_CTTGTA.default.bam	-t
+mlzg_0612_5_ACAGTG	mlzg_0612_5_ACAGTG	BAT_HDAC3_WT_TN_5pm_r1	FGC0612_s_5_ACAGTG.fastq.gz	mm9	NULL	FGC0612_s_5_ACAGTG.default.bam	-t
+mlzg_0699_4_CGATGT	mlzg_0699_4_CGATGT	BAT_HDAC3_WT_TN_5am_r1	FGC0699_s_4_CGATGT.fastq.gz	mm9	NULL	FGC0699_s_4_CGATGT.default.bam	-t
+mlzg_0699_4_CTTGTA	mlzg_0699_4_CTTGTA	BAT_Input_WT_TN_5pm_r2	FGC0699_s_4_CTTGTA.fastq.gz	mm9	NULL	FGC0699_s_4_CTTGTA.default.bam	-t
+mlzg_0699_4_GCCAAT	mlzg_0699_4_GCCAAT	BAT_HDAC3_WT_4C_5pm_r1	FGC0699_s_4_GCCAAT.fastq.gz	mm9	NULL	FGC0699_s_4_GCCAAT.default.bam	-t
+mlzg_0699_4_TGACCA	mlzg_0699_4_TGACCA	BAT_HDAC3_WT_TN_5pm_r2	FGC0699_s_4_TGACCA.fastq.gz	mm9	NULL	FGC0699_s_4_TGACCA.default.bam	-t
+
