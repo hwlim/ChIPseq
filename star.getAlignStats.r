@@ -11,7 +11,8 @@ suppressPackageStartupMessages(library('optparse', quiet=TRUE))
 source(sprintf("%s/basicR.r", Sys.getenv("COMMON_LIB_BASE")))
 # command line option handling
 option_list <- list(
-#	make_option(c("-g","--gtf"), default=NULL, help="gene annotation file"),
+	make_option(c("-o","--outPrefix"), default=NULL, help="Output prefix for alignment statistics & plot files, default=NULL
+		Plot size is automatically decided by the sample number")
 #	make_option(c("-r","--rRNA"), default=NULL, help="rRNA annotation file"),
 #	make_option(c("-u","--update"), default=FALSE, action="store_true", help="Update existing record, default=FALSE"),
 #	make_option(c("-s","--strand"), default=".", help="Strand requirement, + (same) / - (different) / . (both), default=."),
@@ -19,12 +20,13 @@ option_list <- list(
 
 #	make_option(c("-y","--ylabel"), default="yLabel", help="Y-axis label"),
 #	make_option(c("-t","--title"), default="Title", help="Main Title [default: Title]"),
-#	make_option(c("-s","--size"), default="600,600", help="Comma-separated figure size, xSize,ySize"),
+#	make_option(c("-s","--size"), default="12,600", help="Comma-separated figure size, xSize,ySize"),
 #	make_option(c("-o","--outfile"), default="barplot.png", help="Output file, with .png extension. [default: barplot.png]")
 #	make_option(c("-h","--help"), default=FALSE, action="store_true", help="Print usage")
 )
 parser <- OptionParser(usage = "%prog [options] <list of alignment directory>", option_list=option_list,
-			description = "For a give list of STAR alignment directories, print alignment stats")
+			description = "For a give list of STAR alignment directories, print alignment stats to stdio
+If outPrefix is specified, <outPrefix>.txt and <outPrefix>.png files are also created.")
 arguments <- parse_args(parser, positional_arguments = TRUE)
 if(length(arguments$args) == 0) {
 	print_help(parser)
@@ -35,7 +37,7 @@ if(length(arguments$args) == 0) {
 
 # Option handling
 opt=arguments$options
-
+outPrefix = opt$outPrefix
 #dataDirL=c("FGC0588_1_CGATGT", "FGC0588_1_GAGTGG", "FGC0588_1_GTGAAA")
 
 
@@ -53,6 +55,8 @@ if( FALSE ){
 		"ATAC_Day00_AAGAGGCA_CTCTCTAT_2",
 		"ATAC_Day00_AAGAGGCA_GTAAGGAG_1"
 	)
+
+	srcDirL=c("hPSC_Input_Control_A6", "DE_H3K9me3_Control_A6")
 
 }
 
@@ -73,10 +77,13 @@ fieldL[["FailOther%"]]="% of reads unmapped: other"
 
 write(paste(c("Sample", names(fieldL)), collapse="\t"), stdout())
 
+df.stat = NULL
 for( srcDir in srcDirL ){
 # srcDir=srcDirL[1]
 #	write(sprintf("Checking STAR alignment: %s", srcDir), stderr())
-	src=sprintf("%s/alignment.STARLog.final.out", srcDir)
+	# srcDir="hPSC_Input_Control_A6"
+	src=sprintf("%s/%s", srcDir, list.files(srcDir, pattern=".final.out")[1])
+	#src=sprintf("%s/alignment.STARLog.final.out", srcDir)
 	id=basename(srcDir)
 #	stopifnot(file.exists(src))
 	if( !file.exists(src) ){
@@ -86,7 +93,7 @@ for( srcDir in srcDirL ){
 #	stat = stat.template
 	
 	## STAR alignment STAT
-	data = read.delim(sprintf("%s/alignment.STARLog.final.out", srcDir), header=FALSE, stringsAsFactor=FALSE)
+	data = read.delim(src, header=FALSE, stringsAsFactor=FALSE)
 	data = sapply(data, function(x) sub("[ |]+$", "", sub("^ *","", x)))
 	data[,2] = sapply(data[,2], function(x) sub("%$","", x))	
 	data = data[ grep(":$", data[,1], invert=TRUE), ]
@@ -98,8 +105,67 @@ for( srcDir in srcDirL ){
 
 	stat = as.character(data[ unlist(fieldL), 2])
 	write(paste(c(id,stat), collapse="\t"), stdout())
+
+	if(is.null(df.stat)){
+		df.stat = as.numeric(stat)
+	}else{
+		df.stat = rbind(df.stat, as.numeric(stat))
+	}
 }
 
+if( !is.null(outPrefix) ){
+	library(ggplot2)
+	library(cowplot)
 
+	rownames(df.stat) = srcDirL
+	colnames(df.stat) = names(fieldL)
+	df.stat = data.frame(Sample = rownames(df.stat), df.stat)
+	df.stat$Sample = factor(df.stat$Sample, levels=df.stat$Sample)
 
+	g.ttc = ggplot(data=df.stat, aes(x=Sample, y=TTC)) +
+		geom_bar(stat="identity", fill="steelblue")+
+		theme_minimal() +
+		theme(axis.text.x = element_text(angle = 45, hjust = 1, size=5)) +
+		labs(title="Total Reads", y="Count")
+
+	g.uniq = ggplot(data=df.stat, aes(x=Sample, y=AlnUniq)) +
+		geom_bar(stat="identity", fill="steelblue")+
+		theme_minimal() +
+		theme(axis.text.x = element_text(angle = 45, hjust = 1, size=5)) +
+		labs(title="Uniquely Aligneds", y="Count")
+
+	g.uniqRate = ggplot(data=df.stat, aes(x=Sample, y=AlnUniq.)) +
+		geom_bar(stat="identity", fill="steelblue")+
+		theme_minimal() +
+		theme(axis.text.x = element_text(angle = 45, hjust = 1, size=5)) +
+		labs(title="Uniquely Aligneds (%)", y="%")
+
+	g.failMulti = ggplot(data=df.stat, aes(x=Sample, y=FailMulti.)) +
+		geom_bar(stat="identity", fill="steelblue")+
+		theme_minimal() +
+		theme(axis.text.x = element_text(angle = 45, hjust = 1, size=5)) +
+		labs(title="Fail by Multi Align (%)", y="%")
+
+	g.failShort = ggplot(data=df.stat, aes(x=Sample, y=FailTooShort.)) +
+		geom_bar(stat="identity", fill="steelblue")+
+		theme_minimal() +
+		theme(axis.text.x = element_text(angle = 45, hjust = 1, size=5)) +
+		labs(title="Fail by Too Short (%)", y="%")
+
+	g.failOther = ggplot(data=df.stat, aes(x=Sample, y=FailOther.)) +
+		geom_bar(stat="identity", fill="steelblue")+
+		theme_minimal() +
+		theme(axis.text.x = element_text(angle = 45, hjust = 1, size=5)) +
+		labs(title="Fail Other (%)", y="%")
+
+	g = plot_grid( g.ttc, g.uniq, g.uniqRate, g.failMulti, g.failShort, g.failOther, ncol=3)
+
+	if(length(srcDirL) < 10){
+		w.unit = 0.2
+	}else{
+		w.unit = 0.1
+	}
+	ggsave(sprintf("%s.png", outPrefix), g, height=6, width=(1+w.unit*length(srcDirL))*3)
+	write.table(df.stat, sprintf("%s.txt", outPrefix), row.names=FALSE, col.names=TRUE, quote=FALSE, sep="\t")
+}
 

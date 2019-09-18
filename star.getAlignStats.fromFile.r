@@ -24,7 +24,7 @@ option_list <- list(
 #	make_option(c("-h","--help"), default=FALSE, action="store_true", help="Print usage")
 )
 parser <- OptionParser(usage = "%prog [options] <list of *Log.final.out files>", option_list=option_list,
-			description = "For a give list of STAR alignment directories, print alignment stats")
+			description = "For a give list of STAR alignment log, *final.out files, print alignment stats")
 arguments <- parse_args(parser, positional_arguments = TRUE)
 if(length(arguments$args) == 0) {
 	print_help(parser)
