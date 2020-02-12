@@ -167,7 +167,7 @@ rule call_peak_hetchr2:
 			exit 1
 		fi
 		spikein=`echo -e "${{spikeChip}}\t${{spikeCtrl}}" | gawk '{{ printf "%f", $1 / $2 }}'`
-		hetChr.call.homer.sh -o {params.outPrefix} -s {peakWindow} -k $spikein -t {peakFC} {input.chip} {input.ctrl}
+		hetChr.call.homer.sh -o {params.outPrefix} -s {peakWindow} -k $spikein -f {peakFC} {input.chip} {input.ctrl}
 		"""
 
 
