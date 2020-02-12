@@ -81,6 +81,8 @@ peakFC		= 2
 peakAlpha	= 1
 peakSuffix	= "w%d.s%d.fc%.1f" % ( peakWindow, peakStep, peakFC )
 
+peakDir2 	= "PeakCall.Homer"
+peakSuffix2	= "w%d.fc%.1f" % ( peakWindow, peakFC )
 
 ## CODE used in the initial version
 #def getfq(wildcards):
@@ -149,6 +151,7 @@ rule all:
 #		expand(spikeinCntDir + "/{sampleName}.spikeCnt.txt", sampleName=samples.Name.tolist())
 		spikeinCntDir + "/spikein.txt",
 		expand(peakDir + "/{sampleName}.{suffix}.{ext}", sampleName=samples.Name[samples.Ctrl != "NULL"].tolist(), suffix=peakSuffix, ext=["bed","txt.gz"]),
+		expand(peakDir2 + "/{sampleName}.{suffix}.exBL.bed", sampleName=samples.Name[samples.Ctrl != "NULL"].tolist(), suffix=peakSuffix2)
 		## homer tag dir
 		#expand(homerDir + "/{sampleName}/TSV", sampleName=samples.Name.tolist())
 
