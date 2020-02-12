@@ -49,7 +49,7 @@ doDedup		= True
 
 #########################
 ## Directories
-fastqDir	= baseDir + "/iwafuchilab/NGS_Data_NextSeq/Seq007_012320_NB501763_0328_AHVMCVBGXC_CnR.ChIP/fastq_files"
+fastqDir	= baseDir + "/iwafuchilab/NGS_Data_NextSeq/Seq006_011320_NB501763_0325_AHVLYNBGXC_CnR.ChIP/fastq_files"
 trimDir		= "0.Fastq.Trim"
 alignDir	= "1.1.Align"
 filteredDir	= "1.2.Align.filtered"
@@ -72,6 +72,14 @@ bigWigScaledDir_div = "3.3.BigWig.scaled.divInput"
 bigWigDir_sub_avg	= bigWigDir_sub + "/Avg"
 bigWigScaledDir_sub_avg	= bigWigScaledDir_sub + "/Avg"
 bigWigScaledDir_div_avg	= bigWigScaledDir_div + "/Avg"
+
+## Hetero-chromatin domain calling
+peakDir 	= "PeakCall"
+peakWindow 	= 2000
+peakStep	= 1000
+peakFC		= 2
+peakAlpha	= 1
+peakSuffix	= "w%d.s%d.fc%.1f" % ( peakWindow, peakStep, peakFC )
 
 
 ## CODE used in the initial version
@@ -139,7 +147,8 @@ rule all:
 		## fragment length distribution
 		expand(fragLenDir + "/{sampleName}.dist.png", sampleName=samples.Name.tolist()),
 #		expand(spikeinCntDir + "/{sampleName}.spikeCnt.txt", sampleName=samples.Name.tolist())
-		spikeinCntDir + "/spikein.txt"
+		spikeinCntDir + "/spikein.txt",
+		expand(peakDir + "/{sampleName}.{suffix}.{ext}", sampleName=samples.Name[samples.Ctrl != "NULL"].tolist(), suffix=peakSuffix, ext=["bed","txt.gz"]),
 		## homer tag dir
 		#expand(homerDir + "/{sampleName}/TSV", sampleName=samples.Name.tolist())
 
@@ -157,4 +166,5 @@ rule all:
 #	shell:
 #		"rm -rf " + " ".join([ trimDir, alignDir, filteredDir, dedupDir, splitDir, baseFreqDir, bigWigDir ])
 
-include: os.environ["MY_SCRIPT_BASE"] + "/Pipeline/Snakemake/rules.smk"
+include: os.environ["MY_SCRIPT_BASE"] + "/Pipeline/Snakemake/rules.pre.smk"
+include: os.environ["MY_SCRIPT_BASE"] + "/Pipeline/Snakemake/rules.post.smk"
