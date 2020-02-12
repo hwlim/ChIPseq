@@ -151,9 +151,9 @@ rule call_peak_hetchr2:
 		spikeChip = spikeinCntDir + "/{sampleName}.spikeCnt.txt",
 		spikeCtrl = lambda wildcards: spikeinCntDir + "/" + get_hetchr_ctrl(wildcards.sampleName) + ".spikeCnt.txt"
 	output:
-		peakDir2 + "/{sampleName}." + peakSuffix2 + ".exBL.bed",
+		peakDir_homer + "/{sampleName}." + peakSuffix_homer + ".exBL.bed",
 	params:
-		outPrefix = peakDir2 + "/{sampleName}." + peakSuffix,
+		outPrefix = peakDir_homer + "/{sampleName}." + peakSuffix_homer,
 
 	message:
 		"Peak calling for heterochromatin... [{wildcards.sampleName}]"
@@ -167,7 +167,7 @@ rule call_peak_hetchr2:
 			exit 1
 		fi
 		spikein=`echo -e "${{spikeChip}}\t${{spikeCtrl}}" | gawk '{{ printf "%f", $1 / $2 }}'`
-		hetChr.call.homer.sh -o {params.outPrefix} -s {peakWindow} -k $spikein -f {peakFC} {input.chip} {input.ctrl}
+		hetChr.call.homer.sh -o {params.outPrefix} -s {peakWindow_homer} -d {minDist_homer} -k $spikein -f {peakFC_homer} {input.chip} {input.ctrl}
 		"""
 
 
