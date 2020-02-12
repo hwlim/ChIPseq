@@ -144,6 +144,31 @@ rule call_peak_hetchr:
 		hetChr.call.sh -o {params.outPrefix} -g {chrom_size} -w {peakWindow} -s {peakStep} -a {peakAlpha} -k $spikein -t {peakFC} {input.chip} {input.ctrl}
 		"""
 
+rule call_peak_hetchr2:
+	input:
+		chip = fragDir + "/{sampleName}.frag.bed.gz",
+		ctrl = lambda wildcards: fragDir + "/" + get_hetchr_ctrl(wildcards.sampleName) + ".frag.bed.gz",
+		spikeChip = spikeinCntDir + "/{sampleName}.spikeCnt.txt",
+		spikeCtrl = lambda wildcards: spikeinCntDir + "/" + get_hetchr_ctrl(wildcards.sampleName) + ".spikeCnt.txt"
+	output:
+		peakDir2 + "/{sampleName}." + peakSuffix2 + ".exBL.bed",
+	params:
+		outPrefix = peakDir2 + "/{sampleName}." + peakSuffix,
+
+	message:
+		"Peak calling for heterochromatin... [{wildcards.sampleName}]"
+	shell:
+		"""
+		module load ChIPseq
+		spikeChip=`cat {input.spikeChip} | grep ^Spikein | cut -f 2`
+		spikeCtrl=`cat {input.spikeCtrl} | grep ^Spikein | cut -f 2`
+		if [ "$spikeChip" == "" ] || [ "$spikeCtrl" == "" ];then
+			echo -e "Error: empty spikein factor" >&2
+			exit 1
+		fi
+		spikein=`echo -e "${{spikeChip}}\t${{spikeCtrl}}" | gawk '{{ printf "%f", $1 / $2 }}'`
+		hetChr.call.homer.sh -o {params.outPrefix} -s {peakWindow} -k $spikein -t {peakFC} {input.chip} {input.ctrl}
+		"""
 
 
 '''
