@@ -27,8 +27,8 @@ rule make_spikeintable:
 
 rule get_fragLenHist:
 	input:
-#		dedupDir + "/{sampleName}.dedup.bam"
-		fragDir + "/{sampleName}.frag.bed.gz"
+		dedupDir + "/{sampleName}.dedup.bam"
+#		fragDir + "/{sampleName}.frag.bed.gz"
 	output:
 		fragLenDir + "/{sampleName}.dist.txt",
 		fragLenDir + "/{sampleName}.dist.png"
@@ -37,7 +37,7 @@ rule get_fragLenHist:
 	shell:
 		"""
 		module load CnR/1.0
-		ngs.fragLenHist.r -o {fragLenDir}/{wildcards.sampleName} {input}
+		ngs.fragLenHist.r -o {fragLenDir}/{wildcards.sampleName} -n {wildcards.sampleName} {input}
 		"""
 
 ## RPM-scaled bigWig
