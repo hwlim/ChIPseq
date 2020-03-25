@@ -5,7 +5,7 @@
 #
 __default__:
     cpu         : 1
-    memory      : 5000
+    memory      : 10000
     walltime    : "12:00"
     name        : "{rule}.{wildcards.sampleName}"
     output      : "logs/{rule}.{wildcards.sampleName}.out"
@@ -30,6 +30,12 @@ dedup_align:
     memory      : 6000
 
 make_bigwig:
+    memory      : 10000
+
+make_bigwig_allfrag:
+    memory      : 10000
+
+make_bigwig_allfrag_rpsm:
     memory      : 10000
 
 make_bigwig_subtract:
