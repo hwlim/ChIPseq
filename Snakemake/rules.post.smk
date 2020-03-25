@@ -27,8 +27,8 @@ rule make_spikeintable:
 
 rule get_fragLenHist:
 	input:
-		dedupDir + "/{sampleName}.dedup.bam"
-#		fragDir + "/{sampleName}.frag.bed.gz"
+#		dedupDir + "/{sampleName}.dedup.bam"
+		fragDir + "/{sampleName}.frag.bed.gz"
 	output:
 		fragLenDir + "/{sampleName}.dist.txt",
 		fragLenDir + "/{sampleName}.dist.png"
