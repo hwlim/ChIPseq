@@ -73,7 +73,7 @@ rule make_bigwig_allfrag:
 
 rule make_bigwig_allfrag_rpsm:
 	input:
-		fragDir + "/{sampleName}.frag.bed.gz"
+		fragDir + "/{sampleName}.frag.bed.gz",
 		spikeinCnt = spikeinCntDir + "/spikein.txt"
 	output:
 		bigWigAllFrag_RPSM + "/{sampleName}.allFrag.rpsm.bw"
