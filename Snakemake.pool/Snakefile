@@ -47,16 +47,18 @@ bamDir_pool	= "1.2.Align.pool"
 bamDir		= bamDir_pool
 
 ## Downstream analysis directories
-splitDir	= "1.3.Align.split"
-fclDir		= "1.4.Align.fcl"
+#splitDir	= "1.3.Align.split"
+#fclDir		= "1.4.Align.fcl"
 baseFreqDir = bamDir + "/BaseFreq"
 fragLenDir 	= splitDir + "/fragLenHist"
 fragAcorDir = fclDir + "/fragAutoCor"
 bigWigDir	= "2.1.BigWig"
 bigWigDir1bp = "2.3.BigWig.1bp"
+bigWigDirAllFrag = "2.4.BigWig.allFrag.RPM"
 
 bigWigScaledDir = "3.1.BigWig.scaled"
 bigWigScaledDir_sub = "3.2.BigWig.scaled.subInput"
+bigWigAllFrag_RPSM = "3.4.BigWig.allFrag.RPSM"
 homerDir	= "4.Homer"
 
 spikeinCntDir = "1.5.Spikein"
@@ -120,9 +122,11 @@ rule all:
 		#expand(spikeinCntDir + "/{sampleName}.spikeCnt.txt", sampleName=samples.Name.tolist()),
 		spikeinCntDir + "/spikein.txt",
 		expand(bigWigScaledDir + "/{sampleName}.{fragment}.ctr.bw", sampleName=samples.Name.tolist(), fragment=["all","nfr","nuc"]),
-		expand(bigWigScaledDir_sub + "/{sampleName}.{fragment}.scaled.subInput.bw", sampleName=samples.Name[samples.Ctrl != "NULL"].tolist(), fragment=["all","nfr","nuc"])
+		expand(bigWigScaledDir_sub + "/{sampleName}.{fragment}.scaled.subInput.bw", sampleName=samples.Name[samples.Ctrl != "NULL"].tolist(), fragment=["all","nfr","nuc"]),
 
-
+		expand(bigWigDirAllFrag + "/{sampleName}.allFrag.bw", sampleName=samples.Name.tolist()),
+		expand(bigWigAllFrag_RPSM + "/{sampleName}.allFrag.rpsm.bw", sampleName=samples.Name.tolist())
+#
 		## homer tag dir
 		#expand(homerDir + "/{sampleName}/TSV.{fragment}", sampleName=samples.Name.tolist(), fragment=["nfr","nuc"])
 
