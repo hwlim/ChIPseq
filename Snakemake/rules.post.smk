@@ -56,6 +56,43 @@ rule make_bigwig:
 		cnr.bedToBigWig.sh -g {chrom_size} -m {params.memory} -o {output} {input}
 		"""
 
+rule make_bigwig_allfrag:
+	input:
+		fragDir + "/{sampleName}.frag.bed.gz"
+	output:
+		bigWigDirAllFrag + "/{sampleName}.allFrag.bw"
+	message:
+		"Making bigWig files... [{wildcards.sampleName}]"
+#	params:
+#		memory = "5G"
+	shell:
+		"""
+		module load CnR/1.0
+		cnr.bedToBigWig.sh -g {chrom_size} -m 5G -o {output} {input}
+		"""
+
+rule make_bigwig_allfrag_rpsm:
+	input:
+		fragDir + "/{sampleName}.frag.bed.gz"
+		spikeinCnt = spikeinCntDir + "/spikein.txt"
+	output:
+		bigWigAllFrag_RPSM + "/{sampleName}.allFrag.rpsm.bw"
+	message:
+		"Making spike-in scaled allFrag bigWig files... [{wildcards.sampleName}]"
+#	params:
+#		memory = "5G"
+	shell:
+		"""
+		module load CnR/1.0
+		scaleFactor=`cat {input.spikeinCnt} | gawk '$1=="'{wildcards.sampleName}'"' | gawk '{{ printf "%f", 100000/$3 }}'`
+		if [ $scaleFactor == "" ];then
+			echo -e "Error: empty scale factor" >&2
+			exit 1
+		fi
+		cnr.bedToBigWig.sh -g {chrom_size} -m 5G -s $scaleFactor -o {output} {input.bed}
+		"""
+
+
 def get_bigwig_input(wildcards):
 	# return ordered [ctrl , target] list.
 	ctrlName = samples.Ctrl[samples.Name == wildcards.sampleName]

@@ -65,9 +65,12 @@ spikeinCntDir = fragDir + "/spikeinCnt"
 bigWigDir	= "2.1.BigWig"
 bigWigDir_sub	= "2.2.BigWig.subInput"
 bigWigDir_div	= "2.3.BigWig.divInput"
+bigWigDirAllFrag = "2.4.BigWig.allFrag.RPM"
+
 bigWigScaledDir	= "3.1.BigWig.scaled"
 bigWigScaledDir_sub	= "3.2.BigWig.scaled.subInput"
 bigWigScaledDir_div = "3.3.BigWig.scaled.divInput"
+bigWigAllFrag_RPSM = "3.4.BigWig.allFrag.RPSM"
 
 bigWigDir_sub_avg	= bigWigDir_sub + "/Avg"
 bigWigScaledDir_sub_avg	= bigWigScaledDir_sub + "/Avg"
@@ -136,6 +139,9 @@ rule all:
 #		expand(bigWigDir_div + "/{sampleName}.divInput.bw", sampleName=samples.Name[samples.Ctrl != "NULL"].tolist()),
 		expand(bigWigScaledDir + "/{sampleName}.bw", sampleName=samples.Name.tolist()),
 		expand(bigWigScaledDir_sub + "/{sampleName}.scaled.subInput.bw", sampleName=samples.Name[samples.Ctrl != "NULL"].tolist()),
+
+		expand(bigWigDirAllFrag + "/{sampleName}.allFrag.bw", sampleName=samples.Name.tolist()),
+		expand(bigWigAllFrag_RPSM + "/{sampleName}.allFrag.rpsm.bw", sampleName=samples.Name.tolist()),
 #		expand(bigWigScaledDir_div + "/{sampleName}.scaled.divInput.bw", sampleName=samples.Name[samples.Ctrl != "NULL"].tolist()),
 #		expand(bigWigDir_sub_avg + "/{groupName}.subInput.avg.bw",
 #			groupName= list( set(samples.Group.value_counts().index[ samples.Group.value_counts() > 1 ]) & set(samples.Group[samples.Ctrl != "NULL"]) ) ),
