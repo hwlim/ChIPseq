@@ -143,7 +143,7 @@ rule all:
 
 		expand(bigWigDirAllFrag + "/{sampleName}.allFrag.bw", sampleName=samples.Name.tolist()),
 		expand(bigWigAllFrag_RPSM + "/{sampleName}.allFrag.rpsm.bw", sampleName=samples.Name.tolist()),
-		expand(bigWigAllFrag_RPSM_subInput + "/{sampleName}.allFrag.rpsm.subInput.bw", sampleName=samples.Name.tolist()),
+		expand(bigWigAllFrag_RPSM_subInput + "/{sampleName}.allFrag.rpsm.subInput.bw", sampleName=samples.Name[samples.Ctrl != "NULL"].tolist()),
 #		expand(bigWigScaledDir_div + "/{sampleName}.scaled.divInput.bw", sampleName=samples.Name[samples.Ctrl != "NULL"].tolist()),
 #		expand(bigWigDir_sub_avg + "/{groupName}.subInput.avg.bw",
 #			groupName= list( set(samples.Group.value_counts().index[ samples.Group.value_counts() > 1 ]) & set(samples.Group[samples.Ctrl != "NULL"]) ) ),
