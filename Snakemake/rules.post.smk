@@ -92,9 +92,9 @@ rule make_bigwig_allfrag_rpsm:
 		cnr.bedToBigWig.sh -g {chrom_size} -m 5G -s $scaleFactor -o {output} {input.bed}
 		"""
 
-def get_input_name(wildcards):
+def get_input_name(sampleName):
 	# return ordered [ctrl , target] list.
-	ctrlName = samples.Ctrl[samples.Name == wildcards.sampleName]
+	ctrlName = samples.Ctrl[samples.Name == sampleName]
 	ctrlName = ctrlName.tolist()[0]
 	return ctrlName
 
