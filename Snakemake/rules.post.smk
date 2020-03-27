@@ -92,6 +92,28 @@ rule make_bigwig_allfrag_rpsm:
 		cnr.bedToBigWig.sh -g {chrom_size} -m 5G -s $scaleFactor -o {output} {input.bed}
 		"""
 
+def get_input_name(wildcards):
+	# return ordered [ctrl , target] list.
+	ctrlName = samples.Ctrl[samples.Name == wildcards.sampleName]
+	ctrlName = ctrlName.tolist()[0]
+	return ctrlName
+
+rule make_bigwig_allfrag_rpsm_subtract:
+	input:
+		chip = bigWigAllFrag_RPSM + "/{sampleName}.allFrag.rpsm.bw",
+		ctrl = lambda wildcards: bigWigAllFrag_RPSM + "/" + get_input_name(wildcards.sampleName) + ".allFrag.rpsm.bw",
+	output:
+		bigWigAllFrag_RPSM_subInput + "/{sampleName}.allFrag.rpsm.subInput.bw",
+	message:
+		"Making bigWig files... [{wildcards.sampleName}]"
+	#params:
+	#	memory = "%dG" % (  cluster["make_bigwig_subtract"]["memory"]/1000 - 1 )
+	shell:
+		"""
+		module load CnR/1.0
+		bigWigSubtract.sh -g {chrom_size} -m 5G -t -1000 {output} {input.chip} {input.ctrl}
+		"""
+
 
 def get_bigwig_input(wildcards):
 	# return ordered [ctrl , target] list.
