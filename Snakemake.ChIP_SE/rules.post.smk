@@ -12,7 +12,6 @@ rule make_tagdir:
 		"""
 		module load ChIPseq/1.0
 		mypipe.makeTagDir.sh -o {params.name} -n {params.name} -t 1 -c {chrRegexTarget} {input}
-		drawAutoCorrplot.r -t ${params.name} {output}
 		"""
 
 def get_input_name(sampleName):

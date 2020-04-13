@@ -13,7 +13,8 @@ fi
 #snakemake -np
 #exit 0
 mkdir -p logs
-bsub -W ${totalWaitTime} -eo bsub.${timestamp}.err -oo bsub.${timestamp}.out \
+mkdir -p logs.bsub
+bsub -W ${totalWaitTime} -eo logs.bsub/bsub.${timestamp}.err -oo logs.bsub/bsub.${timestamp}.out \
 	"module load python3/3.6.3
 	snakemake -j $nJob \
 		--latency-wait 60 \
