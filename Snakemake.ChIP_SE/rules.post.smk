@@ -83,7 +83,7 @@ rule call_peak_histone:
 ## RPM-scaled bigWig
 rule make_bigwig:
 	input:
-		chip="{sampleName}/TSV1"
+		"{sampleName}/TSV1"
 	output:
 		"{sampleName}/igv.bw",
 	message:
