@@ -2,11 +2,21 @@
 def get_downsample_depth(wildcards):
 	return samples.DownSample[samples.Name == wildcards.sampleName].tolist()[0]
 
+'''
+def get_downsample_bam(wildcards):
+	depth = samples.DownSample[samples.Name == wildcards.sampleName].tolist()[0]
+	return alignDir + "/{sampleName}/align." + ( "ds%dM" % depth ) + ".bam"
+
+def get_downsample_suffix(wildcards):
+	depth = samples.DownSample[samples.Name == wildcards.sampleName].tolist()[0]
+	return "ds%dM" % depth
+'''
+
 rule downsample_bam:
 	input:
-		alignDir+"/{sampleName}/align.bam"
+		alignDir + "/{sampleName}/align.bam"
 	output:
-		alignDir+"/{sampleName}/align.ds.bam"
+		alignDir + "/{sampleName}/align.ds.bam"
 	params:
 		depth=get_downsample_depth
 	message:
