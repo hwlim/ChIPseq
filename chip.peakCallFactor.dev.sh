@@ -100,10 +100,10 @@ echo -e "- desDir = $desDir" >&2
 echo -e "- optStr = $optStr" >&2
 echo -e "" >&2
 
-peak0=${desDir}/peak.homer.txt
-peakBed=${desDir}/peak.homer.bed
-peakMasked=${desDir}/peak.homer.exBL.bed
-peak1rpm=${desDir}/peak.homer.exBL.1rpm.bed
+peak0=${desDir}/peak.txt
+peakBed=${desDir}/peak.bed
+peakMasked=${desDir}/peak.exBL.bed
+peak1rpm=${desDir}/peak.exBL.1rpm.bed
 
 mkdir -p $desDir
 if [ "$ctrl" == "NULL" ];then

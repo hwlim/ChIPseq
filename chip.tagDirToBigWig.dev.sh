@@ -19,13 +19,17 @@ fi
 
 des=""
 chrom=""
-while getopts ":o:g:" opt; do
+sortMem=5G
+while getopts ":o:g:m:" opt; do
 	case $opt in
 		o)
 			des=$OPTARG
 			;;
 		g)
 			chrom=$OPTARG
+			;;
+		m)
+			sortMem=$OPTARG
 			;;
 		\?)
 			echo "Invalid option: -$OPTARG" >&2
@@ -46,7 +50,7 @@ if [ "$des" = "" ];then
 	printUsage
 	exit 1
 fi
-if [ "$genome" = "" ];then
+if [ "$chrom" = "" ];then
 	echo "Error: chrom.size file must be specified" >&2
 	printUsage
 	exit 1
@@ -80,7 +84,7 @@ makeUCSCfile $tagDir -strand both -norm 1000000 -fsize 1e10 \
 			}
 		}'\
 	| gawk '{printf "%s\t%s\t%s\t%.5f\n", $1,$2,$3,$4}'\
-	| sort -S 5G -k1,1 -k2,2n -k3,3nr \
+	| sort -S $sortMem -k1,1 -k2,2n -k3,3nr \
 	> ${tmpBg}
 
 echo -e "2) Converting to bigWig file" >&2

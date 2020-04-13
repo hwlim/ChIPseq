@@ -71,6 +71,6 @@ if [ $verbose -gt 0 ];then
 	echo -e "  N = $selectN" >&2
 fi
 downSample $src \
-	| samtools view -b \
-	| samtools sort -m 5G -T __temp__.$$ -
+	| samtools view -b /dev/stdin
+#	| samtools sort -m 5G -T __temp__.$$ -
 

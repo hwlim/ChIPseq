@@ -1,7 +1,32 @@
 
-rule make_tagdir:
+def get_downsample_depth(wildcards):
+	return samples.DownSample[samples.Name == wildcards.sampleName].tolist()[0]
+
+rule downsample_bam:
 	input:
 		alignDir+"/{sampleName}/align.bam"
+	output:
+		alignDir+"/{sampleName}/align.ds.bam"
+	params:
+		depth=get_downsample_depth
+	message:
+		"Downsampling... [{wildcards.sampleName}]"
+	shell:
+		"""
+		module load ChIPseq/1.0
+		bamDownsample.sh -n {params.depth} {input} > {output}
+		"""
+
+def get_align_bam(wildcards):
+	# return ordered [ctrl , target] list.
+	if "DownSample" in samples and samples.DownSample[samples.Name == wildcards.sampleName].tolist()[0] == 0:
+		return alignDir+"/{sampleName}/align.bam"
+	else:
+		return alignDir+"/{sampleName}/align.ds.bam"
+
+rule make_tagdir:
+	input:
+		get_align_bam
 	output:
 		directory("{sampleName}/TSV1")
 	params:
@@ -67,7 +92,7 @@ rule make_bigwig:
 		memory = "%dG" % (  cluster["make_bigwig"]["memory"]/1000 - 1 )
 	shell:
 		"""
-		module load CnR/1.0
+		module load ChIPseq/1.0
 		chip.tagDirToBigWig.dev.sh -g {chrom_size} -m {params.memory} -o {output} {input}
 		"""
 
