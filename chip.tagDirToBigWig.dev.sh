@@ -19,8 +19,8 @@ fi
 
 des=""
 chrom=""
-sortMem=5G
-while getopts ":o:g:m:" opt; do
+#sortMem=5G
+while getopts ":o:g:" opt; do
 	case $opt in
 		o)
 			des=$OPTARG
@@ -28,9 +28,9 @@ while getopts ":o:g:m:" opt; do
 		g)
 			chrom=$OPTARG
 			;;
-		m)
-			sortMem=$OPTARG
-			;;
+#		m)
+#			sortMem=$OPTARG
+#			;;
 		\?)
 			echo "Invalid option: -$OPTARG" >&2
 			printUsage
@@ -57,7 +57,7 @@ if [ "$chrom" = "" ];then
 fi
 
 tagDir=$1
-assertFileExist $tagDir
+assertDirExist $tagDir
 
 tmpBg=${des%.bw}.bg
 
@@ -71,20 +71,17 @@ echo -e "1) Making bedGraph file" >&2
 makeUCSCfile $tagDir -strand both -norm 1000000 -fsize 1e10 \
 	| grep "^chr" \
 	| gawk 'BEGIN{
-			split("'$chrLen'", lenAr, ",");
-			for(i=1;i<length(lenAr);i=i+2){
-				lenD[lenAr[i]]=lenAr[i+1];
-			}
+			while(getline < "'$chrom'"){ chrLenDic[$1]=$2 }
 		}
 		{
-			if($3>lenD[$1] || $2<0){
+			if($3>chrLenDic[$1] || $2<0){
 				next
 			}else{
 				print $0
 			}
-		}'\
-	| gawk '{printf "%s\t%s\t%s\t%.5f\n", $1,$2,$3,$4}'\
-	| sort -S $sortMem -k1,1 -k2,2n -k3,3nr \
+		}' \
+	| gawk '{printf "%s\t%s\t%s\t%.5f\n", $1,$2,$3,$4}' \
+	| sort -S 5G -k1,1 -k2,2n -k3,3n \
 	> ${tmpBg}
 
 echo -e "2) Converting to bigWig file" >&2

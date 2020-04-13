@@ -88,11 +88,11 @@ rule make_bigwig:
 		"{sampleName}/igv.bw",
 	message:
 		"Making bigWig files... [{wildcards.sampleName}]"
-	params:
-		memory = "%dG" % (  cluster["make_bigwig"]["memory"]/1000 - 1 )
 	shell:
 		"""
 		module load ChIPseq/1.0
-		chip.tagDirToBigWig.dev.sh -g {chrom_size} -m {params.memory} -o {output} {input}
+		chip.tagDirToBigWig.dev.sh -g {chrom_size} -o {output} {input}
 		"""
+#	params:
+#		memory = "%dG" % (  cluster["make_bigwig"]["memory"]/1000 - 1 )
 
