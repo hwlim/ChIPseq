@@ -25,12 +25,18 @@ rule trim_pe:
 
 def get_fastq(wildcards):
 	#print(wildcards.sampleName)
-	if doTrim:
-		return [trimDir + "/" + samples.Id[samples.Name == wildcards.sampleName].tolist()[0] + "_1.trim.fq.gz",
-			trimDir + "/" + samples.Id[samples.Name == wildcards.sampleName].tolist()[0] + "_2.trim.fq.gz"]
+	if samples.Fq2[samples.Name == wildcards.sampleName].tolist()[0].upper() == "NULL":
+		if doTrim:
+			return trimDir + "/" + samples.Id[samples.Name == wildcards.sampleName].tolist()[0] + "_1.trim.fq.gz"
+		else:
+			return fastqDir + "/" + samples.Fq1[samples.Name == wildcards.sampleName].tolist()[0]
 	else:
-		return [fastqDir + "/" + samples.Fq1[samples.Name == wildcards.sampleName].tolist()[0],
-			fastqDir + "/" + samples.Fq2[samples.Name == wildcards.sampleName].tolist()[0]]
+		if doTrim:
+			return [trimDir + "/" + samples.Id[samples.Name == wildcards.sampleName].tolist()[0] + "_1.trim.fq.gz",
+				trimDir + "/" + samples.Id[samples.Name == wildcards.sampleName].tolist()[0] + "_2.trim.fq.gz"]
+		else:
+			return [fastqDir + "/" + samples.Fq1[samples.Name == wildcards.sampleName].tolist()[0],
+				fastqDir + "/" + samples.Fq2[samples.Name == wildcards.sampleName].tolist()[0]]
 	
 #	raise(ValueError("Unrecognized wildcard value for 'endedness': %s" % wildcards.endedness))
 
