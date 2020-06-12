@@ -1,6 +1,9 @@
 
 def get_downsample_depth(wildcards):
-	return samples.DownSample[samples.Name == wildcards.sampleName].tolist()[0]
+	if "DownSample" in samples:
+		return samples.DownSample[samples.Name == wildcards.sampleName].tolist()[0]
+	else:
+		return None
 
 '''
 def get_downsample_bam(wildcards):
@@ -18,7 +21,7 @@ rule downsample_bam:
 	output:
 		alignDir + "/{sampleName}/align.ds.bam"
 	params:
-		depth=get_downsample_depth
+		depth = get_downsample_depth
 	message:
 		"Downsampling... [{wildcards.sampleName}]"
 	shell:
@@ -29,10 +32,10 @@ rule downsample_bam:
 
 def get_align_bam(wildcards):
 	# return ordered [ctrl , target] list.
-	if "DownSample" in samples and samples.DownSample[samples.Name == wildcards.sampleName].tolist()[0] == 0:
-		return alignDir+"/{sampleName}/align.bam"
-	else:
+	if "DownSample" in samples and samples.DownSample[samples.Name == wildcards.sampleName].tolist()[0] > 0:
 		return alignDir+"/{sampleName}/align.ds.bam"
+	else:
+		return alignDir+"/{sampleName}/align.bam"
 
 rule make_tagdir:
 	input:
@@ -60,16 +63,16 @@ rule call_peak_factor:
 		chip="{sampleName}/TSV1",
 		ctrl=lambda wildcards: get_input_name(wildcards.sampleName) + "/TSV1"
 	output:
-		"{sampleName}/HomerPeak.factor/peak.exBL.1rpm.bed"
+		sampleDir + "/{sampleName}/HomerPeak.factor/peak.exBL.1rpm.bed"
 	message:
 		"Making bigWig files... [{wildcards.sampleName}]"
 	params:
-		name = "{sampleName}",
+		desDir = sampleDir + "/{sampleName}",
 		mask = peak_mask
 	shell:
 		"""
 		module load ChIPseq/1.0
-		chip.peakCallFactor.dev.sh -o {params.name}/HomerPeak.factor -i {input.ctrl} -m {params.mask} -s "-size 200" {input}
+		chip.peakCallFactor.sh -o {params.desDir}/HomerPeak.factor -i {input.ctrl} -m {params.mask} -s "-size 200" {input}
 		"""
 
 rule call_peak_histone:
@@ -81,12 +84,12 @@ rule call_peak_histone:
 	message:
 		"Making bigWig files... [{wildcards.sampleName}]"
 	params:
-		name = "{sampleName}",
+		desDir = sampleDir + "/{sampleName}",
 		mask = peak_mask
 	shell:
 		"""
 		module load ChIPseq/1.0
-		chip.peakCallHistone.dev.sh -o {params.name}/HomerPeak.histone -i {input.ctrl} -m {params.mask} {input}
+		chip.peakCallHistone.sh -o {params.desDir}/HomerPeak.histone -i {input.ctrl} -m {params.mask} {input}
 		"""
 
 
@@ -95,13 +98,13 @@ rule make_bigwig:
 	input:
 		"{sampleName}/TSV1"
 	output:
-		"{sampleName}/igv.bw",
+		sampleDir + "/{sampleName}/igv.bw",
 	message:
 		"Making bigWig files... [{wildcards.sampleName}]"
 	shell:
 		"""
 		module load ChIPseq/1.0
-		chip.tagDirToBigWig.dev.sh -g {chrom_size} -o {output} {input}
+		chip.tagDirToBigWig.sh -g {chrom_size} -o {output} {input}
 		"""
 #	params:
 #		memory = "%dG" % (  cluster["make_bigwig"]["memory"]/1000 - 1 )
