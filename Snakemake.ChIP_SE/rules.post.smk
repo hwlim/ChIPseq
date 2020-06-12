@@ -33,17 +33,18 @@ rule downsample_bam:
 def get_align_bam(wildcards):
 	# return ordered [ctrl , target] list.
 	if "DownSample" in samples and samples.DownSample[samples.Name == wildcards.sampleName].tolist()[0] > 0:
-		return alignDir+"/{sampleName}/align.ds.bam"
+		return alignDir + "/{sampleName}/align.ds.bam"
 	else:
-		return alignDir+"/{sampleName}/align.bam"
+		return alignDir + "/{sampleName}/align.bam"
 
 rule make_tagdir:
 	input:
 		get_align_bam
 	output:
-		directory("{sampleName}/TSV1")
+		directory(sampleDir + "/{sampleName}/TSV1")
 	params:
 		desDir = sampleDir + "/{sampleName}",
+		name = "{sampleName}"
 	message:
 		"Making Homer tag directory... [{wildcards.sampleName}]"
 	shell:
@@ -60,8 +61,8 @@ def get_input_name(sampleName):
 
 rule call_peak_factor:
 	input:
-		chip="{sampleName}/TSV1",
-		ctrl=lambda wildcards: get_input_name(wildcards.sampleName) + "/TSV1"
+		chip = sampleDir + "/{sampleName}/TSV1",
+		ctrl = lambda wildcards: sampleDir + "/" + get_input_name(wildcards.sampleName) + "/TSV1"
 	output:
 		sampleDir + "/{sampleName}/HomerPeak.factor/peak.exBL.1rpm.bed"
 	message:
@@ -77,10 +78,10 @@ rule call_peak_factor:
 
 rule call_peak_histone:
 	input:
-		chip="{sampleName}/TSV1",
-		ctrl=lambda wildcards: get_input_name(wildcards.sampleName) + "/TSV1"
+		chip = sampleDir + "/{sampleName}/TSV1",
+		ctrl = lambda wildcards: sampleDir + "/" + get_input_name(wildcards.sampleName) + "/TSV1"
 	output:
-		"{sampleName}/HomerPeak.histone/peak.exBL.bed"
+		sampleDir + "/{sampleName}/HomerPeak.histone/peak.exBL.bed"
 	message:
 		"Making bigWig files... [{wildcards.sampleName}]"
 	params:
@@ -96,7 +97,7 @@ rule call_peak_histone:
 ## RPM-scaled bigWig
 rule make_bigwig:
 	input:
-		"{sampleName}/TSV1"
+		sampleDir + "/{sampleName}/TSV1"
 	output:
 		sampleDir + "/{sampleName}/igv.bw",
 	message:
