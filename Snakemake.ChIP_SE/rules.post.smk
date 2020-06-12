@@ -43,13 +43,13 @@ rule make_tagdir:
 	output:
 		directory("{sampleName}/TSV1")
 	params:
-		name = "{sampleName}"
+		desDir = sampleDir + "/{sampleName}",
 	message:
 		"Making Homer tag directory... [{wildcards.sampleName}]"
 	shell:
 		"""
 		module load ChIPseq/1.0
-		mypipe.makeTagDir.sh -o {params.name} -n {params.name} -t 1 -c {chrRegexTarget} {input}
+		mypipe.makeTagDir.sh -o {params.desDir} -n {params.name} -t 1 -c {chrRegexTarget} {input}
 		"""
 
 def get_input_name(sampleName):
