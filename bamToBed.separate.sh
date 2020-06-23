@@ -27,7 +27,7 @@ fi
 ## option and input file handling
 readSelect=both
 verbose=FALSE
-outPrefix="."
+outPrefix="NULL"
 while getopts ":o:r:v" opt; do
 	case $opt in
 		o)
