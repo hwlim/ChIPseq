@@ -1,3 +1,7 @@
+## default STAR module
+if 'star_module' not in locals():
+	star_module="STAR/2.5"
+
 
 rule trim_pe:
 	input:
@@ -58,7 +62,8 @@ rule align_star:
 		cluster["align_star"]["cpu"]
 	shell:
 		"""
-		module load CnR/1.0
+		module load ChIPseq/1.0
+		module load {params.star_module}
 		star.align.sh -g {params.index} \
 			-o {alignDir}/{wildcards.sampleName}/align \
 			-t {threads} \
