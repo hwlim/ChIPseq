@@ -55,7 +55,8 @@ rule align_star:
 		"Aligning... [{wildcards.sampleName}]"
 	params:
 		index=star_index,
-		option=star_option
+		option=star_option,
+		star_module = star_module
 	log:
 		alignDir + "/{sampleName}/star.log"
 	threads:
