@@ -151,12 +151,12 @@ rule make_fragment:
 		bamToFragment.sh -o {output} -l 150 -s -m {params.memory} {input}
 		"""
 
-'''
-rule make_fragment_noresize:
+
+rule make_fragment0:
 	input:
 		dedupDir + "/{sampleName}.dedup.bam" if doDedup else filteredDir + "/{sampleName}.filtered.bam"
 	output:
-		fragDir + "/{sampleName}.frag.bed.gz"
+		fragDir0 + "/{sampleName}.frag.bed.gz"
 	params:
 		memory = "%dG" % ( cluster["make_fragment"]["memory"]/1000 - 1 )
 	message:
@@ -164,6 +164,5 @@ rule make_fragment_noresize:
 	shell:
 		"""
 		module load CnR/1.0
-		bamToFragment.sh -o {output} -l 150 -s -m {params.memory} {input}
+		bamToFragment.sh -o {output} -l -1 -s -m {params.memory} {input}
 		"""
-'''
