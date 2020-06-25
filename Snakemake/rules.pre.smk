@@ -120,17 +120,21 @@ rule check_baseFreq:
 	input:
 		filteredDir + "/{sampleName}.filtered.bam"
 	output:
-		read1 = baseFreqDir + "/{sampleName}.filtered.R1.freq.line.png",
-		read2 = baseFreqDir + "/{sampleName}.filtered.R2.freq.line.png"
+		read1 = baseFreqDir + "/{sampleName}.R1.freq.png",
+		read2 = baseFreqDir + "/{sampleName}.R2.freq.png"
 	message:
 		"Checking baseFrequency... [{wildcards.sampleName}]"
 	shell:
 		"""
 		module load CnR/1.0
-		bamToBed.separate.sh -o {baseFreqDir} {input}
-		checkBaseFreq.plot.sh -g {genomeFa} -c {chrRegexTarget} -o {baseFreqDir} {baseFreqDir}/{wildcards.sampleName}.filtered.R1.bed.gz
-		checkBaseFreq.plot.sh -g {genomeFa} -c {chrRegexTarget} -o {baseFreqDir} {baseFreqDir}/{wildcards.sampleName}.filtered.R2.bed.gz
+		bamToBed.separate.sh -o {baseFreqDir}/{wildcards.sampleName} {input}
+		checkBaseFreq.plot.sh -g {genomeFa} -n {wildcards.sampleName} -c {chrRegexTarget} -o {baseFreqDir}/{wildcards.sampleName}.R1 {baseFreqDir}/{wildcards.sampleName}.R1.bed.gz
+		checkBaseFreq.plot.sh -g {genomeFa} -n {wildcards.sampleName} -c {chrRegexTarget} -o {baseFreqDir}/{wildcards.sampleName}.R2 {baseFreqDir}/{wildcards.sampleName}.R2.bed.gz
+		rm {baseFreqDir}/{wildcards.sampleName}.R1.bed.gz
+		rm {baseFreqDir}/{wildcards.sampleName}.R2.bed.gz
 		"""
+
+
 
 rule make_fragment:
 	input:
@@ -146,3 +150,20 @@ rule make_fragment:
 		module load CnR/1.0
 		bamToFragment.sh -o {output} -l 150 -s -m {params.memory} {input}
 		"""
+
+'''
+rule make_fragment_noresize:
+	input:
+		dedupDir + "/{sampleName}.dedup.bam" if doDedup else filteredDir + "/{sampleName}.filtered.bam"
+	output:
+		fragDir + "/{sampleName}.frag.bed.gz"
+	params:
+		memory = "%dG" % ( cluster["make_fragment"]["memory"]/1000 - 1 )
+	message:
+		"Making fragment bed files... [{wildcards.sampleName}]"
+	shell:
+		"""
+		module load CnR/1.0
+		bamToFragment.sh -o {output} -l 150 -s -m {params.memory} {input}
+		"""
+'''
