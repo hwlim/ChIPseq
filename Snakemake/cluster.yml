@@ -19,7 +19,7 @@ trim_pe:
 
 align_pe:
     cpu         : 4
-    memory      : 40000
+    memory      : 50000
     walltime    : "24:00"
     resource    : "\"span[hosts=1]\""
 
@@ -30,12 +30,6 @@ dedup_align:
     memory      : 6000
 
 make_bigwig:
-    memory      : 10000
-
-make_bigwig_allfrag:
-    memory      : 10000
-
-make_bigwig_allfrag_rpsm:
     memory      : 10000
 
 make_bigwig_subtract:
@@ -51,6 +45,11 @@ make_fragment:
     memory      : 6000
 
 make_spikeintable:
+    name        : "{rule}"
+    output      : "logs/{rule}.out"
+    error       : "logs/{rule}.err"
+
+make_align_stat_table:
     name        : "{rule}"
     output      : "logs/{rule}.out"
     error       : "logs/{rule}.err"

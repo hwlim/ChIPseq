@@ -84,8 +84,8 @@ rule make_align_stat_table:
 		"Creating alignment stat file"
 	shell:
 		"""
-		module ChIPseq/1.0
-		star.getAlignStats.r `ls -d 1.1.Align/*/` > {output}
+		module load ChIPseq/1.0
+		star.getAlignStats.r {input.alignDir} > {output}
 		"""
 
 rule filter_align:
