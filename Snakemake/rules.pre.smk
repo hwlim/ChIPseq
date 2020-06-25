@@ -74,6 +74,20 @@ rule align_pe:
 #			--outFileNamePrefix __temp__.$$ 2> {log}
 #		mv __temp__.$$Aligned.out.bam {output}"
 
+rule make_align_stat_table:
+	input:
+		alignDir=expand(alignDir+"/{sampleName}", sampleName=samples.Name.tolist()),
+		alignBam=expand(alignDir+"/{sampleName}/align.bam", sampleName=samples.Name.tolist())
+	output:
+		alignDir + "/alignStat.txt"
+	message:
+		"Creating alignment stat file"
+	shell:
+		"""
+		module ChIPseq/1.0
+		star.getAlignStats.r `ls -d 1.1.Align/*/` > {output}
+		"""
+
 rule filter_align:
 	input:
 		alignDir+"/{sampleName}/align.bam"
