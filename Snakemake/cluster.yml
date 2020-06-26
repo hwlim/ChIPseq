@@ -42,7 +42,7 @@ make_bigwig_scaled_subtract:
     memory      : 30000
 
 make_fragment:
-    memory      : 6000
+    memory      : 10000
 
 make_spikeintable:
     name        : "{rule}"
