@@ -109,7 +109,7 @@ rule dedup_align:
 	message:
 		"Deduplicating... [{wildcards.sampleName}]"
 	params:
-		memory = "%dG" % ( cluster["dedup_align"]["memory"]/1000 - 1 )
+		memory = "%dG" % ( cluster["dedup_align"]["memory"]/1000 - 2 )
 	shell:
 		"""
 		module load CnR/1.0
@@ -142,7 +142,7 @@ rule make_fragment:
 	output:
 		fragDir + "/{sampleName}.frag.bed.gz"
 	params:
-		memory = "%dG" % ( cluster["make_fragment"]["memory"]/1000 - 1 )
+		memory = "%dG" % ( cluster["make_fragment"]["memory"]/1000 - 2 )
 	message:
 		"Making fragment bed files... [{wildcards.sampleName}]"
 	shell:
@@ -158,7 +158,7 @@ rule make_fragment0:
 	output:
 		fragDir0 + "/{sampleName}.frag.bed.gz"
 	params:
-		memory = "%dG" % ( cluster["make_fragment"]["memory"]/1000 - 1 )
+		memory = "%dG" % ( cluster["make_fragment"]["memory"]/1000 - 2 )
 	message:
 		"Making fragment bed files... [{wildcards.sampleName}]"
 	shell:
