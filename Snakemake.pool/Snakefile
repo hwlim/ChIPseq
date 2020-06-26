@@ -3,6 +3,7 @@
 
 ## Sample information file with five columns: Id / Name / Group / Fq1 / Fq2 / Ctrl / PeakMode
 src_sampleInfo	= "../sample.tsv"
+cluster_yml		= "~/bin/Pipeline/Snakemake.pool/cluster.yml"
 
 ## Name / PeakMode / Ctrl columns for group analysis mimicking sample.tsv file
 ## i.e. Name correspond to the Group column in sample.tsv
@@ -26,11 +27,7 @@ else:
 
 ## Other essential pameters
 #genome			= "hg38"
-#adapter			= "AGATCGGAAGAGC"	# illumina universal adapter
-#adapter			= "CTGTCTCTTATA"	# Nextera adapter for ATAC-seq or Cut&Tag
-#trim_maxLen=100	## Maximum read length after trimming. ** NOT YET IMPLEMENTED **
-#trim_minLen		= 20
-#trim_minQual	= 20
+
 chrRegexAll		= "^chr[0-9XY]+$|^dm-chr[0-9XYLR]+$"
 chrRegexTarget	= "^chr[0-9XY]+$"
 spikePrefix		= "dm-"
@@ -39,36 +36,56 @@ spikePrefix		= "dm-"
 #########################
 ## Directories
 
+## intact fragments replicates & pool
+frag_rep	= "../1.4.Align.allFrag0"
+frag_pool= "1.4.Align.allFrag0.pool"
 
-#bamDir_rep	= "../1.2.Align.filtered"
-#bamDir_pool	= "1.2.Align.pool"
-
-## Starting BAM file directory for downstream analysis
-#bamDir		= bamDir_pool
-
-fragDir_rep     = "../1.4.Align.allFrag"
-fragDir_pool= "1.4.Align.allFrag.pool"
+## resized fragments replicates & pool
+frag_ctr_rep	= "../1.4.Align.allFrag"
+frag_ctr_pool= "1.4.Align.allFrag.pool"
 
 
-## Downstream analysis directories
-#splitDir	= "1.3.Align.split"
-#fclDir		= "1.4.Align.fcl"
-#baseFreqDir = bamDir + "/BaseFreq"
-fragLenDir 	= splitDir + "/fragLenHist"
-fragAcorDir = fclDir + "/fragAutoCor"
-bigWigDir	= "2.1.BigWig"
-bigWigDir1bp = "2.3.BigWig.1bp"
-bigWigDirAllFrag = "2.4.BigWig.allFrag.RPM"
+## Starting fragment file directory for downstream analysis
+fragDir		= frag_ctr_pool
+fragDir0	= frag_pool
+fragLenDir	= fragDir0 + "/fragLenHist"
 
-bigWigScaledDir = "3.1.BigWig.scaled"
-bigWigScaledDir_sub = "3.2.BigWig.scaled.subInput"
-bigWigAllFrag_RPSM = "3.4.BigWig.allFrag.RPSM"
+bigWigDir_ctr_RPM	= "2.1.1.BigWig.ctr.RPM"
+bigWigDir_ctr_RPM_sub	= "2.1.2.BigWig.ctr.RPM.subInput"
+bigWigDir_ctr_RPM_div	= "2.1.3.BigWig.ctr.RPM.divInput"
+
+bigWigDir_frag_RPM	= "2.2.1.BigWig.frag.RPM"
+bigWigDir_frag_RPM_sub	= "2.2.2.BigWig.frag.RPM.subInput"
+bigWigDir_frag_RPM_div	= "2.2.3.BigWig.frag.RPM.divInput"
+
+
+bigWigDir_ctr_RPSM	= "2.3.1.BigWig.ctr.RPSM"
+bigWigDir_ctr_RPSM_sub	= "2.3.2.BigWig.ctr.RPSM.subInput"
+bigWigDir_ctr_RPSM_div	= "2.3.3.BigWig.ctr.RPSM.divInput"
+
+bigWigDir_frag_RPSM	= "2.4.1.BigWig.frag.RPSM"
+bigWigDir_frag_RPSM_sub	= "2.4.2.BigWig.frag.RPSM.subInput"
+bigWigDir_frag_RPSM_div	= "2.4.3.BigWig.frag.RPSM.divInput"
+
+
 homerDir	= "4.Homer"
 
 spikeinCntDir = "1.5.Spikein"
-bigWigDir_avg = "2.2.BigWig.avg"
 
+## Hetero-chromatin domain calling
+peakDir 	= "PeakCall"
+peakWindow 	= 2000
+peakStep	= 1000
+peakFC		= 2
+peakAlpha	= 1
+peakSuffix	= "w%d.s%d.fc%.1f" % ( peakWindow, peakStep, peakFC )
 
+## Homer findPeaks
+peakDir_homer 	= "PeakCall.Homer"
+peakWindow_homer	= 1000
+minDist_homer	= 2000
+peakFC_homer	= 2
+peakSuffix_homer	= "w%d.d%d.fc%.1f" % ( peakWindow_homer, minDist_homer, peakFC_homer )
 
 ################################
 
@@ -94,11 +111,9 @@ if not samples.Name.is_unique:
 
 #################################
 ## Cluster configuration file
-#cluster = json.load(open("./cluster.json"))
 import yaml
-with open('cluster.yml', 'r') as fh:
+with open(os.path.expanduser(cluster_yml), 'r') as fh:
 	cluster = yaml.load(fh)
-#    cluster = yaml.full_load(fh)
 
 
 
@@ -108,32 +123,23 @@ with open('cluster.yml', 'r') as fh:
 ## Rules start
 rule all:
 	input:
-		## output from check_baseFreq
-#		expand(filteredDir + "/BaseFreq/{sampleName}.filtered.R{read}.freq.line.png", sampleName=samples.Name.tolist(), read=[1,2]),
-		## output from make_bigwig
-		expand(bigWigDir + "/{sampleName}.{fragment}.ctr.bw", sampleName=samples.Name.tolist(), fragment=["all","nfr","nuc"]),
-#		expand(bigWigDir1bp + "/{sampleName}.{strand}.bw", sampleName=samples.Name[samples.PeakMode=="factor"].tolist(), strand=["plus","minus"]),
-#		expand(bigWigDirAllFrag + "/{sampleName}.allFrag.bw", sampleName=samples.Name.tolist()),
-#		expand(bigWigDir_avg + "/{groupName}.{fragment}.ctr.bw", groupName=samples.Group.value_counts().index[ samples.Group.value_counts() > 1 ].tolist(), fragment=["nfr","nuc"]),
-#		expand(homerDir + "/{sampleName}/HomerPeak.factor/peak.homer.exBL.1rpm.bed", sampleName=samples.Name[samples.PeakMode=="factor"].tolist()),
-#		expand(homerDir + "/{sampleName}/HomerPeak.factor.allFrag/peak.homer.exBL.1rpm.bed", sampleName=samples.Name[samples.PeakMode=="factor"].tolist()),
-		expand(homerDir + "/{sampleName}/HomerPeak.histone/peak.homer.exBL.bed", sampleName=samples.Name[samples.PeakMode=="histone"].tolist()),
-		## fragment bed file
-		#expand(fragDir + "/{sampleName}.frag.bed.gz", sampleName=samples.Name.tolist())
-		## fragment length distribution
-		expand(fragLenDir + "/{sampleName}.dist.png", sampleName=samples.Name.tolist()),
-		expand(fragAcorDir + "/{sampleName}.acor.{ext}", sampleName=samples.Name.tolist(), ext=["txt","png"]),
-		#expand(spikeinCntDir + "/{sampleName}.spikeCnt.txt", sampleName=samples.Name.tolist()),
 		spikeinCntDir + "/spikein.txt",
-		expand(bigWigScaledDir + "/{sampleName}.{fragment}.ctr.bw", sampleName=samples.Name.tolist(), fragment=["all","nfr","nuc"]),
-		expand(bigWigScaledDir_sub + "/{sampleName}.{fragment}.scaled.subInput.bw", sampleName=samples.Name[samples.Ctrl != "NULL"].tolist(), fragment=["all","nfr","nuc"]),
+		expand(bigWigDir_ctr_RPM + "/{sampleName}.ctr.rpm.bw", sampleName=samples.Name.tolist()),
+		expand(bigWigDir_frag_RPM + "/{sampleName}.frag.rpm.bw", sampleName=samples.Name.tolist()),
+		expand(bigWigDir_ctr_RPSM + "/{sampleName}.ctr.rpsm.bw", sampleName=samples.Name.tolist()),
+		expand(bigWigDir_frag_RPSM + "/{sampleName}.frag.rpsm.bw", sampleName=samples.Name.tolist()),
 
-		expand(bigWigDirAllFrag + "/{sampleName}.allFrag.bw", sampleName=samples.Name.tolist()),
-		expand(bigWigAllFrag_RPSM + "/{sampleName}.allFrag.rpsm.bw", sampleName=samples.Name.tolist())
-#
+		expand(bigWigDir_ctr_RPM_sub + "/{sampleName}.ctr.rpm.subInput.bw", sampleName=samples.Name[samples.Ctrl != "NULL"].tolist()),
+		expand(bigWigDir_frag_RPM_sub + "/{sampleName}.frag.rpm.subInput.bw", sampleName=samples.Name[samples.Ctrl != "NULL"].tolist()),
+		expand(bigWigDir_ctr_RPSM_sub + "/{sampleName}.ctr.rpsm.subInput.bw", sampleName=samples.Name[samples.Ctrl != "NULL"].tolist()),
+		expand(bigWigDir_frag_RPSM_sub + "/{sampleName}.frag.rpsm.subInput.bw", sampleName=samples.Name[samples.Ctrl != "NULL"].tolist())
+
+#		expand(peakDir + "/{sampleName}.{suffix}.{ext}", sampleName=samples.Name[samples.Ctrl != "NULL"].tolist(), suffix=peakSuffix, ext=["bed","txt.gz"]),
+#		expand(peakDir_homer + "/{sampleName}.{suffix}.exBL.bed", sampleName=samples.Name[samples.Ctrl != "NULL"].tolist(), suffix=peakSuffix_homer),
+
 		## homer tag dir
 		#expand(homerDir + "/{sampleName}/TSV.{fragment}", sampleName=samples.Name.tolist(), fragment=["nfr","nuc"])
 
 
-include: os.environ["MY_SCRIPT_BASE"] + "/CnR/Snakemake/rules.post.smk"
-include: os.environ["MY_SCRIPT_BASE"] + "/CnR/Snakemake.pool/rules.smk"
+include: os.environ["MY_SCRIPT_BASE"] + "/Pipeline/Snakemake/rules.post.smk"
+include: os.environ["MY_SCRIPT_BASE"] + "/Pipeline/Snakemake.pool/rules.smk"

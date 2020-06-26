@@ -10,7 +10,7 @@ __default__:
     name        : "{rule}.{wildcards.sampleName}"
     output      : "logs/{rule}.{wildcards.sampleName}.out"
     error       : "logs/{rule}.{wildcards.sampleName}.err"
-    resource    : "\"span[ptile=1]\""
+    resource    : "\"span[hosts=1]\""
 
 trim_pe:
     name        : "{rule}.{wildcards.sampleId}"
@@ -21,9 +21,15 @@ align_pe:
     cpu         : 4
     memory      : 50000
     walltime    : "24:00"
-    resource    : "\"span[ptile=4]\""
+    resource    : "\"span[hosts=1]\""
 
-pool_replicate_bam:
+pool_replicate_frag_ctr:
+    name        : "{rule}.{wildcards.groupName}"
+    output      : "logs/{rule}.{wildcards.groupName}.out"
+    error       : "logs/{rule}.{wildcards.groupName}.err"
+
+pool_replicate_frag:
+    memory      : 10000
     name        : "{rule}.{wildcards.groupName}"
     output      : "logs/{rule}.{wildcards.groupName}.out"
     error       : "logs/{rule}.{wildcards.groupName}.err"
@@ -31,37 +37,28 @@ pool_replicate_bam:
 check_baseFreq:
     memory      : 6000
 
-dedup_align:
-    memory      : 6000
-
-make_bigwig:
-    memory      : 10000
-
-make_bigwig1bp:
-    memory      : 10000
-
-make_bigwig_allfrag:
-    memory      : 10000
-
-make_bigwig_allfrag_rpsm:
-    memory      : 10000
-
-make_fragment:
-    memory      : 10000
+call_peak_hetchr:
+    cpu         : 4
+    memory      : 5000
+    walltime    : "12:00"
 
 make_spikeintable:
     name        : "{rule}"
     output      : "logs/{rule}.out"
     error       : "logs/{rule}.err"
 
-make_bigwig_avg:
-    memory      : 30000
-    name        : "{rule}.{wildcards.groupName}"
-    output      : "logs/{rule}.{wildcards.groupName}.out"
-    error       : "logs/{rule}.{wildcards.groupName}.err"
-
-make_bigwig_scaled:
+make_bigwig:
     memory      : 10000
 
-make_bigwig_scaled_subtract:
+make_bigwig_ctr_rpm_subinput:
     memory      : 30000
+
+make_bigwig_frag_rpm_subinput:
+    memory      : 30000
+
+make_bigwig_ctr_rpsm_subinput:
+    memory      : 30000
+
+make_bigwig_frag_rpsm_subinput:
+    memory      : 30000
+
