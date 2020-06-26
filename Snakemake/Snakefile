@@ -3,6 +3,7 @@
 
 ## Sample information file with five columns: id / name / group / fq1 / fq2
 src_sampleInfo	= "./sample.tsv"
+cluster_yml		= "~/bin/Pipeline/Snakemake/cluster.yml"
 
 ## Genome folder depending on platform: CCHMC:HPC vs my desktop
 import socket
@@ -60,7 +61,7 @@ baseFreqDir = filteredDir + "/BaseFreq"
 fragLenDir 	= dedupDir + "/fragLenHist"
 homerDir	= "3.Homer"
 
-spikeinCntDir = fragDir + "/spikeinCnt"
+spikeinCntDir = fragDir0 + "/spikeinCnt"
 
 bigWigDir_ctr_RPM	= "2.1.1.BigWig.ctr.RPM"
 bigWigDir_ctr_RPM_sub	= "2.1.2.BigWig.ctr.RPM.subInput"
@@ -124,7 +125,7 @@ if not samples.Name.is_unique:
 ## Cluster configuration file
 #cluster = json.load(open("./cluster.json"))
 import yaml
-with open('cluster.yml', 'r') as fh:
+with open('cluster_yml', 'r') as fh:
 	cluster = yaml.load(fh)
 #    cluster = yaml.full_load(fh)
 
