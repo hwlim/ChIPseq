@@ -7,9 +7,9 @@ __default__:
     cpu         : 1
     memory      : 10000
     walltime    : "12:00"
-    name        : "{rule}.{wildcards.groupName}"
-    output      : "logs/{rule}.{wildcards.groupName}.out"
-    error       : "logs/{rule}.{wildcards.groupName}.err"
+    name        : "{rule}.{wildcards.sampleName}"
+    output      : "logs/{rule}.{wildcards.sampleName}.out"
+    error       : "logs/{rule}.{wildcards.sampleName}.err"
     resource    : "\"span[hosts=1]\""
 
 pool_replicate_frag_ctr:
