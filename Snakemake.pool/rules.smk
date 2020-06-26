@@ -7,18 +7,20 @@
 ###		Written by Hee Woong Lim
 ########$$$$$$$###################################
 
-def get_frag_replicate(groupName, repDir):
+
+def get_frag_replicate_names(groupName):
 	repL = sampleAll.Name[sampleAll.Group == groupName].tolist()
-	return map(lambda x: repDir + "/" + x + ".frag.bed.gz", repL)
+	assert len(repL) > 0, "No replicates found for %s" % groupName
+	return repL
 
 ## fragment pooling: frag.ctr
 rule pool_replicate_frag_ctr:
 	input:
-		get_frag_replicate("{groupName}", frag_ctr_rep)
+		lambda wildcards: map(lambda x: frag_ctr_rep + "/" + x + ".frag.bed.gz", get_frag_replicate_names(wildcards.groupName))
 	output:
 		frag_ctr_pool + "/{groupName}.frag.bed.gz"
 	params:
-		memory= "%dG" % ( cluster["pool_replicate_frag"]["memory"]/1000 - 1 )
+		memory= "%dG" % ( cluster["pool_replicate_frag_ctr"]["memory"]/1000 - 2 )
 	message:
 		"Pooling replicates... [{wildcards.groupName}]"
 	shell:
@@ -30,11 +32,11 @@ rule pool_replicate_frag_ctr:
 
 rule pool_replicate_frag:
 	input:
-		get_frag_replicate("{groupName}", frag_rep)
+		lambda wildcards: map(lambda x: frag_ctr_rep + "/" + x + ".frag.bed.gz", get_frag_replicate_names(wildcards.groupName))
 	output:
 		frag_pool + "/{groupName}.frag.bed.gz"
 	params:
-		memory= "%dG" % ( cluster["pool_replicate_frag"]["memory"]/1000 - 1 )
+		memory= "%dG" % ( cluster["pool_replicate_frag"]["memory"]/1000 - 2 )
 	message:
 		"Pooling replicates... [{wildcards.groupName}]"
 	shell:
