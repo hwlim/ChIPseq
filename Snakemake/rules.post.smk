@@ -1,7 +1,7 @@
 
 rule count_spikein:
 	input:
-		fragDir + "/{sampleName}.frag.bed.gz"
+		fragDir0 + "/{sampleName}.frag.bed.gz"
 	output:
 		spikeinCntDir + "/{sampleName}.spikeCnt.txt"
 	message:
@@ -25,6 +25,8 @@ rule make_spikeintable:
 		makeSpikeCntTable.r -o {spikeinCntDir}/spikein {input}
 		"""
 
+## Draw a plot of fragment length distribution
+## Automatically consider targer chromosomes only starting with "chr" excluding others such as "DM-chr"
 rule get_fragLenHist:
 	input:
 		#dedupDir + "/{sampleName}.dedup.bam"
@@ -40,22 +42,89 @@ rule get_fragLenHist:
 		ngs.fragLenHist.r -o {fragLenDir}/{wildcards.sampleName} -n {wildcards.sampleName} {input}
 		"""
 
-## RPM-scaled bigWig
-rule make_bigwig:
+## bigwig file: resized fragment in RPM scale
+## Draw a plot of fragment length distribution
+## Automatically consider targer chromosomes only starting with "chr" excluding others such as "DM-chr"
+## and the same in other bigwig file rules
+rule make_bigwig_ctr_rpm:
 	input:
 		fragDir + "/{sampleName}.frag.bed.gz"
 	output:
-		bigWigDir + "/{sampleName}.bw",
+		bigWigDir_ctr_RPM + "/{sampleName}.ctr.rpm.bw",
 	message:
 		"Making bigWig files... [{wildcards.sampleName}]"
 	params:
-		memory = "%dG" % (  cluster["make_bigwig"]["memory"]/1000 - 1 )
+		memory = "%dG" % (  cluster["make_bigwig"]["memory"]/1000 - 2 )
 	shell:
 		"""
 		module load CnR/1.0
 		cnr.bedToBigWig.sh -g {chrom_size} -m {params.memory} -o {output} {input}
 		"""
 
+## bigwig file: original fragment in RPM scale
+rule make_bigwig_frag_rpm:
+	input:
+		fragDir0 + "/{sampleName}.frag.bed.gz"
+	output:
+		bigWigDir_frag_RPM + "/{sampleName}.frag.rpm.bw",
+	message:
+		"Making bigWig files... [{wildcards.sampleName}]"
+	params:
+		memory = "%dG" % (  cluster["make_bigwig"]["memory"]/1000 - 2 )
+	shell:
+		"""
+		module load CnR/1.0
+		cnr.bedToBigWig.sh -g {chrom_size} -m {params.memory} -o {output} {input}
+		"""
+
+
+## bigwig file: resized fragment in RPSM scale
+rule make_bigwig_ctr_rpsm:
+	input:
+		bed = fragDir + "/{sampleName}.frag.bed.gz",
+		spikeinCnt = spikeinCntDir + "/spikein.txt"
+	output:
+		bigWigDir_ctr_RPSM + "/{sampleName}.ctr.rpsm.bw",
+	message:
+		"Making bigWig files... [{wildcards.sampleName}]"
+	params:
+		memory = "%dG" % ( cluster["make_bigwig"]["memory"]/1000 - 2 )
+	shell:
+		"""
+		module load CnR/1.0
+		scaleFactor=`cat {input.spikeinCnt} | gawk '$1=="'{wildcards.sampleName}'"' | gawk '{{ printf "%f", 100000/$3 }}'`
+		if [ $scaleFactor == "" ];then
+			echo -e "Error: empty scale factor" >&2
+			exit 1
+		fi
+		cnr.bedToBigWig.sh -g {chrom_size} -m 5G -s $scaleFactor -o {output} {input.bed}
+		"""
+
+## bigwig file: original fragment in RPSM scale
+rule make_bigwig_frag_rpsm:
+	input:
+		bed = fragDir0 + "/{sampleName}.frag.bed.gz",
+		spikeinCnt = spikeinCntDir + "/spikein.txt"
+	output:
+		bigWigDir_frag_RPSM + "/{sampleName}.frag.rpsm.bw",
+	message:
+		"Making bigWig files... [{wildcards.sampleName}]"
+	params:
+		memory = "%dG" % (  cluster["make_bigwig"]["memory"]/1000 - 2 )
+	shell:
+		"""
+		module load CnR/1.0
+		scaleFactor=`cat {input.spikeinCnt} | gawk '$1=="'{wildcards.sampleName}'"' | gawk '{{ printf "%f", 100000/$3 }}'`
+		if [ $scaleFactor == "" ];then
+			echo -e "Error: empty scale factor" >&2
+			exit 1
+		fi
+		cnr.bedToBigWig.sh -g {chrom_size} -m 5G -s $scaleFactor -o {output} {input.bed}
+		"""
+
+
+
+'''
 rule make_bigwig_allfrag:
 	input:
 		fragDir + "/{sampleName}.frag.bed.gz"
@@ -91,6 +160,8 @@ rule make_bigwig_allfrag_rpsm:
 		fi
 		cnr.bedToBigWig.sh -g {chrom_size} -m 5G -s $scaleFactor -o {output} {input.bed}
 		"""
+'''
+
 
 def get_input_name(sampleName):
 	# return ordered [ctrl , target] list.
@@ -98,6 +169,74 @@ def get_input_name(sampleName):
 	ctrlName = ctrlName.tolist()[0]
 	return ctrlName
 
+
+rule make_bigwig_ctr_rpm_subinput:
+	input:
+		chip = bigWigDir_ctr_RPM + "/{sampleName}.ctr.rpm.bw",
+		ctrl = lambda wildcards: bigWigDir_ctr_RPM + "/" + get_input_name(wildcards.sampleName) + ".ctr.rpm.bw",
+	output:
+		bigWigDir_ctr_RPM_sub + "/{sampleName}.ctr.rpm.subInput.bw",
+	message:
+		"Making bigWig files... [{wildcards.sampleName}]"
+	#params:
+	#	memory = "%dG" % (  cluster["make_bigwig_subtract"]["memory"]/1000 - 1 )
+	shell:
+		"""
+		module load CnR/1.0
+		bigWigSubtract.sh -g {chrom_size} -m 5G -t -1000 {output} {input.chip} {input.ctrl}
+		"""
+
+rule make_bigwig_frag_rpm_subinput:
+	input:
+		chip = bigWigDir_frag_RPM + "/{sampleName}.frag.rpm.bw",
+		ctrl = lambda wildcards: bigWigDir_frag_RPM + "/" + get_input_name(wildcards.sampleName) + ".frag.rpm.bw",
+	output:
+		bigWigDir_frag_RPM_sub + "/{sampleName}.frag.rpm.subInput.bw",
+	message:
+		"Making bigWig files... [{wildcards.sampleName}]"
+	#params:
+	#	memory = "%dG" % (  cluster["make_bigwig_subtract"]["memory"]/1000 - 1 )
+	shell:
+		"""
+		module load CnR/1.0
+		bigWigSubtract.sh -g {chrom_size} -m 5G -t -1000 {output} {input.chip} {input.ctrl}
+		"""
+
+
+rule make_bigwig_ctr_rpsm_subinput:
+	input:
+		chip = bigWigDir_ctr_RPSM + "/{sampleName}.ctr.rpsm.bw",
+		ctrl = lambda wildcards: bigWigDir_ctr_RPSM + "/" + get_input_name(wildcards.sampleName) + ".ctr.rpsm.bw",
+	output:
+		bigWigDir_ctr_RPSM_sub + "/{sampleName}.ctr.rpsm.subInput.bw",
+	message:
+		"Making bigWig files... [{wildcards.sampleName}]"
+	#params:
+	#	memory = "%dG" % (  cluster["make_bigwig_subtract"]["memory"]/1000 - 1 )
+	shell:
+		"""
+		module load CnR/1.0
+		bigWigSubtract.sh -g {chrom_size} -m 5G -t -1000 {output} {input.chip} {input.ctrl}
+		"""
+
+rule make_bigwig_frag_rpsm_subinput:
+	input:
+		chip = bigWigDir_frag_RPSM + "/{sampleName}.frag.rpsm.bw",
+		ctrl = lambda wildcards: bigWigDir_frag_RPSM + "/" + get_input_name(wildcards.sampleName) + ".frag.rpsm.bw",
+	output:
+		bigWigDir_frag_RPSM_sub + "/{sampleName}.frag.rpsm.subInput.bw",
+	message:
+		"Making bigWig files... [{wildcards.sampleName}]"
+	#params:
+	#	memory = "%dG" % (  cluster["make_bigwig_subtract"]["memory"]/1000 - 1 )
+	shell:
+		"""
+		module load CnR/1.0
+		bigWigSubtract.sh -g {chrom_size} -m 5G -t -1000 {output} {input.chip} {input.ctrl}
+		"""
+
+
+'''
 rule make_bigwig_allfrag_rpsm_subtract:
 	input:
 		chip = bigWigAllFrag_RPSM + "/{sampleName}.allFrag.rpsm.bw",
@@ -137,6 +276,7 @@ rule make_bigwig_subtract:
 		bigWigSubtract.sh -g {chrom_size} -m 5G -t -1000 {output} {input}
 		"""
 
+
 ## RPM-scaled bigWig input-divided log2FC
 rule make_bigwig_divide:
 	input:
@@ -167,6 +307,7 @@ rule make_tagdir:
 		module load CnR/1.0
 		cnr.makeHomerDir.sh -c {chrRegexTarget} -o {output} -n {params.name} {input}
 		"""
+'''
 
 def get_hetchr_ctrl(sampleName):
 	#print(sampleName)
@@ -285,6 +426,7 @@ rule call_peaks:
 #	return [ spikeinTable.ScaleFactor[spikeinTable.Sample == wildcards.sampleName].tolist()[0] ]
 
 ## Raw read count scale + spike-in scaled
+'''
 rule make_bigwig_scaled:
 	input:
 		bed = fragDir + "/{sampleName}.frag.bed.gz",
@@ -343,10 +485,10 @@ rule make_bigwig_scaled_divide:
 		module load CnR/1.0
 		bigWigDivide.sh -g {chrom_size} -m 5G -s log -a 1 -o {output} {input}
 		"""
+'''
 
 
-
-
+'''
 ##### Average bigWig files
 def get_bigwig_rep_sub(wildcards):
 	repL = samples.Name[samples.Group == wildcards.groupName].tolist()
@@ -404,3 +546,4 @@ rule make_bigwig_scaled_div_avg:
 		module load CnR/1.0
 		makeBigWigAverage.sh -g {chrom_size} -m {params.memory} -o {output} {input}
 		"""
+'''

@@ -62,20 +62,32 @@ homerDir	= "3.Homer"
 
 spikeinCntDir = fragDir + "/spikeinCnt"
 
-bigWigDir	= "2.1.BigWig"
-bigWigDir_sub	= "2.2.BigWig.subInput"
-bigWigDir_div	= "2.3.BigWig.divInput"
-bigWigDirAllFrag = "2.4.BigWig.allFrag.RPM"
+bigWigDir_ctr_RPM	= "2.1.1.BigWig.ctr.RPM"
+bigWigDir_ctr_RPM_sub	= "2.1.2.BigWig.ctr.RPM.subInput"
+bigWigDir_ctr_RPM_div	= "2.1.3.BigWig.ctr.RPM.divInput"
 
-bigWigScaledDir	= "3.1.BigWig.scaled"
-bigWigScaledDir_sub	= "3.2.BigWig.scaled.subInput"
-bigWigScaledDir_div = "3.3.BigWig.scaled.divInput"
-bigWigAllFrag_RPSM = "3.4.BigWig.allFrag.RPSM"
-bigWigAllFrag_RPSM_subInput = "3.5.BigWig.allFrag.RPSM.subInput"
+bigWigDir_frag_RPM	= "2.2.1.BigWig.frag.RPM"
+bigWigDir_frag_RPM_sub	= "2.2.2.BigWig.frag.RPM.subInput"
+bigWigDir_frag_RPM_div	= "2.2.3.BigWig.frag.RPM.divInput"
+
+
+bigWigDir_ctr_RPSM	= "2.3.1.BigWig.ctr.RPSM"
+bigWigDir_ctr_RPSM_sub	= "2.3.2.BigWig.ctr.RPSM.subInput"
+bigWigDir_ctr_RPSM_div	= "2.3.3.BigWig.ctr.RPSM.divInput"
+
+bigWigDir_frag_RPSM	= "2.4.1.BigWig.frag.RPSM"
+bigWigDir_frag_RPSM_sub	= "2.4.2.BigWig.frag.RPSM.subInput"
+bigWigDir_frag_RPSM_div	= "2.4.3.BigWig.frag.RPSM.divInput"
+
+#bigWigScaledDir	= "3.1.BigWig.scaled"
+#bigWigScaledDir_sub	= "3.2.BigWig.scaled.subInput"
+#bigWigScaledDir_div = "3.3.BigWig.scaled.divInput"
+#bigWigAllFrag_RPSM = "3.4.BigWig.allFrag.RPSM"
+#bigWigAllFrag_RPSM_subInput = "3.5.BigWig.allFrag.RPSM.subInput"
 
 bigWigDir_sub_avg	= bigWigDir_sub + "/Avg"
 bigWigScaledDir_sub_avg	= bigWigScaledDir_sub + "/Avg"
-bigWigScaledDir_div_avg	= bigWigScaledDir_div + "/Avg"
+#bigWigScaledDir_div_avg	= bigWigScaledDir_div + "/Avg"
 
 ## Hetero-chromatin domain calling
 peakDir 	= "PeakCall"
@@ -120,62 +132,30 @@ with open('cluster.yml', 'r') as fh:
 
 
 
-#########################
-## Rules start
-#def getGroupToPool():
-#	# groups that has more than one replicates
-#	groupWithRep = set(samples.Group.value_counts().index[ samples.Group.value_counts() > 1 ])
-#	# groups that is not input/control
-#	groupNoneCtrl = set(samples.Group[samples.Ctrl != "NULL"])
-#	groups = list( groupWithRep & groupNoneCtrl )
-#	return groups
 
 rule all:
 	input:
 		## output from check_baseFreq
-		expand(filteredDir + "/BaseFreq/{sampleName}.filtered.R{read}.freq.line.png", sampleName=samples.Name.tolist(), read=[1,2]),
+		expand(filteredDir + "/BaseFreq/{sampleName}.R{read}.freq.png", sampleName=samples.Name.tolist(), read=[1,2]),
 		## output from make_bigwig
-		expand(bigWigDir + "/{sampleName}.bw", sampleName=samples.Name.tolist()),
-		expand(bigWigDir_sub + "/{sampleName}.subInput.bw", sampleName=samples.Name[samples.Ctrl != "NULL"].tolist()),
-#		expand(bigWigDir_div + "/{sampleName}.divInput.bw", sampleName=samples.Name[samples.Ctrl != "NULL"].tolist()),
-		expand(bigWigScaledDir + "/{sampleName}.bw", sampleName=samples.Name.tolist()),
-		expand(bigWigScaledDir_sub + "/{sampleName}.scaled.subInput.bw", sampleName=samples.Name[samples.Ctrl != "NULL"].tolist()),
+		expand(bigWigDir_ctr_RPM + "/{sampleName}.ctr.rpm.bw", sampleName=samples.Name.tolist()),
+		expand(bigWigDir_frag_RPM + "/{sampleName}.frag.rpm.bw", sampleName=samples.Name.tolist()),
+		expand(bigWigDir_ctr_RPSM + "/{sampleName}.ctr.rpsm.bw", sampleName=samples.Name.tolist()),
+		expand(bigWigDir_frag_RPSM + "/{sampleName}.frag.rpsm.bw", sampleName=samples.Name.tolist()),
 
-		expand(bigWigDirAllFrag + "/{sampleName}.allFrag.bw", sampleName=samples.Name.tolist()),
-		expand(bigWigAllFrag_RPSM + "/{sampleName}.allFrag.rpsm.bw", sampleName=samples.Name.tolist()),
-		expand(bigWigAllFrag_RPSM_subInput + "/{sampleName}.allFrag.rpsm.subInput.bw", sampleName=samples.Name[samples.Ctrl != "NULL"].tolist()),
-#		expand(bigWigScaledDir_div + "/{sampleName}.scaled.divInput.bw", sampleName=samples.Name[samples.Ctrl != "NULL"].tolist()),
-#		expand(bigWigDir_sub_avg + "/{groupName}.subInput.avg.bw",
-#			groupName= list( set(samples.Group.value_counts().index[ samples.Group.value_counts() > 1 ]) & set(samples.Group[samples.Ctrl != "NULL"]) ) ),
-#		expand(bigWigScaledDir_sub_avg + "/{groupName}.scaled.subInput.avg.bw", 
-#			groupName= list( set(samples.Group.value_counts().index[ samples.Group.value_counts() > 1 ]) & set(samples.Group[samples.Ctrl != "NULL"]) ) ),
-#		expand(bigWigScaledDir_div_avg + "/{groupName}.scaled.divInput.avg.bw", 
-#			groupName= list( set(samples.Group.value_counts().index[ samples.Group.value_counts() > 1 ]) & set(samples.Group[samples.Ctrl != "NULL"]) ) ),
-		#expand(homerDir + "/{sampleName}/HomerPeak/peak.homer.exBL.1rpm.bed", sampleName=samples.Name.tolist()),
-		## fragment bed file
-		#expand(fragDir + "/{sampleName}.frag.bed.gz", sampleName=samples.Name.tolist())
-		## fragment length distribution
+		expand(bigWigDir_ctr_RPM_sub + "/{sampleName}.ctr.rpm.subInput.bw", sampleName=samples.Name[samples.Ctrl != "NULL"].tolist()),
+		expand(bigWigDir_frag_RPM_sub + "/{sampleName}.frag.rpm.subInput.bw", sampleName=samples.Name[samples.Ctrl != "NULL"].tolist()),
+		expand(bigWigDir_ctr_RPSM_sub + "/{sampleName}.ctr.rpsm.subInput.bw", sampleName=samples.Name[samples.Ctrl != "NULL"].tolist()),
+		expand(bigWigDir_frag_RPSM_sub + "/{sampleName}.frag.rpsm.subInput.bw", sampleName=samples.Name[samples.Ctrl != "NULL"].tolist()),
 		expand(fragLenDir + "/{sampleName}.dist.png", sampleName=samples.Name.tolist()),
 #		expand(spikeinCntDir + "/{sampleName}.spikeCnt.txt", sampleName=samples.Name.tolist())
 		spikeinCntDir + "/spikein.txt",
-		expand(peakDir + "/{sampleName}.{suffix}.{ext}", sampleName=samples.Name[samples.Ctrl != "NULL"].tolist(), suffix=peakSuffix, ext=["bed","txt.gz"]),
-		expand(peakDir2 + "/{sampleName}.{suffix}.exBL.bed", sampleName=samples.Name[samples.Ctrl != "NULL"].tolist(), suffix=peakSuffix2)
+		alignDir + "/alignStat.txt"
+#		expand(peakDir + "/{sampleName}.{suffix}.{ext}", sampleName=samples.Name[samples.Ctrl != "NULL"].tolist(), suffix=peakSuffix, ext=["bed","txt.gz"]),
+#		expand(peakDir2 + "/{sampleName}.{suffix}.exBL.bed", sampleName=samples.Name[samples.Ctrl != "NULL"].tolist(), suffix=peakSuffix2)
 		## homer tag dir
 		#expand(homerDir + "/{sampleName}/TSV", sampleName=samples.Name.tolist())
 
-		## output from trim
-#		expand(trimDir + "/{sampleId}_1.trim.fq.gz", sampleId=samples["Id"].tolist()),
-#		expand(trimDir + "/{sampleId}_2.trim.fq.gz", sampleId=samples["Id"].tolist())
-#		expand("1.4.Align.split/{sampleId}.filtered.dedup.{group}.{proctype}.bed.gz", 
-#			sampleId=samples["Id"].tolist(),
-#			group=["nfr","nuc"],
-#			proctype=["con","ctr","sep"])
-#		expand("1.3.Align.dedup/{sampleId}.filtered.dedup.bam", sampleId=samples["Id"].tolist()),
-#		expand("1.2.Align.filtered/{sampleId}.filtered.bam", sampleId=samples.index.values.tolist()),
-
-#rule clean:
-#	shell:
-#		"rm -rf " + " ".join([ trimDir, alignDir, filteredDir, dedupDir, splitDir, baseFreqDir, bigWigDir ])
 
 include: os.environ["MY_SCRIPT_BASE"] + "/Pipeline/Snakemake/rules.pre.smk"
 include: os.environ["MY_SCRIPT_BASE"] + "/Pipeline/Snakemake/rules.post.smk"
