@@ -3,6 +3,8 @@
 # "memory" must be integer >= 1000
 #
 #
+
+## wildcards.sampleName must not be changed for compatability with Snakemake/rule.post.smk
 __default__:
     cpu         : 1
     memory      : 10000
