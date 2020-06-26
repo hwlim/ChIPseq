@@ -46,9 +46,9 @@ frag_ctr_pool= "1.4.Align.allFrag.pool"
 
 
 ## Starting fragment file directory for downstream analysis
-fragDir		= frag_ctr_pool
-fragDir0	= frag_pool
-fragLenDir	= fragDir0 + "/fragLenHist"
+fragDir	= frag_pool
+fragDir_ctr		= frag_ctr_pool
+fragLenDir	= fragDir + "/fragLenHist"
 
 bigWigDir_ctr_RPM	= "2.1.1.BigWig.ctr.RPM"
 bigWigDir_ctr_RPM_sub	= "2.1.2.BigWig.ctr.RPM.subInput"

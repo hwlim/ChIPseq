@@ -1,7 +1,7 @@
 
 rule count_spikein:
 	input:
-		fragDir0 + "/{sampleName}.frag.bed.gz"
+		fragDir + "/{sampleName}.frag.bed.gz"
 	output:
 		spikeinCntDir + "/{sampleName}.spikeCnt.txt"
 	message:
@@ -30,7 +30,7 @@ rule make_spikeintable:
 rule get_fragLenHist:
 	input:
 		#dedupDir + "/{sampleName}.dedup.bam"
-		fragDir0 + "/{sampleName}.frag.bed.gz"
+		fragDir + "/{sampleName}.frag.bed.gz"
 	output:
 		fragLenDir + "/{sampleName}.dist.txt",
 		fragLenDir + "/{sampleName}.dist.png"
@@ -48,7 +48,7 @@ rule get_fragLenHist:
 ## and the same in other bigwig file rules
 rule make_bigwig_ctr_rpm:
 	input:
-		fragDir + "/{sampleName}.frag.bed.gz"
+		fragDir_ctr + "/{sampleName}.frag.bed.gz"
 	output:
 		bigWigDir_ctr_RPM + "/{sampleName}.ctr.rpm.bw",
 	message:
@@ -64,7 +64,7 @@ rule make_bigwig_ctr_rpm:
 ## bigwig file: original fragment in RPM scale
 rule make_bigwig_frag_rpm:
 	input:
-		fragDir0 + "/{sampleName}.frag.bed.gz"
+		fragDir + "/{sampleName}.frag.bed.gz"
 	output:
 		bigWigDir_frag_RPM + "/{sampleName}.frag.rpm.bw",
 	message:
@@ -81,7 +81,7 @@ rule make_bigwig_frag_rpm:
 ## bigwig file: resized fragment in RPSM scale
 rule make_bigwig_ctr_rpsm:
 	input:
-		bed = fragDir + "/{sampleName}.frag.bed.gz",
+		bed = fragDir_ctr + "/{sampleName}.frag.bed.gz",
 		spikeinCnt = spikeinCntDir + "/spikein.txt"
 	output:
 		bigWigDir_ctr_RPSM + "/{sampleName}.ctr.rpsm.bw",
@@ -103,7 +103,7 @@ rule make_bigwig_ctr_rpsm:
 ## bigwig file: original fragment in RPSM scale
 rule make_bigwig_frag_rpsm:
 	input:
-		bed = fragDir0 + "/{sampleName}.frag.bed.gz",
+		bed = fragDir + "/{sampleName}.frag.bed.gz",
 		spikeinCnt = spikeinCntDir + "/spikein.txt"
 	output:
 		bigWigDir_frag_RPSM + "/{sampleName}.frag.rpsm.bw",

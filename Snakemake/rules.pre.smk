@@ -136,13 +136,13 @@ rule check_baseFreq:
 
 
 
-rule make_fragment:
+rule make_fragment_ctr:
 	input:
 		dedupDir + "/{sampleName}.dedup.bam" if doDedup else filteredDir + "/{sampleName}.filtered.bam"
 	output:
-		fragDir + "/{sampleName}.frag.bed.gz"
+		fragDir_ctr + "/{sampleName}.frag.bed.gz"
 	params:
-		memory = "%dG" % ( cluster["make_fragment"]["memory"]/1000 - 2 )
+		memory = "%dG" % ( cluster["make_fragment_ctr"]["memory"]/1000 - 2 )
 	message:
 		"Making fragment bed files... [{wildcards.sampleName}]"
 	shell:
@@ -152,11 +152,11 @@ rule make_fragment:
 		"""
 
 
-rule make_fragment0:
+rule make_fragment:
 	input:
 		dedupDir + "/{sampleName}.dedup.bam" if doDedup else filteredDir + "/{sampleName}.filtered.bam"
 	output:
-		fragDir0 + "/{sampleName}.frag.bed.gz"
+		fragDir + "/{sampleName}.frag.bed.gz"
 	params:
 		memory = "%dG" % ( cluster["make_fragment"]["memory"]/1000 - 2 )
 	message:

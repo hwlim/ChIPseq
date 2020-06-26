@@ -47,7 +47,7 @@ make_bigwig_frag_rpsm_subinput:
 make_fragment:
     memory      : 10000
 
-make_fragment0:
+make_fragment_ctr:
     memory      : 10000
 
 make_spikeintable:
