@@ -44,6 +44,9 @@ make_bigwig_scaled_subtract:
 make_fragment:
     memory      : 10000
 
+make_fragment0:
+    memory      : 10000
+
 make_spikeintable:
     name        : "{rule}"
     output      : "logs/{rule}.out"
