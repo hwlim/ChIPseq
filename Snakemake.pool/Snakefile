@@ -37,17 +37,17 @@ spikePrefix		= "dm-"
 ## Directories
 
 ## intact fragments replicates & pool
-frag_rep	= "../1.4.Align.allFrag0"
-frag_pool= "1.4.Align.allFrag0.pool"
+frag_rep	= "../1.4.Frag"
+frag_pool	= "1.4.Frag"
 
 ## resized fragments replicates & pool
-frag_ctr_rep	= "../1.4.Align.allFrag"
-frag_ctr_pool= "1.4.Align.allFrag.pool"
+frag_ctr_rep = "../1.4.Frag.ctr"
+frag_ctr_pool= "1.4.Frag.ctr"
 
 
-## Starting fragment file directory for downstream analysis
-fragDir	= frag_pool
-fragDir_ctr		= frag_ctr_pool
+## Starting fragment file directory for downstream analysis for rule.post.smk
+fragDir		= frag_pool
+fragDir_ctr	= frag_ctr_pool
 fragLenDir	= fragDir + "/fragLenHist"
 
 bigWigDir_ctr_RPM	= "2.1.1.BigWig.ctr.RPM"
