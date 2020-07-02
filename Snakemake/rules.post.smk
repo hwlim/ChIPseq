@@ -58,7 +58,7 @@ rule make_bigwig_ctr_rpm:
 	shell:
 		"""
 		module load CnR/1.0
-		cnr.bedToBigWig.sh -g {chrom_size} -m {params.memory} -o {output} {input}
+		cnr.fragToBigWig.sh -g {chrom_size} -m {params.memory} -o {output} {input}
 		"""
 
 ## bigwig file: original fragment in RPM scale
@@ -74,7 +74,7 @@ rule make_bigwig_frag_rpm:
 	shell:
 		"""
 		module load CnR/1.0
-		cnr.bedToBigWig.sh -g {chrom_size} -m {params.memory} -o {output} {input}
+		cnr.fragToBigWig.sh -g {chrom_size} -m {params.memory} -o {output} {input}
 		"""
 
 
@@ -97,7 +97,7 @@ rule make_bigwig_ctr_rpsm:
 			echo -e "Error: empty scale factor" >&2
 			exit 1
 		fi
-		cnr.bedToBigWig.sh -g {chrom_size} -m 5G -s $scaleFactor -o {output} {input.bed}
+		cnr.fragToBigWig.sh -g {chrom_size} -m 5G -s $scaleFactor -o {output} {input.bed}
 		"""
 
 ## bigwig file: original fragment in RPSM scale
@@ -119,7 +119,7 @@ rule make_bigwig_frag_rpsm:
 			echo -e "Error: empty scale factor" >&2
 			exit 1
 		fi
-		cnr.bedToBigWig.sh -g {chrom_size} -m 5G -s $scaleFactor -o {output} {input.bed}
+		cnr.fragToBigWig.sh -g {chrom_size} -m 5G -s $scaleFactor -o {output} {input.bed}
 		"""
 
 
@@ -137,7 +137,7 @@ rule make_bigwig_allfrag:
 	shell:
 		"""
 		module load CnR/1.0
-		cnr.bedToBigWig.sh -g {chrom_size} -m 5G -o {output} {input}
+		cnr.fragToBigWig.sh -g {chrom_size} -m 5G -o {output} {input}
 		"""
 
 rule make_bigwig_allfrag_rpsm:
@@ -158,7 +158,7 @@ rule make_bigwig_allfrag_rpsm:
 			echo -e "Error: empty scale factor" >&2
 			exit 1
 		fi
-		cnr.bedToBigWig.sh -g {chrom_size} -m 5G -s $scaleFactor -o {output} {input.bed}
+		cnr.fragToBigWig.sh -g {chrom_size} -m 5G -s $scaleFactor -o {output} {input.bed}
 		"""
 '''
 
@@ -446,9 +446,9 @@ rule make_bigwig_scaled:
 			echo -e "Error: empty scale factor" >&2
 			exit 1
 		fi
-		cnr.bedToBigWig.sh -g {chrom_size} -m 5G -s $scaleFactor -o {output} {input.bed}
+		cnr.fragToBigWig.sh -g {chrom_size} -m 5G -s $scaleFactor -o {output} {input.bed}
 		"""
-#		cnr.bedToBigWig.sh -g {chrom_size} -m {params.memory} -s {params.scaleFactor} -o {output} {input.bed}
+#		cnr.fragToBigWig.sh -g {chrom_size} -m {params.memory} -s {params.scaleFactor} -o {output} {input.bed}
 
 def get_bigwig_scaled_input(wildcards):
 	# return ordered [ctrl , target] list.
