@@ -127,7 +127,7 @@ if not samples.Name.is_unique:
 ## Cluster configuration file
 #cluster = json.load(open("./cluster.json"))
 import yaml
-with open('cluster_yml', 'r') as fh:
+with open(os.path.expanduser(cluster_yml), 'r') as fh:
 	cluster = yaml.load(fh)
 #    cluster = yaml.full_load(fh)
 
