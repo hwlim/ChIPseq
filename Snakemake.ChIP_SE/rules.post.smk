@@ -53,16 +53,28 @@ rule make_tagdir:
 		mypipe.makeTagDir.sh -o {params.desDir} -n {params.name} -t 1 -c {chrRegexTarget} {input}
 		"""
 
+
+'''
+## Not being used; replaced with get_input_tagdir for handling NULL ctrl
 def get_input_name(sampleName):
-	# return ordered [ctrl , target] list.
 	ctrlName = samples.Ctrl[samples.Name == sampleName]
 	ctrlName = ctrlName.tolist()[0]
 	return ctrlName
+'''
+
+def get_input_tagdir(sampleName):
+	ctrlName = samples.Ctrl[samples.Name == sampleName]
+	ctrlName = ctrlName.tolist()[0]
+	if ctrlName == "NULL":
+		return "NULL"
+	else:
+		return sampleDir + "/" + ctrlName + "/TSV1"
 
 rule call_peak_factor:
 	input:
 		chip = sampleDir + "/{sampleName}/TSV1",
-		ctrl = lambda wildcards: sampleDir + "/" + get_input_name(wildcards.sampleName) + "/TSV1"
+		ctrl = lambda wildcards: get_input_tagdir(wildcards.samplename)
+#		ctrl = lambda wildcards: sampleDir + "/" + get_input_name(wildcards.sampleName) + "/TSV1"
 	output:
 		sampleDir + "/{sampleName}/HomerPeak.factor/peak.exBL.1rpm.bed"
 	message:
@@ -79,7 +91,8 @@ rule call_peak_factor:
 rule call_peak_histone:
 	input:
 		chip = sampleDir + "/{sampleName}/TSV1",
-		ctrl = lambda wildcards: sampleDir + "/" + get_input_name(wildcards.sampleName) + "/TSV1"
+		ctrl = lambda wildcards: get_input_tagdir(wildcards.samplename)
+#		ctrl = lambda wildcards: sampleDir + "/" + get_input_name(wildcards.sampleName) + "/TSV1"
 	output:
 		sampleDir + "/{sampleName}/HomerPeak.histone/peak.exBL.bed"
 	message:
@@ -91,6 +104,20 @@ rule call_peak_histone:
 		"""
 		module load ChIPseq/1.0
 		chip.peakCallHistone.sh -o {params.desDir}/HomerPeak.histone -i {input.ctrl} -m {params.mask} {input}
+		"""
+
+
+rule run_homermotif:
+	input:
+		sampleDir + "/{sampleName}/HomerPeak.factor/peak.exBL.1rpm.bed"
+	output:
+		sampleDir + "/{sampleName}/HomerPeak.factor/peak.exBL.1rpm.bed.all.noBG/homerResults.html"
+	message:
+		"Running Homer motif search... [{wildcards.sampleName}]"
+	shell:
+		"""
+		module load Motif/1.0
+		runHomerMotif.sh -g {genome} -s 200 -p 4 -b /data/limlab/Resource/Homer.preparse -o {sampleDir}/{wildcards.sampleName}/HomerPeak.factor {input}
 		"""
 
 
