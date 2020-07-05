@@ -73,7 +73,7 @@ def get_input_tagdir(sampleName):
 rule call_peak_factor:
 	input:
 		chip = sampleDir + "/{sampleName}/TSV1",
-		ctrl = lambda wildcards: get_input_tagdir(wildcards.samplename)
+		ctrl = lambda wildcards: get_input_tagdir(wildcards.sampleName)
 #		ctrl = lambda wildcards: sampleDir + "/" + get_input_name(wildcards.sampleName) + "/TSV1"
 	output:
 		sampleDir + "/{sampleName}/HomerPeak.factor/peak.exBL.1rpm.bed"
@@ -91,7 +91,7 @@ rule call_peak_factor:
 rule call_peak_histone:
 	input:
 		chip = sampleDir + "/{sampleName}/TSV1",
-		ctrl = lambda wildcards: get_input_tagdir(wildcards.samplename)
+		ctrl = lambda wildcards: get_input_tagdir(wildcards.sampleName)
 #		ctrl = lambda wildcards: sampleDir + "/" + get_input_name(wildcards.sampleName) + "/TSV1"
 	output:
 		sampleDir + "/{sampleName}/HomerPeak.histone/peak.exBL.bed"
