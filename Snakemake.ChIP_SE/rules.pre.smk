@@ -44,6 +44,7 @@ def get_fastq(wildcards):
 	
 #	raise(ValueError("Unrecognized wildcard value for 'endedness': %s" % wildcards.endedness))
 
+
 rule align_star:
 	input:
 		get_fastq
@@ -68,7 +69,8 @@ rule align_star:
 		star.align.sh -g {params.index} \
 			-o {alignDir}/{wildcards.sampleName}/align \
 			-t {threads} \
-			-p '{params.option}' \
+			-p '{params.option}'
+			-s \
 			{input}
 		"""
 
