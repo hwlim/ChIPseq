@@ -34,3 +34,7 @@ call_peak_factor:
 
 call_peak_histone:
     memory      : 10000
+
+run_homermotif:
+    cpu         : 4
+    memory      : 10000
