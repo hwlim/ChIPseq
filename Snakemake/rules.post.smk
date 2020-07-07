@@ -105,7 +105,8 @@ rule make_bigwig_ctr_rpsm:
 rule make_bigwig_frag_rpsm:
 	input:
 		bed = fragDir + "/{sampleName}.frag.bed.gz",
-		spikeinCnt = spikeinCntDir + "/spikein.txt"
+		spikeinCnt = spikeinCntDir + "/{sampleName}.spikeCnt.txt"
+		#spikeinCnt = spikeinCntDir + "/spikein.txt"
 	output:
 		bigWigDir_frag_RPSM + "/{sampleName}.frag.rpsm.bw",
 	message:
