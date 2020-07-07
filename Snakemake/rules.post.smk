@@ -82,7 +82,8 @@ rule make_bigwig_frag_rpm:
 rule make_bigwig_ctr_rpsm:
 	input:
 		bed = fragDir_ctr + "/{sampleName}.frag.bed.gz",
-		spikeinCnt = spikeinCntDir + "/spikein.txt"
+		spikeinCnt = spikeinCntDir + "/{sampleName}.spikeCnt.txt"
+		#spikeinCnt = spikeinCntDir + "/spikein.txt"
 	output:
 		bigWigDir_ctr_RPSM + "/{sampleName}.ctr.rpsm.bw",
 	message:
@@ -92,7 +93,7 @@ rule make_bigwig_ctr_rpsm:
 	shell:
 		"""
 		module load CnR/1.0
-		scaleFactor=`cat {input.spikeinCnt} | gawk '$1=="'{wildcards.sampleName}'"' | gawk '{{ printf "%f", 100000/$3 }}'`
+		scaleFactor=`cat {input.spikeinCnt} | gawk '{{ if($1=="ScaleFactor") print $2 }}'`
 		if [ $scaleFactor == "" ];then
 			echo -e "Error: empty scale factor" >&2
 			exit 1
@@ -114,13 +115,14 @@ rule make_bigwig_frag_rpsm:
 	shell:
 		"""
 		module load CnR/1.0
-		scaleFactor=`cat {input.spikeinCnt} | gawk '$1=="'{wildcards.sampleName}'"' | gawk '{{ printf "%f", 100000/$3 }}'`
+		scaleFactor=`cat {input.spikeinCnt} | gawk '{{ if($1=="ScaleFactor") print $2 }}'`
 		if [ $scaleFactor == "" ];then
 			echo -e "Error: empty scale factor" >&2
 			exit 1
 		fi
 		cnr.fragToBigWig.sh -g {chrom_size} -m 5G -s $scaleFactor -o {output} {input.bed}
 		"""
+#		scaleFactor=`cat {input.spikeinCnt} | gawk '$1=="'{wildcards.sampleName}'"' | gawk '{{ printf "%f", 100000/$3 }}'`
 
 
 
