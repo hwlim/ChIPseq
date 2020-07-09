@@ -74,18 +74,25 @@ rule align_pe:
 #			--outFileNamePrefix __temp__.$$ 2> {log}
 #		mv __temp__.$$Aligned.out.bam {output}"
 
+#		alignDir=expand(alignDir+"/{sampleName}", sampleName=samples.Name.tolist()),
+
+def get_align_dir(bamList):
+	import os.path
+	return list(map(lambda x: os.path.dirname(x), bamList ))
+
 rule make_align_stat_table:
 	input:
-		alignDir=expand(alignDir+"/{sampleName}", sampleName=samples.Name.tolist()),
-		alignBam=expand(alignDir+"/{sampleName}/align.bam", sampleName=samples.Name.tolist())
+		expand(alignDir+"/{sampleName}/align.bam", sampleName=samples.Name.tolist())
 	output:
 		alignDir + "/alignStat.txt"
+	params:
+		inputDir = get_align_dir(expand(alignDir+"/{sampleName}/align.bam", sampleName=samples.Name.tolist()))
 	message:
 		"Creating alignment stat file"
 	shell:
 		"""
 		module load ChIPseq/1.0
-		star.getAlignStats.r {input.alignDir} > {output}
+		star.getAlignStats.r {params.inputDir} > {output}
 		"""
 
 rule filter_align:
