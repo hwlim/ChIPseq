@@ -74,7 +74,6 @@ rule call_peak_factor:
 	input:
 		chip = sampleDir + "/{sampleName}/TSV1",
 		ctrl = lambda wildcards: get_input_tagdir(wildcards.sampleName)
-#		ctrl = lambda wildcards: sampleDir + "/" + get_input_name(wildcards.sampleName) + "/TSV1"
 	output:
 		sampleDir + "/{sampleName}/HomerPeak.factor/peak.exBL.1rpm.bed"
 	message:
@@ -86,6 +85,22 @@ rule call_peak_factor:
 		"""
 		module load ChIPseq/1.0
 		chip.peakCallFactor.sh -o {params.desDir}/HomerPeak.factor -i {input.ctrl} -m {params.mask} -s "-size 200" {input}
+		"""
+
+rule call_peak_factor_no_ctrl:
+	input:
+		chip = sampleDir + "/{sampleName}/TSV1",
+	output:
+		sampleDir + "/{sampleName}/HomerPeak.factor.noCtrl/peak.exBL.1rpm.bed"
+	message:
+		"Making bigWig files... [{wildcards.sampleName}]"
+	params:
+		desDir = sampleDir + "/{sampleName}",
+		mask = peak_mask
+	shell:
+		"""
+		module load ChIPseq/1.0
+		chip.peakCallFactor.sh -o {params.desDir}/HomerPeak.factor.noCtrl -m {params.mask} -s "-size 200" {input}
 		"""
 
 rule call_peak_histone:
@@ -120,6 +135,18 @@ rule run_homermotif:
 		runHomerMotif.sh -g {genome} -s 200 -p 4 -b /data/limlab/Resource/Homer.preparse -o {sampleDir}/{wildcards.sampleName}/HomerPeak.factor {input}
 		"""
 
+rule run_homermotif_no_ctrl:
+	input:
+		sampleDir + "/{sampleName}/HomerPeak.factor.noCtrl/peak.exBL.1rpm.bed"
+	output:
+		sampleDir + "/{sampleName}/HomerPeak.factor.noCtrl/peak.exBL.1rpm.bed.all.noBG/homerResults.html"
+	message:
+		"Running Homer motif search... [{wildcards.sampleName}]"
+	shell:
+		"""
+		module load Motif/1.0
+		runHomerMotif.sh -g {genome} -s 200 -p 4 -b /data/limlab/Resource/Homer.preparse -o {sampleDir}/{wildcards.sampleName}/HomerPeak.factor.noCtrl {input}
+		"""
 
 ## RPM-scaled bigWig
 rule make_bigwig:

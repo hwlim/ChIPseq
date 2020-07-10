@@ -12,7 +12,7 @@ __default__:
     error       : "logs/{rule}.{wildcards.sampleName}.err"
     resource    : "\"span[hosts=1]\""
 
-trim_pe:
+trim_se:
     name        : "{rule}.{wildcards.sampleId}"
     output      : "logs/{rule}.{wildcards.sampleId}.out"
     error       : "logs/{rule}.{wildcards.sampleId}.err"
@@ -36,5 +36,9 @@ call_peak_histone:
     memory      : 10000
 
 run_homermotif:
+    cpu         : 4
+    memory      : 10000
+
+run_homermotif_no_ctrl:
     cpu         : 4
     memory      : 10000

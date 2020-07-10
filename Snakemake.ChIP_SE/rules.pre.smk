@@ -3,13 +3,13 @@ if 'star_module' not in locals():
 	star_module="STAR/2.5"
 
 
-rule trim_pe:
+rule trim_se:
 	input:
-		fq1 = lambda wildcards: fastqDir + "/" + samples.Fq1[samples.Id == wildcards.sampleId],
-		fq2 = lambda wildcards: fastqDir + "/" + samples.Fq2[samples.Id == wildcards.sampleId]
+		fq1 = lambda wildcards: fastqDir + "/" + samples.Fq1[samples.Id == wildcards.sampleId]
+#		fq2 = lambda wildcards: fastqDir + "/" + samples.Fq2[samples.Id == wildcards.sampleId]
 	output:
-		fq1 = trimDir + "/{sampleId}_1.trim.fq.gz",
-		fq2 = trimDir + "/{sampleId}_2.trim.fq.gz"
+		fq1 = trimDir + "/{sampleId}_1.trim.fq.gz"
+#		fq2 = trimDir + "/{sampleId}_2.trim.fq.gz"
 	message:
 		"Trimming... [{wildcards.sampleId}]"
 	params:
@@ -21,11 +21,14 @@ rule trim_pe:
 	shell:
 		"""
 		# Note: Needs to be implemented as a quantum transaction
-		cutadapt -a {params.adapter} -A {params.adapter} --minimum-length {params.minLen} -q {params.minQual} \
-			-o __temp__.$$.1.fq.gz -p __temp__.$$.2.fq.gz {input.fq1} {input.fq2} 2>&1 | tee {log}
+		cutadapt -a {params.adapter} --minimum-length {params.minLen} -q {params.minQual} \
+			-o __temp__.$$.1.fq.gz {input.fq1} 2>&1 | tee {log}
 		mv __temp__.$$.1.fq.gz {output.fq1}
-		mv __temp__.$$.2.fq.gz {output.fq2} 
 		"""
+#		cutadapt -a {params.adapter} -A {params.adapter} --minimum-length {params.minLen} -q {params.minQual} \
+#			-o __temp__.$$.1.fq.gz -p __temp__.$$.2.fq.gz {input.fq1} {input.fq2} 2>&1 | tee {log}
+#		mv __temp__.$$.1.fq.gz {output.fq1}
+#		mv __temp__.$$.2.fq.gz {output.fq2} 
 
 def get_fastq(wildcards):
 	#print(wildcards.sampleName)
@@ -69,7 +72,7 @@ rule align_star:
 		star.align.sh -g {params.index} \
 			-o {alignDir}/{wildcards.sampleName}/align \
 			-t {threads} \
-			-p '{params.option}'
+			-p '{params.option}' \
 			-s \
 			{input}
 		"""
