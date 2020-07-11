@@ -62,6 +62,7 @@ def get_input_name(sampleName):
 	return ctrlName
 '''
 
+'''
 def get_input_tagdir(sampleName):
 	ctrlName = samples.Ctrl[samples.Name == sampleName]
 	ctrlName = ctrlName.tolist()[0]
@@ -69,24 +70,39 @@ def get_input_tagdir(sampleName):
 		return "NULL"
 	else:
 		return sampleDir + "/" + ctrlName + "/TSV1"
+'''
+
+def get_peakcall_input(sampleName):
+	ctrlName = samples.Ctrl[samples.Name == sampleName]
+	ctrlName = ctrlName.tolist()[0]
+	assert( len(crlName) == 1 )
+	if ctrlName.upper() == "NULL":
+		return [ sampleDir + "/" + sampleName + "/TSV1" ]
+	else:
+		return [ sampleDir + "/" + ctrlName + "/TSV1", sampleDir + "/" + samplename + "/TSV1" ]
+
 
 rule call_peak_factor:
 	input:
-		chip = sampleDir + "/{sampleName}/TSV1",
-		ctrl = lambda wildcards: get_input_tagdir(wildcards.sampleName)
+		lambda wildcards: get_peakcall_input(wildcards.sampleName)
+		#chip = sampleDir + "/{sampleName}/TSV1",
+		#ctrl = lambda wildcards: get_input_tagdir(wildcards.sampleName)
 	output:
 		sampleDir + "/{sampleName}/HomerPeak.factor/peak.exBL.1rpm.bed"
 	message:
 		"Making bigWig files... [{wildcards.sampleName}]"
 	params:
 		desDir = sampleDir + "/{sampleName}",
-		mask = peak_mask
+		mask = peak_mask,
+		optStr = lambda wildcards, input: "-i" if len(input)>1 else ""
 	shell:
 		"""
 		module load ChIPseq/1.0
-		chip.peakCallFactor.sh -o {params.desDir}/HomerPeak.factor -i {input.ctrl} -m {params.mask} -s "-size 200" {input}
+		chip.peakCallFactor.sh -o {params.desDir}/HomerPeak.factor -m {params.mask} -s "-size 200" {params.optStr} {input}
 		"""
+#		chip.peakCallFactor.sh -o {params.desDir}/HomerPeak.factor -i {input.ctrl} -m {params.mask} -s "-size 200" {input}
 
+'''
 rule call_peak_factor_no_ctrl:
 	input:
 		chip = sampleDir + "/{sampleName}/TSV1",
@@ -102,23 +118,25 @@ rule call_peak_factor_no_ctrl:
 		module load ChIPseq/1.0
 		chip.peakCallFactor.sh -o {params.desDir}/HomerPeak.factor.noCtrl -m {params.mask} -s "-size 200" {input}
 		"""
+'''
 
 rule call_peak_histone:
 	input:
-		chip = sampleDir + "/{sampleName}/TSV1",
-		ctrl = lambda wildcards: get_input_tagdir(wildcards.sampleName)
-#		ctrl = lambda wildcards: sampleDir + "/" + get_input_name(wildcards.sampleName) + "/TSV1"
+		lambda wildcards: get_peakcall_input(wildcards.sampleName)
+		#chip = sampleDir + "/{sampleName}/TSV1",
+		#ctrl = lambda wildcards: get_input_tagdir(wildcards.sampleName)
 	output:
 		sampleDir + "/{sampleName}/HomerPeak.histone/peak.exBL.bed"
 	message:
 		"Making bigWig files... [{wildcards.sampleName}]"
 	params:
 		desDir = sampleDir + "/{sampleName}",
-		mask = peak_mask
+		mask = peak_mask,
+		optStr = lambda wildcards, input: "-i" if len(input)>1 else ""
 	shell:
 		"""
 		module load ChIPseq/1.0
-		chip.peakCallHistone.sh -o {params.desDir}/HomerPeak.histone -i {input.ctrl} -m {params.mask} {input}
+		chip.peakCallHistone.sh -o {params.desDir}/HomerPeak.histone -m {params.mask} {params.optStr} {input}
 		"""
 
 
@@ -135,6 +153,7 @@ rule run_homermotif:
 		runHomerMotif.sh -g {genome} -s 200 -p 4 -b /data/limlab/Resource/Homer.preparse -o {sampleDir}/{wildcards.sampleName}/HomerPeak.factor {input}
 		"""
 
+'''
 rule run_homermotif_no_ctrl:
 	input:
 		sampleDir + "/{sampleName}/HomerPeak.factor.noCtrl/peak.exBL.1rpm.bed"
@@ -147,6 +166,7 @@ rule run_homermotif_no_ctrl:
 		module load Motif/1.0
 		runHomerMotif.sh -g {genome} -s 200 -p 4 -b /data/limlab/Resource/Homer.preparse -o {sampleDir}/{wildcards.sampleName}/HomerPeak.factor.noCtrl {input}
 		"""
+'''
 
 ## RPM-scaled bigWig
 rule make_bigwig:
