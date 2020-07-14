@@ -76,15 +76,17 @@ rule make_tagdir:
 	output:
 		directory(sampleDir + "/{sampleName}/TSV")
 	params:
-		desDir = sampleDir + "/{sampleName}",
 		name = "{sampleName}"
 	message:
 		"Making Homer tag directory... [{wildcards.sampleName}]"
 	shell:
 		"""
 		module load ChIPseq/1.0
-		mypipe.makeTagDir.sh -o {params.desDir} -n {params.name} -t {Homer_tbp} -c {chrRegexTarget} {input}
+		ngs.alignToTagDir.sh -o {output} -t {Homer_tbp} -c {chrRegexTarget} {input}
+		drawAutoCorrplot.r -t {params.name} -o {output}/Autocorrelation.png {output}
+		echo "{params.name}" > {sampleDir}/{wildcards.sampleName}/info.txt
 		"""
+#		mypipe.makeTagDir.sh -o {params.desDir} -n {params.name} -t {Homer_tbp} -c {chrRegexTarget} {input}
 
 
 '''
@@ -123,11 +125,11 @@ rule call_peak_factor:
 	output:
 		sampleDir + "/{sampleName}/HomerPeak.factor/peak.exBL.1rpm.bed"
 	message:
-		"Making bigWig files... [{wildcards.sampleName}]"
+		"Calling TF peaks... [{wildcards.sampleName}]"
 	params:
 		desDir = sampleDir + "/{sampleName}",
 		mask = peak_mask,
-		optStr = lambda wildcards, input: ( "-tbp 0 -i" ) if len(input)>1 else "-tbp 0"
+		optStr = lambda wildcards, input: ( "-i" ) if len(input)>1 else ""
 	shell:
 		"""
 		module load ChIPseq/1.0
