@@ -17,6 +17,11 @@ trim_se:
     output      : "logs/{rule}.{wildcards.sampleId}.out"
     error       : "logs/{rule}.{wildcards.sampleId}.err"
 
+trim_pe:
+    name        : "{rule}.{wildcards.sampleId}"
+    output      : "logs/{rule}.{wildcards.sampleId}.out"
+    error       : "logs/{rule}.{wildcards.sampleId}.err"
+
 align_star:
     cpu         : 4
     memory      : 40000

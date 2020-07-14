@@ -8,7 +8,7 @@ rule trim_se:
 		fq1 = lambda wildcards: fastqDir + "/" + samples.Fq1[samples.Id == wildcards.sampleId]
 #		fq2 = lambda wildcards: fastqDir + "/" + samples.Fq2[samples.Id == wildcards.sampleId]
 	output:
-		fq1 = trimDir + "/{sampleId}_1.trim.fq.gz"
+		fq1 = trimDir + "/{sampleId}.se.trim.fq.gz"
 #		fq2 = trimDir + "/{sampleId}_2.trim.fq.gz"
 	message:
 		"Trimming... [{wildcards.sampleId}]"
@@ -25,22 +25,48 @@ rule trim_se:
 			-o __temp__.$$.1.fq.gz {input.fq1} 2>&1 | tee {log}
 		mv __temp__.$$.1.fq.gz {output.fq1}
 		"""
+
 #		cutadapt -a {params.adapter} -A {params.adapter} --minimum-length {params.minLen} -q {params.minQual} \
 #			-o __temp__.$$.1.fq.gz -p __temp__.$$.2.fq.gz {input.fq1} {input.fq2} 2>&1 | tee {log}
 #		mv __temp__.$$.1.fq.gz {output.fq1}
 #		mv __temp__.$$.2.fq.gz {output.fq2} 
 
+
+rule trim_pe:
+	input:
+		fq1 = lambda wildcards: fastqDir + "/" + samples.Fq1[samples.Id == wildcards.sampleId],
+		fq2 = lambda wildcards: fastqDir + "/" + samples.Fq2[samples.Id == wildcards.sampleId]
+	output:
+		fq1 = trimDir + "/{sampleId}.1.trim.fq.gz",
+		fq2 = trimDir + "/{sampleId}.2.trim.fq.gz"
+	message:
+		"Trimming... [{wildcards.sampleId}]"
+	params:
+		adapter = adapter,
+		minLen = trim_minLen,
+		minQual = trim_minQual
+	log:
+		trimDir + "/{sampleId}.trim.log"
+	shell:
+		"""
+		cutadapt -a {params.adapter} -A {params.adapter} --minimum-length {params.minLen} -q {params.minQual} \
+			-o __temp__.$$.1.fq.gz -p __temp__.$$.2.fq.gz {input.fq1} {input.fq2} 2>&1 | tee {log}
+		mv __temp__.$$.1.fq.gz {output.fq1}
+		mv __temp__.$$.2.fq.gz {output.fq2} 
+		"""
+
+
 def get_fastq(wildcards):
 	#print(wildcards.sampleName)
 	if samples.Fq2[samples.Name == wildcards.sampleName].tolist()[0].upper() == "NULL":
 		if doTrim:
-			return trimDir + "/" + samples.Id[samples.Name == wildcards.sampleName].tolist()[0] + "_1.trim.fq.gz"
+			return trimDir + "/" + samples.Id[samples.Name == wildcards.sampleName].tolist()[0] + ".se.trim.fq.gz"
 		else:
 			return fastqDir + "/" + samples.Fq1[samples.Name == wildcards.sampleName].tolist()[0]
 	else:
 		if doTrim:
-			return [trimDir + "/" + samples.Id[samples.Name == wildcards.sampleName].tolist()[0] + "_1.trim.fq.gz",
-				trimDir + "/" + samples.Id[samples.Name == wildcards.sampleName].tolist()[0] + "_2.trim.fq.gz"]
+			return [trimDir + "/" + samples.Id[samples.Name == wildcards.sampleName].tolist()[0] + ".1.trim.fq.gz",
+				trimDir + "/" + samples.Id[samples.Name == wildcards.sampleName].tolist()[0] + ".2.trim.fq.gz"]
 		else:
 			return [fastqDir + "/" + samples.Fq1[samples.Name == wildcards.sampleName].tolist()[0],
 				fastqDir + "/" + samples.Fq2[samples.Name == wildcards.sampleName].tolist()[0]]

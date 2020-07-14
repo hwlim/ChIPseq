@@ -116,7 +116,7 @@ def get_peakcall_input(sampleName):
 	else:
 		return [ sampleDir + "/" + ctrlName + "/TSV", sampleDir + "/" + samplename + "/TSV" ]
 
-
+## NOTE: "-tbp 0" is implicitly set within chip.peakCallHistone.sh 
 rule call_peak_factor:
 	input:
 		lambda wildcards: get_peakcall_input(wildcards.sampleName)
@@ -155,6 +155,7 @@ rule call_peak_factor_no_ctrl:
 		"""
 '''
 
+## NOTE: "-tbp 0" is implicitly set within chip.peakCallHistone.sh 
 rule call_peak_histone:
 	input:
 		lambda wildcards: get_peakcall_input(wildcards.sampleName)
@@ -167,7 +168,7 @@ rule call_peak_histone:
 	params:
 		desDir = sampleDir + "/{sampleName}",
 		mask = peak_mask,
-		optStr = lambda wildcards, input: ( "-tbp 0 -i" ) if len(input)>1 else "-tbp 0"
+		optStr = lambda wildcards, input: ( "-i" ) if len(input)>1 else ""
 	shell:
 		"""
 		module load ChIPseq/1.0
