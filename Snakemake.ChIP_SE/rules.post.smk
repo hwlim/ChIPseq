@@ -1,5 +1,9 @@
+## Default values to main compatibility with previously precessed data
 if 'Homer_tbp' not in locals():
 	Homer_tbp=1
+
+if 'downsampleDir' not in locals():
+	downsampleDir="1.2.Align.downSample"
 
 if 'doDedup' not in locals():
 	doDedup=False
@@ -42,7 +46,7 @@ rule dedup_align:
 	input:
 		get_align_bam_for_dedup
 	output:
-		dedupDir + "/{sampleName}.bam"
+		dedupDir + "/{sampleName}/align.bam"
 	message:
 		"Deduplicating... [{wildcards.sampleName}]"
 	params:
@@ -104,7 +108,7 @@ def get_input_tagdir(sampleName):
 def get_peakcall_input(sampleName):
 	ctrlName = samples.Ctrl[samples.Name == sampleName]
 	ctrlName = ctrlName.tolist()[0]
-	assert( len(crlName) == 1 )
+	#assert( len(ctrlName) == 1 )
 	if ctrlName.upper() == "NULL":
 		return [ sampleDir + "/" + sampleName + "/TSV" ]
 	else:
