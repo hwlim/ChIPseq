@@ -23,7 +23,8 @@ Options:
 	-i <ctrl>: (optional) ctrl homer tag directory, default=NULL
 	-m <mask>: mask bed file for filtering such as ENCODE blacklist
 	-s <optStr>: additional option for 'findPeaks' of Homer
-		Internal pre-set option: \"-style factor -tbp 0 -norm 1000000 -center\"
+		Internal pre-set option: \"-style factor -norm 1000000 -center\"
+		Warning: -tbp 0 is implicitly set (may be revised in the future)
 		Additional options are also possible such as -size 200 -minDist 400"
 }
 
