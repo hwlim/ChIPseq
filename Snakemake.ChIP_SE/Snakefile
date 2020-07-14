@@ -48,16 +48,21 @@ star_option	= "--alignSJDBoverhangMin 999 --alignIntronMax 1 --outFilterMultimap
 #########################
 ## Job flags
 doTrim		= False
+doDedup		= False
 #downSampleN	= 30000000
-#doDedup		= True
 
 #########################
 ## Directories
 fastqDir	= "../0.Fastq"
 trimDir		= "../0.Fastq.Trim"
-alignDir	= "./1.1.Align"
+alignDir	= "1.1.Align"
+downsampleDir	=	"1.2.Align.downSample"
+dedupDir	=	"1.3.Align.dedup"
 sampleDir	= "./2.Samples"
 
+########################
+## Other parameteres
+Homer_tbp	= 1	# Homer tbp
 
 ################################
 ## Loading sample Information
@@ -99,8 +104,6 @@ rule all:
 		expand(sampleDir + "/{sampleName}/HomerPeak.factor/peak.exBL.1rpm.bed", sampleName=samples.Name[ samples.PeakMode=="factor" ].tolist()),
 		expand(sampleDir + "/{sampleName}/HomerPeak.histone/peak.exBL.bed", sampleName=samples.Name[samples.PeakMode=="histone"].tolist()),
 		expand(sampleDir + "/{sampleName}/HomerPeak.factor/peak.exBL.1rpm.bed.all.noBG/homerResults.html", sampleName=samples.Name[samples.PeakMode=="factor"].tolist()),
-#		expand(sampleDir + "/{sampleName}/HomerPeak.factor.noCtrl/peak.exBL.1rpm.bed", sampleName=samples.Name[( samples.PeakMode=="factor" ) & ( samples.Ctrl=="NULL" )].tolist()),
-#		expand(sampleDir + "/{sampleName}/HomerPeak.factor.noCtrl/peak.exBL.1rpm.bed.all.noBG/homerResults.html", sampleName=samples.Name[ ( samples.PeakMode=="factor" ) & ( samples.Ctrl=="NULL" ) ].tolist()),
 		expand(sampleDir + "/{sampleName}/igv.bw", sampleName=samples.Name.tolist())
 
 include: os.environ["MY_SCRIPT_BASE"] + "/Pipeline/Snakemake.ChIP_SE/rules.pre.smk"

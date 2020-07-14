@@ -1,3 +1,13 @@
+if 'Homer_tbp' not in locals():
+	Homer_tbp=1
+
+if 'doDedup' not in locals():
+	doDedup=False
+
+if 'dedupDir' not in locals():
+	dedupDir="1.3.Align.dedup"
+
+
 
 def get_downsample_depth(wildcards):
 	if "DownSample" in samples:
@@ -5,21 +15,11 @@ def get_downsample_depth(wildcards):
 	else:
 		return None
 
-'''
-def get_downsample_bam(wildcards):
-	depth = samples.DownSample[samples.Name == wildcards.sampleName].tolist()[0]
-	return alignDir + "/{sampleName}/align." + ( "ds%dM" % depth ) + ".bam"
-
-def get_downsample_suffix(wildcards):
-	depth = samples.DownSample[samples.Name == wildcards.sampleName].tolist()[0]
-	return "ds%dM" % depth
-'''
-
 rule downsample_bam:
 	input:
 		alignDir + "/{sampleName}/align.bam"
 	output:
-		alignDir + "/{sampleName}/align.ds.bam"
+		downsampleDir + "/{sampleName}/align.bam"
 	params:
 		depth = get_downsample_depth
 	message:
@@ -30,18 +30,47 @@ rule downsample_bam:
 		bamDownsample.sh -n {params.depth} {input} > {output}
 		"""
 
-def get_align_bam(wildcards):
+
+def get_align_bam_for_dedup(wildcards):
 	# return ordered [ctrl , target] list.
 	if "DownSample" in samples and samples.DownSample[samples.Name == wildcards.sampleName].tolist()[0] > 0:
-		return alignDir + "/{sampleName}/align.ds.bam"
+		return downsampleDir + "/{sampleName}/align.bam"
 	else:
 		return alignDir + "/{sampleName}/align.bam"
 
+rule dedup_align:
+	input:
+		get_align_bam_for_dedup
+	output:
+		dedupDir + "/{sampleName}.bam"
+	message:
+		"Deduplicating... [{wildcards.sampleName}]"
+	params:
+		memory = "%dG" % ( cluster["dedup_align"]["memory"]/1000 - 2 )
+	shell:
+		"""
+		module load CnR/1.0
+		cnr.dedupBam.sh -m {params.memory} -o {output} -r {input}
+		"""
+
+
+
+def get_align_bam_for_tagdir(wildcards):
+	# return ordered [ctrl , target] list.
+	if doDedup:
+		srcDir = dedupDir
+	else:
+		if "DownSample" in samples and samples.DownSample[samples.Name == wildcards.sampleName].tolist()[0] > 0:
+			srcDir = downsampleDir
+		else:
+			srcDir = alignDir	
+	return srcDir + "/{sampleName}/align.bam"
+
 rule make_tagdir:
 	input:
-		get_align_bam
+		get_align_bam_for_tagdir
 	output:
-		directory(sampleDir + "/{sampleName}/TSV1")
+		directory(sampleDir + "/{sampleName}/TSV")
 	params:
 		desDir = sampleDir + "/{sampleName}",
 		name = "{sampleName}"
@@ -50,7 +79,7 @@ rule make_tagdir:
 	shell:
 		"""
 		module load ChIPseq/1.0
-		mypipe.makeTagDir.sh -o {params.desDir} -n {params.name} -t 1 -c {chrRegexTarget} {input}
+		mypipe.makeTagDir.sh -o {params.desDir} -n {params.name} -t {Homer_tbp} -c {chrRegexTarget} {input}
 		"""
 
 
@@ -69,7 +98,7 @@ def get_input_tagdir(sampleName):
 	if ctrlName == "NULL":
 		return "NULL"
 	else:
-		return sampleDir + "/" + ctrlName + "/TSV1"
+		return sampleDir + "/" + ctrlName + "/TSV"
 '''
 
 def get_peakcall_input(sampleName):
@@ -77,15 +106,15 @@ def get_peakcall_input(sampleName):
 	ctrlName = ctrlName.tolist()[0]
 	assert( len(crlName) == 1 )
 	if ctrlName.upper() == "NULL":
-		return [ sampleDir + "/" + sampleName + "/TSV1" ]
+		return [ sampleDir + "/" + sampleName + "/TSV" ]
 	else:
-		return [ sampleDir + "/" + ctrlName + "/TSV1", sampleDir + "/" + samplename + "/TSV1" ]
+		return [ sampleDir + "/" + ctrlName + "/TSV", sampleDir + "/" + samplename + "/TSV" ]
 
 
 rule call_peak_factor:
 	input:
 		lambda wildcards: get_peakcall_input(wildcards.sampleName)
-		#chip = sampleDir + "/{sampleName}/TSV1",
+		#chip = sampleDir + "/{sampleName}/TSV",
 		#ctrl = lambda wildcards: get_input_tagdir(wildcards.sampleName)
 	output:
 		sampleDir + "/{sampleName}/HomerPeak.factor/peak.exBL.1rpm.bed"
@@ -94,7 +123,7 @@ rule call_peak_factor:
 	params:
 		desDir = sampleDir + "/{sampleName}",
 		mask = peak_mask,
-		optStr = lambda wildcards, input: "-i" if len(input)>1 else ""
+		optStr = lambda wildcards, input: ( "-tbp 0 -i" ) if len(input)>1 else "-tbp 0"
 	shell:
 		"""
 		module load ChIPseq/1.0
@@ -105,7 +134,7 @@ rule call_peak_factor:
 '''
 rule call_peak_factor_no_ctrl:
 	input:
-		chip = sampleDir + "/{sampleName}/TSV1",
+		chip = sampleDir + "/{sampleName}/TSV",
 	output:
 		sampleDir + "/{sampleName}/HomerPeak.factor.noCtrl/peak.exBL.1rpm.bed"
 	message:
@@ -123,7 +152,7 @@ rule call_peak_factor_no_ctrl:
 rule call_peak_histone:
 	input:
 		lambda wildcards: get_peakcall_input(wildcards.sampleName)
-		#chip = sampleDir + "/{sampleName}/TSV1",
+		#chip = sampleDir + "/{sampleName}/TSV",
 		#ctrl = lambda wildcards: get_input_tagdir(wildcards.sampleName)
 	output:
 		sampleDir + "/{sampleName}/HomerPeak.histone/peak.exBL.bed"
@@ -132,7 +161,7 @@ rule call_peak_histone:
 	params:
 		desDir = sampleDir + "/{sampleName}",
 		mask = peak_mask,
-		optStr = lambda wildcards, input: "-i" if len(input)>1 else ""
+		optStr = lambda wildcards, input: ( "-tbp 0 -i" ) if len(input)>1 else "-tbp 0"
 	shell:
 		"""
 		module load ChIPseq/1.0
@@ -171,7 +200,7 @@ rule run_homermotif_no_ctrl:
 ## RPM-scaled bigWig
 rule make_bigwig:
 	input:
-		sampleDir + "/{sampleName}/TSV1"
+		sampleDir + "/{sampleName}/TSV"
 	output:
 		sampleDir + "/{sampleName}/igv.bw",
 	message:
