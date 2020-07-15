@@ -19,7 +19,7 @@ Output:
 	- <outDir>/peak.bed              Homer peak in bed format
 	- <outDir>/peak.exBL.bed         After blacklist filtering
 Options:
-	-o <outDir>: Destination tag directory, required
+	-o <outDir>: output directory, required
 	-i <ctrl>: (optional) ctrl homer tag directory, default=NULL
 	-m <mask>: mask bed file for filtering such as ENCODE blacklist
 	-s <optStr>: additional option for 'findPeaks' of Homer
@@ -109,9 +109,8 @@ echo -e "  - optStr = $optStr" >&2
 echo -e "" >&2
 
 peak0=${desDir}/peak.txt
-peakBed=${desDir}/peakbed
+peakBed=${desDir}/peak.bed
 peakMasked=${desDir}/peak.exBL.bed
-#peak1rpm=${desDir}/peak.homer.exBL.1rpm.bed
 tmpPeakMasked=${TMPDIR}/__temp__.$$.bed
 tmpTagCount=${TMPDIR}/__temp__.$$.target
 
