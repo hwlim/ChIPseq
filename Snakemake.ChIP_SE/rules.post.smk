@@ -133,7 +133,7 @@ rule call_peak_factor:
 	shell:
 		"""
 		module load ChIPseq/1.0
-		chip.peakCallFactor.sh -o {params.desDir}/HomerPeak.factor -m {params.mask} -s "-size 200" {params.optStr} {input}
+		chip.peakCallFactor.sh -o {params.desDir}/HomerPeak.factor/peak -m {params.mask} -s "-size 200" {params.optStr} {input}
 		"""
 #		chip.peakCallFactor.sh -o {params.desDir}/HomerPeak.factor -i {input.ctrl} -m {params.mask} -s "-size 200" {input}
 
@@ -172,7 +172,7 @@ rule call_peak_histone:
 	shell:
 		"""
 		module load ChIPseq/1.0
-		chip.peakCallHistone.sh -o {params.desDir}/HomerPeak.histone -m {params.mask} {params.optStr} {input}
+		chip.peakCallHistone.sh -o {params.desDir}/HomerPeak.histone/peak -m {params.mask} {params.optStr} {input}
 		"""
 
 

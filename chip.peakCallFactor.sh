@@ -13,19 +13,19 @@ trap 'if [ `ls -1 ${TMPDIR}/__temp__.$$.* 2>/dev/null | wc -l` -gt 0 ];then rm $
 function printUsage {
 	echo -e "Usage: `basename $0` (options) [taget tagDir]
 Description: Make Homer data directory from BED file
-Output:
-	- <outDir>/peak.homer.txt              Homer peak calling result
-	- <outDir>/peak.homer.bed              Homer peak in bed format
-	- <outDir>/peak.homer.exBL.bed         After blacklist filtering
-	- <outDir>/peak.homer.exBL.1rpm.bed    > 1rpm after filtering
 Options:
-	-o <outDir>: Destination tag directory, required
+	-o <outPrefix>: output prefix including path, required
 	-i <ctrl>: (optional) ctrl homer tag directory, default=NULL
 	-m <mask>: mask bed file for filtering such as ENCODE blacklist
 	-s <optStr>: additional option for 'findPeaks' of Homer
 		Internal pre-set option: \"-style factor -norm 1000000 -center\"
 		Warning: -tbp 0 is implicitly set (may be revised in the future)
-		Additional options are also possible such as -size 200 -minDist 400"
+		Additional options are also possible such as -size 200 -minDist 400
+Output:
+	- <outPrefix>.txt              Homer peak calling result
+	- <outPrefix>.bed              Homer peak in bed format
+	- <outPrefix>.exBL.bed         After blacklist filtering
+	- <outPrefix>.exBL.1rpm.bed    > 1rpm after filtering"
 }
 
 if [ $# -eq 0 ];then
@@ -36,7 +36,7 @@ fi
 
 ###################################
 ## option and input file handling
-desDir=NULL
+outPrefix=NULL
 ctrl=NULL
 mask=NULL
 optStr=""
@@ -44,7 +44,7 @@ optStr=""
 while getopts ":o:i:m:s:" opt; do
 	case $opt in
 		o)
-			desDir=$OPTARG
+			outPrefix=$OPTARG
 			;;
 		i)
 			ctrl=$OPTARG
@@ -78,8 +78,8 @@ fi
 target=$1
 assertDirExist $target
 
-if [ "$desDir" == "NULL" ];then
-	echo -e "Error: Destination directory (-o) must be specified" >&2
+if [ "$outPrefix" == "NULL" ];then
+	echo -e "Error: outPrefix (-o) must be specified" >&2
 	exit 1
 fi
 
@@ -93,7 +93,6 @@ fi
 
 ###################################
 ## main code
-log=${desDir}/peak.homer.log
 echo -e "Homer peak-calling" >&2
 echo -e "- target = $target" >&2
 echo -e "- ctrl = $ctrl" >&2
@@ -101,12 +100,15 @@ echo -e "- desDir = $desDir" >&2
 echo -e "- optStr = $optStr" >&2
 echo -e "" >&2
 
-peak0=${desDir}/peak.txt
-peakBed=${desDir}/peak.bed
-peakMasked=${desDir}/peak.exBL.bed
-peak1rpm=${desDir}/peak.exBL.1rpm.bed
+log=${outPrefix}.homer.log
+peak0=${outPrefix}.txt
+peakBed=${outPrefix}.bed
+peakMasked=${outPrefix}.exBL.bed
+peak1rpm=${outPrefix}.exBL.1rpm.bed
 
+desDir=`dirname $outPrefix`
 mkdir -p $desDir
+
 if [ "$ctrl" == "NULL" ];then
 	findPeaks $target -o ${peak0} -style factor -tbp 0 -norm 1000000 -center ${optStr} 2>&1 | tee ${log}
 else

@@ -14,17 +14,17 @@ trap 'if [ `ls -1 ${TMPDIR}/__temp__.$$.* 2>/dev/null | wc -l` -gt 0 ];then rm $
 function printUsage {
 	echo -e "Usage: `basename $0` (options) [taget tagDir]
 Description: Make Homer data directory from BED file
-Output:
-	- <outDir>/peak.txt              Homer peak calling result
-	- <outDir>/peak.bed              Homer peak in bed format
-	- <outDir>/peak.exBL.bed         After blacklist filtering
 Options:
-	-o <outDir>: output directory, required
+	-o <outPrefix>: output prefix including path, required
 	-i <ctrl>: (optional) ctrl homer tag directory, default=NULL
 	-m <mask>: mask bed file for filtering such as ENCODE blacklist
 	-s <optStr>: additional option for 'findPeaks' of Homer
 		to internally pre-set option: \"-style histone -tbp 0 -norm 1000000 \"
-		such as -size or -minDist"
+		such as -size or -minDist
+Output:
+	- <outPrefix>.txt              Homer peak calling result
+	- <outPrefix>.bed              Homer peak in bed format
+	- <outPrefix>.exBL.bed         After blacklist filtering"
 }
 
 if [ $# -eq 0 ];then
@@ -77,8 +77,8 @@ fi
 target=$1
 assertDirExist $target
 
-if [ "$desDir" == "NULL" ];then
-	echo -e "Error: Destination directory (-o) must be specified" >&2
+if [ "$outPrefix" == "NULL" ];then
+	echo -e "Error: outPrefix (-o) must be specified" >&2
 	exit 1
 fi
 
@@ -99,7 +99,6 @@ fi
 
 ###################################
 ## main code
-log=${desDir}/peak.log
 echo -e "Homer peak-calling" >&2
 echo -e "  - target = $target" >&2
 echo -e "  - ctrl = $ctrl" >&2
@@ -108,12 +107,14 @@ echo -e "  - TTC = $ttc" >&2
 echo -e "  - optStr = $optStr" >&2
 echo -e "" >&2
 
-peak0=${desDir}/peak.txt
-peakBed=${desDir}/peak.bed
-peakMasked=${desDir}/peak.exBL.bed
+log=${outPrefix}.log
+peak0=${outPrefix}.txt
+peakBed=${outPrefix}.bed
+peakMasked=${outPrefix}.exBL.bed
 tmpPeakMasked=${TMPDIR}/__temp__.$$.bed
 tmpTagCount=${TMPDIR}/__temp__.$$.target
 
+desDir=`dirname $outPrefix`
 mkdir -p $desDir
 if [ "$ctrl" == "NULL" ];then
 	echo -e "findPeaks $target -o ${peak0} ${optStr}" >&2
