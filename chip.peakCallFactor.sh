@@ -91,6 +91,9 @@ if [ "$mask" != "NULL" ];then
 	assertFileExist $mask
 fi
 
+desDir=`dirname $outPrefix`
+mkdir -p $desDir
+
 ###################################
 ## main code
 echo -e "Homer peak-calling" >&2
@@ -106,8 +109,6 @@ peakBed=${outPrefix}.bed
 peakMasked=${outPrefix}.exBL.bed
 peak1rpm=${outPrefix}.exBL.1rpm.bed
 
-desDir=`dirname $outPrefix`
-mkdir -p $desDir
 
 if [ "$ctrl" == "NULL" ];then
 	findPeaks $target -o ${peak0} -style factor -tbp 0 -norm 1000000 -center ${optStr} 2>&1 | tee ${log}
