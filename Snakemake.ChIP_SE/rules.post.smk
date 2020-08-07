@@ -114,7 +114,7 @@ def get_peakcall_input(sampleName):
 	if ctrlName.upper() == "NULL":
 		return [ sampleDir + "/" + sampleName + "/TSV" ]
 	else:
-		return [ sampleDir + "/" + ctrlName + "/TSV", sampleDir + "/" + samplename + "/TSV" ]
+		return [ sampleDir + "/" + ctrlName + "/TSV", sampleDir + "/" + sampleName + "/TSV" ]
 
 ## NOTE: "-tbp 0" is implicitly set within chip.peakCallHistone.sh 
 rule call_peak_factor:
