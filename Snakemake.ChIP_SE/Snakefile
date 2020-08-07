@@ -1,3 +1,9 @@
+
+## TODO:
+## - Handling 1rpm peak cut off
+## - Handling downstream pruning for zero peaks sample
+
+
 ########################
 ## Basic parameters
 
