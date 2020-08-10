@@ -123,7 +123,10 @@ def get_peakcall_opt(sampleName):
 		optStr = samples.PeakOpt[samples.Name == sampleName]
 		assert( len(optStr) == 1 )
 		optStr = optStr.tolist()[0]
-		return optStr
+		if optStr == "NULL":
+			return ""
+		else:
+			return optStr
 
 ## NOTE: "-tbp 0" is implicitly set within chip.peakCallHistone.sh 
 rule call_peak_factor:
