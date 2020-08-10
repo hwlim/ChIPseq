@@ -35,7 +35,7 @@ fi
 
 ###################################
 ## option and input file handling
-desDir=NULL
+outPrefix=NULL
 ctrl=NULL
 mask=NULL
 optStr="-style histone -tbp 0 -norm 1000000 -strand both"
@@ -43,7 +43,7 @@ optStr="-style histone -tbp 0 -norm 1000000 -strand both"
 while getopts ":o:i:m:s:" opt; do
 	case $opt in
 		o)
-			desDir=$OPTARG
+			outPrefix=$OPTARG
 			;;
 		i)
 			ctrl=$OPTARG
@@ -102,7 +102,7 @@ fi
 echo -e "Homer peak-calling" >&2
 echo -e "  - target = $target" >&2
 echo -e "  - ctrl = $ctrl" >&2
-echo -e "  - desDir = $desDir" >&2
+echo -e "  - outPrefix = $outPrefix" >&2
 echo -e "  - TTC = $ttc" >&2
 echo -e "  - optStr = $optStr" >&2
 echo -e "" >&2
