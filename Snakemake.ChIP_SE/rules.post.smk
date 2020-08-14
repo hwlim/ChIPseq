@@ -11,6 +11,9 @@ if 'doDedup' not in locals():
 if 'dedupDir' not in locals():
 	dedupDir="1.3.Align.dedup"
 
+if 'bigWigDir_avg' not in locals():
+	bigWigDir_avg="3.1.bigWig_avg"
+
 
 
 def get_downsample_depth(wildcards):
@@ -232,3 +235,27 @@ rule make_bigwig:
 #	params:
 #		memory = "%dG" % (  cluster["make_bigwig"]["memory"]/1000 - 1 )
 
+##### Average bigWig files
+def get_bigwig_rep(groupName, srcDir):
+	repL = samples.Name[samples.Group == groupName].tolist()
+	return map(lambda x: srcDir + "/" + x + "/igv.bw", repL)
+
+rule make_bigwig_avg:
+	input:
+		lambda wildcards: get_bigwig_rep(wildcards.groupName, sampleDir)
+	output:
+		bigWigDir_avg + "/{groupName}.avg.bw"
+	message:
+		"Making average bigWig files... [{wildcards.groupName}]"
+	params:
+		memory = "9G"
+	shell:
+		"""
+		module load ChIPseq/1.0
+		N=`ls {input} | wc -l`
+		if [ $N -gt 1 ];then
+			makeBigWigAverage.sh -g {chrom_size} -m {params.memory} -o {output} {input}
+		else
+			cp -v {input} {output}
+		fi
+		"""

@@ -26,7 +26,6 @@ align_star:
     cpu         : 4
     memory      : 40000
     walltime    : "24:00"
-    resource    : "\"span[hosts=1]\""
 
 dedup_align:
     memory      : 10000
@@ -47,3 +46,12 @@ run_homermotif:
 run_homermotif_no_ctrl:
     cpu         : 4
     memory      : 10000
+
+make_bigwig_avg:
+    cpu         : 2
+    memory      : 10000
+    name        : "{wildcards.groupName}"
+    output      : "logs/{rule}.{wildcards.groupName}.out"
+    error       : "logs/{rule}.{wildcards.groupName}.err"
+
+

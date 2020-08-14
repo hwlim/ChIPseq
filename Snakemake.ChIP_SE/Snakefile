@@ -66,6 +66,8 @@ downsampleDir	=	"1.2.Align.downSample"
 dedupDir	=	"1.3.Align.dedup"
 sampleDir	= "./2.Samples"
 
+bigWigDir_avg="3.1.bigWig_avg"
+
 ########################
 ## Other parameteres
 Homer_tbp	= 1	# Homer tbp
@@ -107,6 +109,7 @@ with open(os.path.expanduser(cluster_yml), 'r') as fh:
 rule all:
 	input:
 		expand(sampleDir + "/{sampleName}/TSV1", sampleName=samples.Name.tolist()),
+		expand(bigWigDir_avg + "/{groupName}.avg.bw" groupName=samples.Group.unique().tolist()),
 		expand(sampleDir + "/{sampleName}/HomerPeak.factor/peak.exBL.1rpm.bed", sampleName=samples.Name[ samples.PeakMode=="factor" ].tolist()),
 		expand(sampleDir + "/{sampleName}/HomerPeak.histone/peak.exBL.bed", sampleName=samples.Name[samples.PeakMode=="histone"].tolist()),
 		expand(sampleDir + "/{sampleName}/HomerPeak.factor/peak.exBL.1rpm.bed.all.noBG/homerResults.html", sampleName=samples.Name[samples.PeakMode=="factor"].tolist()),
