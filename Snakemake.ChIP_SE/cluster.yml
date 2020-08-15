@@ -49,7 +49,7 @@ run_homermotif_no_ctrl:
 
 make_bigwig_avg:
     cpu         : 2
-    memory      : 10000
+    memory      : 20000
     name        : "{wildcards.groupName}"
     output      : "logs/{rule}.{wildcards.groupName}.out"
     error       : "logs/{rule}.{wildcards.groupName}.err"
