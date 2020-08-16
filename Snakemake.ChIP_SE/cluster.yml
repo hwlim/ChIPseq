@@ -54,4 +54,11 @@ make_bigwig_avg:
     output      : "logs/{rule}.{wildcards.groupName}.out"
     error       : "logs/{rule}.{wildcards.groupName}.err"
 
+make_bigwig_avg_subinput:
+    cpu         : 2
+    memory      : 20000
+    name        : "{wildcards.groupName}"
+    output      : "logs/{rule}.{wildcards.groupName}.out"
+    error       : "logs/{rule}.{wildcards.groupName}.err"
+
 

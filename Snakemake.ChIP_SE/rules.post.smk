@@ -110,10 +110,14 @@ def get_input_tagdir(sampleName):
 		return sampleDir + "/" + ctrlName + "/TSV"
 '''
 
-def get_peakcall_input(sampleName):
+def get_input_name(sampleName):
 	ctrlName = samples.Ctrl[samples.Name == sampleName]
+	assert( len(ctrlName) == 1 )
 	ctrlName = ctrlName.tolist()[0]
-	#assert( len(ctrlName) == 1 )
+	return ctrlName
+
+def get_peakcall_input(sampleName):
+	ctrlName = get_input_name(sampleName)
 	if ctrlName.upper() == "NULL":
 		return [ sampleDir + "/" + sampleName + "/TSV" ]
 	else:
@@ -258,4 +262,35 @@ rule make_bigwig_avg:
 		else
 			cp -v {input} {output}
 		fi
+		"""
+
+def get_input_group(groupName):
+	sampleName = samples.Name[samples.Group == groupName].tolist()
+	assert( len(sampleName) >= 1 )
+	sampleName = sampleName[0]
+
+	ctrlName = samples.Ctrl[samples.Name == sampleName].tolist()
+	assert( len(ctrlName) >= 1 )
+	ctrlName = ctrlName[0]
+
+	ctrlGroup = samples.Group[samples.Name == ctrlName].tolist()
+	assert( len(ctrlGroup) == 1 )
+	ctrlGroup = ctrlGroup[0]
+	return ctrlGroup
+
+rule make_bigwig_avg_subinput:
+	input:
+		chip = bigWigDir_avg + "/{groupName}.avg.bw",
+		ctrl = lambda wildcards: bigWigDir_avg + "/" + get_input_group(wildcards.groupName) + "/igv.avg.bw",
+	output:
+		bigWigDir_avg + "/{groupName}.avg.subInput.bw"
+	message:
+		"Making input-subtracted average bigWig files... [{wildcards.groupName}]"
+	params:
+		memory = "9G"
+	#	memory = "%dG" % (  cluster["make_bigwig_subtract"]["memory"]/1000 - 1 )
+	shell:
+		"""
+		module load CnR/1.0
+		bigWigSubtract.sh -g {chrom_size} -m {params.memory} -t -1000 {output} {input.chip} {input.ctrl}
 		"""
