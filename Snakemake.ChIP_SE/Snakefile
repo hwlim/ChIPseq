@@ -105,21 +105,21 @@ with open(os.path.expanduser(cluster_yml), 'r') as fh:
 #	groupNoneCtrl = set(samples.Group[samples.Ctrl != "NULL"])
 #	groups = list( groupWithRep & groupNoneCtrl )
 #	return groups
-sampleListAll	= samples.Name.tolist()
-sampleListFactor	= samples.Name[ samples.PeakMode=="factor" ].tolist()
-sampleListHistone	= samples.Name[ samples.PeakMode=="histone" ].tolist()
-groupListAll		= samples.Group.unique().tolist()
-groupListChIP		= samples.Group[ samples.PeakMode == "factor" or samples.PeakMode == "histone" ].unique().tolist()
+samplesAll	= samples.Name.tolist()
+samplesFactor	= samples.Name[ samples.PeakMode=="factor" ].tolist()
+samplesHistone	= samples.Name[ samples.PeakMode=="histone" ].tolist()
+groupsAll		= samples.Group.unique().tolist()
+groupsChIP		= samples.Group[ ( samples.PeakMode == "factor" ) | ( samples.PeakMode == "histone" ) ].unique().tolist()
 
 rule all:
 	input:
-		expand(sampleDir + "/{sampleName}/TSV1", sampleName=sampleListAll),
-		expand(sampleDir + "/{sampleName}/HomerPeak.factor/peak.exBL.1rpm.bed", sampleName=sampleListFactor),
-		expand(sampleDir + "/{sampleName}/HomerPeak.histone/peak.exBL.bed", sampleName=sampleListHistone),
-		expand(sampleDir + "/{sampleName}/HomerPeak.factor/peak.exBL.1rpm.bed.all.noBG/homerResults.html", sampleName=sampleListFactor),
-		expand(sampleDir + "/{sampleName}/igv.bw", sampleName=sampleListAll),
-		expand(bigWigDir_avg + "/{groupName}.avg.bw" groupName=groupListAll),
-		expand(bigWigDir_avg + "/{groupName}.avg.subInput.bw" groupName=groupListChIP)
+		expand(sampleDir + "/{sampleName}/TSV1", sampleName=samplesAll),
+		expand(sampleDir + "/{sampleName}/HomerPeak.factor/peak.exBL.1rpm.bed", sampleName=samplesFactor),
+		expand(sampleDir + "/{sampleName}/HomerPeak.histone/peak.exBL.bed", sampleName=samplesHistone),
+		expand(sampleDir + "/{sampleName}/HomerPeak.factor/peak.exBL.1rpm.bed.all.noBG/homerResults.html", sampleName=samplesFactor),
+		expand(sampleDir + "/{sampleName}/igv.bw", sampleName=samplesAll),
+		expand(bigWigDir_avg + "/{groupName}.avg.bw" groupName=groupsAll),
+		expand(bigWigDir_avg + "/{groupName}.avg.subInput.bw" groupName=groupsChIP)
 
 include: os.environ["MY_SCRIPT_BASE"] + "/Pipeline/Snakemake.ChIP_SE/rules.pre.smk"
 include: os.environ["MY_SCRIPT_BASE"] + "/Pipeline/Snakemake.ChIP_SE/rules.post.smk"
