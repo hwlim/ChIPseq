@@ -281,7 +281,7 @@ def get_input_group(groupName):
 rule make_bigwig_avg_subinput:
 	input:
 		chip = bigWigDir_avg + "/{groupName}.avg.bw",
-		ctrl = lambda wildcards: bigWigDir_avg + "/" + get_input_group(wildcards.groupName) + "/igv.avg.bw",
+		ctrl = lambda wildcards: bigWigDir_avg + "/" + get_input_group(wildcards.groupName) + ".avg.bw",
 	output:
 		bigWigDir_avg + "/{groupName}.avg.subInput.bw"
 	message:
