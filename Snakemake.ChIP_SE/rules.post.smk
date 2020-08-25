@@ -156,23 +156,6 @@ rule call_peak_factor:
 		"""
 #		chip.peakCallFactor.sh -o {params.desDir}/HomerPeak.factor -i {input.ctrl} -m {params.mask} -s "-size 200" {input}
 
-'''
-rule call_peak_factor_no_ctrl:
-	input:
-		chip = sampleDir + "/{sampleName}/TSV",
-	output:
-		sampleDir + "/{sampleName}/HomerPeak.factor.noCtrl/peak.exBL.1rpm.bed"
-	message:
-		"Making bigWig files... [{wildcards.sampleName}]"
-	params:
-		desDir = sampleDir + "/{sampleName}",
-		mask = peak_mask
-	shell:
-		"""
-		module load ChIPseq/1.0
-		chip.peakCallFactor.sh -o {params.desDir}/HomerPeak.factor.noCtrl -m {params.mask} -s "-size 200" {input}
-		"""
-'''
 
 ## NOTE: "-tbp 0" is implicitly set within chip.peakCallHistone.sh 
 rule call_peak_histone:
@@ -194,7 +177,7 @@ rule call_peak_histone:
 		chip.peakCallHistone.sh -o {params.desDir}/HomerPeak.histone/peak -m {params.mask} {params.optStr} {input}
 		"""
 
-''''
+'''
 rule run_homermotif:
 	input:
 		sampleDir + "/{sampleName}/HomerPeak.factor/peak.exBL.1rpm.bed"
@@ -208,6 +191,7 @@ rule run_homermotif:
 		runHomerMotif.sh -g {genome} -s 200 -p 4 -b /data/limlab/Resource/Homer.preparse -o {sampleDir}/{wildcards.sampleName}/HomerPeak.factor {input}
 		"""
 '''
+
 
 rule run_homer_motif:
 	input:
