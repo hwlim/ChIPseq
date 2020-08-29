@@ -59,12 +59,12 @@ doDedup		= False
 
 #########################
 ## Directories
-fastqDir	= "../0.Fastq"
-trimDir		= "../0.Fastq.Trim"
+fastqDir	= "0.Fastq"
+trimDir		= "0.Fastq.Trim"
 alignDir	= "1.1.Align"
 downsampleDir	=	"1.2.Align.downSample"
 dedupDir	=	"1.3.Align.dedup"
-sampleDir	= "./2.Samples"
+sampleDir	= "2.Samples"
 
 bigWigDir_avg="3.1.bigWig_avg"
 
@@ -113,7 +113,6 @@ groupsChIP		= samples.Group[ ( samples.PeakMode == "factor" ) | ( samples.PeakMo
 
 rule all:
 	input:
-		expand(sampleDir + "/{sampleName}/TSV1", sampleName=samplesAll),
 		expand(sampleDir + "/{sampleName}/HomerPeak.factor/peak.exBL.1rpm.bed", sampleName=samplesFactor),
 		expand(sampleDir + "/{sampleName}/HomerPeak.histone/peak.exBL.bed", sampleName=samplesHistone),
 		expand(sampleDir + "/{sampleName}/Motif/Homer.all/homerResults.html", sampleName=samplesFactor),
