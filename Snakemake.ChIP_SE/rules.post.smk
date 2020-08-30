@@ -148,11 +148,11 @@ rule call_peak_factor:
 	params:
 		desDir = sampleDir + "/{sampleName}",
 		mask = peak_mask,
-		optStr = lambda wildcards, input:( "-s \"" + get_peakcall_opt(wildcards.sampleName) + "\"" + " -i" ) if len(input)>1 else "-s \"" + get_peakcall_opt(wildcards.sampleName) + "\""
+		optStr = lambda wildcards, input:( "\"-size 200 " + get_peakcall_opt(wildcards.sampleName) + "\"" + " -i" ) if len(input)>1 else "\"-size 200 " + get_peakcall_opt(wildcards.sampleName) + "\""
 	shell:
 		"""
 		module load ChIPseq/1.0
-		chip.peakCallFactor.sh -o {params.desDir}/HomerPeak.factor/peak -m {params.mask} -s "-size 200" {params.optStr} {input}
+		chip.peakCallFactor.sh -o {params.desDir}/HomerPeak.factor/peak -m {params.mask} -s {params.optStr} {input}
 		"""
 #		chip.peakCallFactor.sh -o {params.desDir}/HomerPeak.factor -i {input.ctrl} -m {params.mask} -s "-size 200" {input}
 
@@ -170,11 +170,11 @@ rule call_peak_histone:
 	params:
 		desDir = sampleDir + "/{sampleName}",
 		mask = peak_mask,
-		optStr = lambda wildcards, input:( "-s \"" + get_peakcall_opt(wildcards.sampleName) + "\"" + " -i" ) if len(input)>1 else "-s \"" + get_peakcall_opt(wildcards.sampleName) + "\""
+		optStr = lambda wildcards, input:( "\"" + get_peakcall_opt(wildcards.sampleName) + "\"" + " -i" ) if len(input)>1 else "\"" + get_peakcall_opt(wildcards.sampleName) + "\""
 	shell:
 		"""
 		module load ChIPseq/1.0
-		chip.peakCallHistone.sh -o {params.desDir}/HomerPeak.histone/peak -m {params.mask} {params.optStr} {input}
+		chip.peakCallHistone.sh -o {params.desDir}/HomerPeak.histone/peak -m {params.mask} -s {params.optStr} {input}
 		"""
 
 
