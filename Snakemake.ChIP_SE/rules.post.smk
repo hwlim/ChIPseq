@@ -135,7 +135,8 @@ def get_peakcall_opt(sampleName):
 		else:
 			return optStr
 
-## NOTE: "-tbp 0" is implicitly set within chip.peakCallHistone.sh 
+## NOTE: "-tbp 0" is implicitly set within chip.peakCallFactor.sh
+## Peak size is fixed as 200bp
 rule call_peak_factor:
 	input:
 		lambda wildcards: get_peakcall_input(wildcards.sampleName)
