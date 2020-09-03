@@ -4,17 +4,21 @@ source $COMMON_LIB_BASE/commonBash.sh
 trap 'if [ `ls -1 __temp__.$$.* 2>/dev/null | wc -l` -gt 0 ];then rm __temp__.$$.*; fi' EXIT
 
 function printUsage {
-	echo "Usage: `basename $0` (options) [alignFile]" >&2
-	echo -e "Description: Make data and homer tag directory using a given alignment file" >&2
-	echo -e "Options:" >&2
-	echo -e "\t-o : dataDir, default=<src file name>" >&2
-	echo -e "\t-n : name, default=<src file name>" >&2
-	echo -e "\t-t : -tbp option for homer, default=0" >&2
-	echo -e "\t-c : regular expression of chr to select, default=NULL" >&2
-	echo -e "\t\te.g. 'chr[0-9XY]*$' to select autosomes and sex chromosomes" >&2
-	echo -e "Output:" >&2
-	echo -e "\t<dataDir>/TSV<tbp>: tagDir">&2
-	echo -e "\t<dataDir>/info.txt: information file containing <name>">&2
+	echo "Usage: `basename $0` (options) [alignFile]
+Description: Make data and homer tag directory using a given alignment file
+Options:
+	-o : dataDir, default=<src file name>
+	-n : name, default=<src file name>
+	-t : -tbp option for homer, default=0
+	-c : regular expression of chr to select, default=NULL
+		e.g. 'chr[0-9XY]*$' to select autosomes and sex chromosomes
+Input:
+	- bed file, plain or gzipped
+	- bam
+	- sam
+Output:
+	<dataDir>/TSV<tbp>: tagDir
+	<dataDir>/info.txt: information file containing <name>">&2
 }
 
 ###################################
