@@ -39,13 +39,18 @@ call_peak_factor:
 call_peak_histone:
     memory      : 10000
 
-run_homermotif:
+run_homer_motif:
     cpu         : 4
     memory      : 10000
 
-run_homermotif_no_ctrl:
+#run_homermotif_no_ctrl:
+#    cpu         : 4
+#    memory      : 10000
+
+run_meme_motif_rand5k:
     cpu         : 4
     memory      : 10000
+
 
 make_bigwig_avg:
     cpu         : 2
