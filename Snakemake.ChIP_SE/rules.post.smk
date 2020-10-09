@@ -14,6 +14,9 @@ if 'dedupDir' not in locals():
 if 'bigWigDir_avg' not in locals():
 	bigWigDir_avg="3.1.bigWig_avg"
 
+if 'robustFragLen' not in locals():
+	robustFragLen=False
+
 
 
 def get_downsample_depth(wildcards):
@@ -79,13 +82,14 @@ rule make_tagdir:
 	output:
 		directory(sampleDir + "/{sampleName}/TSV")
 	params:
-		name = "{sampleName}"
+		name = "{sampleName}",
+		optStr = "-r" if robustFragLen else ""
 	message:
 		"Making Homer tag directory... [{wildcards.sampleName}]"
 	shell:
 		"""
 		module load ChIPseq/1.0
-		ngs.alignToTagDir.sh -o {output} -t {Homer_tbp} -c {chrRegexTarget} {input}
+		ngs.alignToTagDir.sh -o {output} -t {Homer_tbp} -c {chrRegexTarget} {params.optStr} {input}
 		drawAutoCorrplot.r -t {params.name} -o {output}/Autocorrelation.png {output}
 		echo "{params.name}" > {sampleDir}/{wildcards.sampleName}/info.txt
 		"""

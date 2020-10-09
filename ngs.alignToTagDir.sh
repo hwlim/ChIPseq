@@ -10,7 +10,9 @@ Options:
 	-o : output tag directory,required
 	-t : -tbp option for homer, default=0
 	-c : regular expression of chr to select, default=NULL
-		e.g. 'chr[0-9XY]*$' to select autosomes and sex chromosomes" >&2
+		e.g. 'chr[0-9XY]*$' to select autosomes and sex chromosomes
+	-r : If set, perform robust estimation of fragment length, default=OFF
+	     because Homer gives unreliable fragment length when the max-autocorr length is too small (e.g. CUT&RUN)" >&2
 }
 
 ###################################
@@ -18,7 +20,8 @@ Options:
 outiDir=NULL
 tbp=0
 chrRegex=NULL
-while getopts ":o:n:t:c:" opt; do
+robust=FALSE
+while getopts ":o:n:t:c:r" opt; do
 	case $opt in
 		o)
 			outDir=$OPTARG
@@ -28,6 +31,9 @@ while getopts ":o:n:t:c:" opt; do
 			;;
 		c)
 			chrRegex=$OPTARG
+			;;
+		r)
+			robust=TRUE
 			;;
 		\?)
 			echo "Invalid options: -$OPTARG" >&2
@@ -133,3 +139,10 @@ echo -e "printAlign $src | makeTagDirectory ${outDir} /dev/stdin ${optStr}" >&2
 #drawAutoCorrplot.r -t ${name} ${outDir}
 
 
+if [ "$robust" == "TRUE" ];then
+	echo -e "Performing robust fragment estimation using Homer tagAutocorrelation.txt" >&2
+	srcAuto=${outDir}/tagAutocorrelation.txt
+	assertFileExist $srcAuto
+	fragLen=`estimateHomerFragLen.r $srcAuto`
+	makeTagDirectory ${outDir} -update -fragLength $fragLen 2>&1 | tee ${outDir}/TSV.log
+fi
