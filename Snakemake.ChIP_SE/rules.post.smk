@@ -90,7 +90,7 @@ rule make_tagdir:
 		"""
 		module load ChIPseq/1.0
 		ngs.alignToTagDir.sh -o {output} -t {Homer_tbp} -c {chrRegexTarget} {params.optStr} {input}
-		drawAutoCorrplot.r -t {params.name} -o {output}/Autocorrelation.png {output}
+		drawHomerAutoCorr.r -t {params.name} -o {output}/Autocorrelation.png {output}
 		echo "{params.name}" > {sampleDir}/{wildcards.sampleName}/info.txt
 		"""
 #		mypipe.makeTagDir.sh -o {params.desDir} -n {params.name} -t {Homer_tbp} -c {chrRegexTarget} {input}

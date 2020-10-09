@@ -163,7 +163,7 @@ if [ $toTSV -eq 1 ];then
 
 	#drawGCplot.sh ${desDir}/TSVrd
 	#drawAutoCorrplot.sh ${desDir}/TSVrd
-	drawAutoCorrplot.r -t ${name} ${desDir}/TSVrd
+	drawHomerAutoCorr.r -t ${name} ${desDir}/TSVrd
 	drawTCDistrib.sh ${desDir}/TSVrd
 	drawTLDistrib.sh ${desDir}/TSVrd
 
@@ -173,7 +173,7 @@ if [ $toTSV -eq 1 ];then
 	makeTagDirectory ${desDir}/TSVu -d ${desDir}/TSVrd -tbp 1 2>&1 | tee ${desDir}/TSVu/TSVu.log
 	#drawGCplot.sh ${desDir}/TSVu
 	#drawAutoCorrplot.sh ${desDir}/TSVu
-	drawAutoCorrplot.r -t ${name} ${desDir}/TSVu
+	drawHomerAutoCorr.r -t ${name} ${desDir}/TSVu
 	drawTCDistrib.sh ${desDir}/TSVu
 	drawTLDistrib.sh ${desDir}/TSVu
 fi

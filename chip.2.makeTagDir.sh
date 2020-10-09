@@ -117,14 +117,14 @@ do
 	( printAlign $src \
 		| makeTagDirectory ${dataDir}/TSVrd /dev/stdin ${optStr} ) 2>&1 \
 		| tee ${dataDir}/TSVrd/TSVrd.log
-	drawAutoCorrplot.r -t ${name} ${dataDir}/TSVrd
+	drawHomerAutoCorr.r -t ${name} ${dataDir}/TSVrd
 
 	echo "2) Creating tag directory: ${dataDir}/TSVu" >&2
 	mkdir -p ${dataDir}/TSVu
 	echo -e "tagDir2bed.pl ${dataDir}/TSVrd | makeTagDirectory ${dataDir}/TSVu /dev/stdin -format bed" >&2
 	tagDir2bed.pl ${dataDir}/TSVrd \
 		| makeTagDirectory ${dataDir}/TSVu /dev/stdin -format bed 2>&1 | tee ${dataDir}/TSVu/TSVu.log
-	drawAutoCorrplot.r -t ${name} ${dataDir}/TSVu
+	drawHomerAutoCorr.r -t ${name} ${dataDir}/TSVu
 
 	echo -e "" >&2
 	

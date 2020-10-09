@@ -148,6 +148,6 @@ echo -e "printAlign $src | makeTagDirectory ${tagDir} /dev/stdin ${optStr}" >&2
 	| makeTagDirectory ${tagDir} /dev/stdin ${optStr} ) 2>&1 \
 	| tee ${tagDir}/TSV.log
 
-drawAutoCorrplot.r -t ${name} ${tagDir}
+drawHomerAutoCorr.r -t ${name} ${tagDir}
 
 

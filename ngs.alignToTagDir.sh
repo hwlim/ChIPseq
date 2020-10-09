@@ -136,7 +136,7 @@ echo -e "printAlign $src | makeTagDirectory ${outDir} /dev/stdin ${optStr}" >&2
 	| makeTagDirectory ${outDir} /dev/stdin ${optStr} ) 2>&1 \
 	| tee ${outDir}/TSV.log
 
-#drawAutoCorrplot.r -t ${name} ${outDir}
+#drawHomerAutoCorr.r -t ${name} ${outDir}
 
 
 if [ "$robust" == "TRUE" ];then
