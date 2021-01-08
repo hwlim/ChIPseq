@@ -104,7 +104,7 @@ rule filter_align:
 		"Filtering... [{wildcards.sampleName}]"
 	shell:
 		"""
-		module load CnR/1.0
+		module load Cutlery/1.0
 		cnr.filterBam.sh  -o {output} -c "{chrRegexAll}" {input}
 		"""
 
@@ -119,7 +119,7 @@ rule dedup_align:
 		memory = "%dG" % ( cluster["dedup_align"]["memory"]/1000 - 2 )
 	shell:
 		"""
-		module load CnR/1.0
+		module load Cutlery/1.0
 		cnr.dedupBam.sh -m {params.memory} -o {output} -r {input}
 		"""
 
@@ -133,7 +133,7 @@ rule check_baseFreq:
 		"Checking baseFrequency... [{wildcards.sampleName}]"
 	shell:
 		"""
-		module load CnR/1.0
+		module load Cutlery/1.0
 		bamToBed.separate.sh -o {baseFreqDir}/{wildcards.sampleName} {input}
 		checkBaseFreq.plot.sh -g {genomeFa} -n {wildcards.sampleName} -c {chrRegexTarget} -o {baseFreqDir}/{wildcards.sampleName}.R1 {baseFreqDir}/{wildcards.sampleName}.R1.bed.gz
 		checkBaseFreq.plot.sh -g {genomeFa} -n {wildcards.sampleName} -c {chrRegexTarget} -o {baseFreqDir}/{wildcards.sampleName}.R2 {baseFreqDir}/{wildcards.sampleName}.R2.bed.gz
@@ -154,7 +154,7 @@ rule make_fragment_ctr:
 		"Making fragment bed files... [{wildcards.sampleName}]"
 	shell:
 		"""
-		module load CnR/1.0
+		module load Cutlery/1.0
 		bamToFragment.sh -o {output} -l 150 -s -m {params.memory} {input}
 		"""
 
@@ -170,6 +170,6 @@ rule make_fragment:
 		"Making fragment bed files... [{wildcards.sampleName}]"
 	shell:
 		"""
-		module load CnR/1.0
+		module load Cutlery/1.0
 		bamToFragment.sh -o {output} -l -1 -s -m {params.memory} {input}
 		"""
