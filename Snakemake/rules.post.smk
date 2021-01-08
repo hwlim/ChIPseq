@@ -8,7 +8,7 @@ rule count_spikein:
 		"Counting spikein tags... [{wildcards.sampleName}]"
 	shell:
 		"""
-		module load CnR/1.0
+		module load Cutlery/1.0
 		countSpikein.sh -p {spikePrefix} {input} > {output}
 		"""
 
@@ -21,7 +21,7 @@ rule make_spikeintable:
 		"Making spikein table..."
 	shell:
 		"""
-		module load CnR/1.0
+		module load Cutlery/1.0
 		makeSpikeCntTable.r -o {spikeinCntDir}/spikein {input}
 		"""
 
@@ -38,7 +38,7 @@ rule get_fragLenHist:
 		"Checking fragment length... [{wildcards.sampleName}]"
 	shell:
 		"""
-		module load CnR/1.0
+		module load Cutlery/1.0
 		ngs.fragLenHist.r -o {fragLenDir}/{wildcards.sampleName} -n {wildcards.sampleName} {input}
 		"""
 
@@ -57,7 +57,7 @@ rule make_bigwig_ctr_rpm:
 		memory = "%dG" % (  cluster["make_bigwig"]["memory"]/1000 - 2 )
 	shell:
 		"""
-		module load CnR/1.0
+		module load Cutlery/1.0
 		cnr.fragToBigWig.sh -g {chrom_size} -m {params.memory} -o {output} {input}
 		"""
 
@@ -73,7 +73,7 @@ rule make_bigwig_frag_rpm:
 		memory = "%dG" % (  cluster["make_bigwig"]["memory"]/1000 - 2 )
 	shell:
 		"""
-		module load CnR/1.0
+		module load Cutlery/1.0
 		cnr.fragToBigWig.sh -g {chrom_size} -m {params.memory} -o {output} {input}
 		"""
 
@@ -92,7 +92,7 @@ rule make_bigwig_ctr_rpsm:
 		memory = "%dG" % ( cluster["make_bigwig"]["memory"]/1000 - 2 )
 	shell:
 		"""
-		module load CnR/1.0
+		module load Cutlery/1.0
 		scaleFactor=`cat {input.spikeinCnt} | gawk '{{ if($1=="ScaleFactor") print $2 }}'`
 		if [ $scaleFactor == "" ];then
 			echo -e "Error: empty scale factor" >&2
@@ -115,7 +115,7 @@ rule make_bigwig_frag_rpsm:
 		memory = "%dG" % (  cluster["make_bigwig"]["memory"]/1000 - 2 )
 	shell:
 		"""
-		module load CnR/1.0
+		module load Cutlery/1.0
 		scaleFactor=`cat {input.spikeinCnt} | gawk '{{ if($1=="ScaleFactor") print $2 }}'`
 		if [ $scaleFactor == "" ];then
 			echo -e "Error: empty scale factor" >&2
@@ -139,7 +139,7 @@ rule make_bigwig_allfrag:
 #		memory = "5G"
 	shell:
 		"""
-		module load CnR/1.0
+		module load Cutlery/1.0
 		cnr.fragToBigWig.sh -g {chrom_size} -m 5G -o {output} {input}
 		"""
 
@@ -155,7 +155,7 @@ rule make_bigwig_allfrag_rpsm:
 #		memory = "5G"
 	shell:
 		"""
-		module load CnR/1.0
+		module load Cutlery/1.0
 		scaleFactor=`cat {input.spikeinCnt} | gawk '$1=="'{wildcards.sampleName}'"' | gawk '{{ printf "%f", 100000/$3 }}'`
 		if [ $scaleFactor == "" ];then
 			echo -e "Error: empty scale factor" >&2
@@ -185,7 +185,7 @@ rule make_bigwig_ctr_rpm_subinput:
 	#	memory = "%dG" % (  cluster["make_bigwig_subtract"]["memory"]/1000 - 1 )
 	shell:
 		"""
-		module load CnR/1.0
+		module load Cutlery/1.0
 		bigWigSubtract.sh -g {chrom_size} -m 5G -t -1000 {output} {input.chip} {input.ctrl}
 		"""
 
@@ -201,7 +201,7 @@ rule make_bigwig_frag_rpm_subinput:
 	#	memory = "%dG" % (  cluster["make_bigwig_subtract"]["memory"]/1000 - 1 )
 	shell:
 		"""
-		module load CnR/1.0
+		module load Cutlery/1.0
 		bigWigSubtract.sh -g {chrom_size} -m 5G -t -1000 {output} {input.chip} {input.ctrl}
 		"""
 
@@ -218,7 +218,7 @@ rule make_bigwig_ctr_rpsm_subinput:
 	#	memory = "%dG" % (  cluster["make_bigwig_subtract"]["memory"]/1000 - 1 )
 	shell:
 		"""
-		module load CnR/1.0
+		module load Cutlery/1.0
 		bigWigSubtract.sh -g {chrom_size} -m 5G -t -1000 {output} {input.chip} {input.ctrl}
 		"""
 
@@ -234,7 +234,7 @@ rule make_bigwig_frag_rpsm_subinput:
 	#	memory = "%dG" % (  cluster["make_bigwig_subtract"]["memory"]/1000 - 1 )
 	shell:
 		"""
-		module load CnR/1.0
+		module load Cutlery/1.0
 		bigWigSubtract.sh -g {chrom_size} -m 5G -t -1000 {output} {input.chip} {input.ctrl}
 		"""
 
@@ -252,7 +252,7 @@ rule make_bigwig_allfrag_rpsm_subtract:
 	#	memory = "%dG" % (  cluster["make_bigwig_subtract"]["memory"]/1000 - 1 )
 	shell:
 		"""
-		module load CnR/1.0
+		module load Cutlery/1.0
 		bigWigSubtract.sh -g {chrom_size} -m 5G -t -1000 {output} {input.chip} {input.ctrl}
 		"""
 
@@ -275,7 +275,7 @@ rule make_bigwig_subtract:
 	#	memory = "%dG" % (  cluster["make_bigwig_subtract"]["memory"]/1000 - 1 )
 	shell:
 		"""
-		module load CnR/1.0
+		module load Cutlery/1.0
 		bigWigSubtract.sh -g {chrom_size} -m 5G -t -1000 {output} {input}
 		"""
 
@@ -292,7 +292,7 @@ rule make_bigwig_divide:
 	#	memory = "%dG" % (  cluster["make_bigwig_subtract"]["memory"]/1000 - 1 )
 	shell:
 		"""
-		module load CnR/1.0
+		module load Cutlery/1.0
 		bigWigDivide.sh -g {chrom_size} -m 5G -s log -a 1 -o {output} {input}
 		"""
 
@@ -307,7 +307,7 @@ rule make_tagdir:
 		"Making Homer tag directory... [{wildcards.sampleName}]"
 	shell:
 		"""
-		module load CnR/1.0
+		module load Cutlery/1.0
 		cnr.makeHomerDir.sh -c {chrRegexTarget} -o {output} -n {params.name} {input}
 		"""
 '''
@@ -403,7 +403,7 @@ rule call_peaks:
 		"Peak calling using Homer... [{wildcards.sampleName}]"
 	shell:
 		"""
-		module load CnR/1.0
+		module load Cutlery/1.0
 		cnr.peakCallTF.sh -o {params.peakDir} -m {params.mask} -s \"-fragLength 100\" {params.optStr} {input}
 		"""
 '''
@@ -443,7 +443,7 @@ rule make_bigwig_scaled:
 #		scaleFactor = get_scalefactor
 	shell:
 		"""
-		module load CnR/1.0
+		module load Cutlery/1.0
 		scaleFactor=`cat {input.spikeinCnt} | gawk '$1=="'{wildcards.sampleName}'"' | cut -f 6`
 		if [ $scaleFactor == "" ];then
 			echo -e "Error: empty scale factor" >&2
@@ -470,7 +470,7 @@ rule make_bigwig_scaled_subtract:
 	#	memory = "%dG" % (  cluster["make_bigwig_subtract"]["memory"]/1000 - 1 )
 	shell:
 		"""
-		module load CnR/1.0
+		module load Cutlery/1.0
 		bigWigSubtract.sh -g {chrom_size} -m 5G -t -1000 {output} {input}
 		"""
 
@@ -485,7 +485,7 @@ rule make_bigwig_scaled_divide:
 	#	memory = "%dG" % (  cluster["make_bigwig_subtract"]["memory"]/1000 - 1 )
 	shell:
 		"""
-		module load CnR/1.0
+		module load Cutlery/1.0
 		bigWigDivide.sh -g {chrom_size} -m 5G -s log -a 1 -o {output} {input}
 		"""
 '''
@@ -508,7 +508,7 @@ rule make_bigwig_sub_avg:
 		memory = "5G"
 	shell:
 		"""
-		module load CnR/1.0
+		module load Cutlery/1.0
 		makeBigWigAverage.sh -g {chrom_size} -m {params.memory} -o {output} {input}
 		"""
 
@@ -527,7 +527,7 @@ rule make_bigwig_scaled_sub_avg:
 		memory = "5G"
 	shell:
 		"""
-		module load CnR/1.0
+		module load Cutlery/1.0
 		makeBigWigAverage.sh -g {chrom_size} -m {params.memory} -o {output} {input}
 		"""
 
@@ -546,7 +546,7 @@ rule make_bigwig_scaled_div_avg:
 		memory = "5G"
 	shell:
 		"""
-		module load CnR/1.0
+		module load Cutlery/1.0
 		makeBigWigAverage.sh -g {chrom_size} -m {params.memory} -o {output} {input}
 		"""
 '''
