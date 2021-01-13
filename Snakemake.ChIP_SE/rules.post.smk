@@ -17,13 +17,30 @@ if 'bigWigDir_avg' not in locals():
 if 'robustFragLen' not in locals():
 	robustFragLen=False
 
+if 'downSampleN' not in locals():
+	downSampleN = 0
 
 
 def get_downsample_depth(wildcards):
+	'''
+	Get down sampling depth
+	Default value is from 'downSampleN
+	If 'DownSample' column exists in sample.tsv file, it has priority
+	'''
+	n = None
+	if downSampleN > 0:
+		n = downSampleN
+
 	if "DownSample" in samples:
-		return samples.DownSample[samples.Name == wildcards.sampleName].tolist()[0]
+		tmp = samples.DownSample[samples.Name == wildcards.sampleName].tolist()[0]
+		if tmp > 0:
+			n = tmp
+	
+	if isinstance(n, int):
+		return n
 	else:
-		return None
+		raise RuntimeError('Invalid down sampling depth: %s' % n)
+
 
 rule downsample_bam:
 	input:
@@ -67,10 +84,12 @@ rule dedup_align:
 
 def get_align_bam_for_tagdir(wildcards):
 	# return ordered [ctrl , target] list.
+	downDepth=get_downsample_depth(wildcards)
 	if doDedup:
 		srcDir = dedupDir
 	else:
-		if "DownSample" in samples and samples.DownSample[samples.Name == wildcards.sampleName].tolist()[0] > 0:
+		#if "DownSample" in samples and samples.DownSample[samples.Name == wildcards.sampleName].tolist()[0] > 0:
+		if downDepth > 0:
 			srcDir = downsampleDir
 		else:
 			srcDir = alignDir	
