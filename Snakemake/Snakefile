@@ -138,6 +138,7 @@ with open(os.path.expanduser(cluster_yml), 'r') as fh:
 
 rule all:
 	input:
+		expand(fragLenDir + "/{sampleName}.png", sampleName=samples.Name.tolist()),
 		## output from check_baseFreq
 		expand(filteredDir + "/BaseFreq/{sampleName}.R{read}.freq.png", sampleName=samples.Name.tolist(), read=[1,2]),
 		## output from make_bigwig

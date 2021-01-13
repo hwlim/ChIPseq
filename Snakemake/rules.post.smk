@@ -32,8 +32,8 @@ rule get_fragLenHist:
 		#dedupDir + "/{sampleName}.dedup.bam"
 		fragDir + "/{sampleName}.frag.bed.gz"
 	output:
-		fragLenDir + "/{sampleName}.dist.txt",
-		fragLenDir + "/{sampleName}.dist.png"
+		fragLenDir + "/{sampleName}.txt",
+		fragLenDir + "/{sampleName}.png"
 	message:
 		"Checking fragment length... [{wildcards.sampleName}]"
 	shell:
@@ -170,13 +170,22 @@ def get_input_name(sampleName):
 	# return ordered [ctrl , target] list.
 	ctrlName = samples.Ctrl[samples.Name == sampleName]
 	ctrlName = ctrlName.tolist()[0]
+	""" Temporary debug code
+	print("%s : %s" % (sampleName, ctrlName), file=sys.stderr)
+	src=bigWigDir_ctr_RPM + "/" + ctrlName + ".ctr.rpm.bw"
+	import os.path
+	if os.path.isfile(src):
+		print("%s exists" % ctrlName, file=sys.stderr)
+	else:
+		print("%s not exist" % ctrlName, file=sys.stderr)
+	"""
 	return ctrlName
 
 
 rule make_bigwig_ctr_rpm_subinput:
 	input:
 		chip = bigWigDir_ctr_RPM + "/{sampleName}.ctr.rpm.bw",
-		ctrl = lambda wildcards: bigWigDir_ctr_RPM + "/" + get_input_name(wildcards.sampleName) + ".ctr.rpm.bw",
+		ctrl = lambda wildcards: bigWigDir_ctr_RPM + "/" + get_input_name(wildcards.sampleName) + ".ctr.rpm.bw"
 	output:
 		bigWigDir_ctr_RPM_sub + "/{sampleName}.ctr.rpm.subInput.bw",
 	message:
@@ -192,7 +201,7 @@ rule make_bigwig_ctr_rpm_subinput:
 rule make_bigwig_frag_rpm_subinput:
 	input:
 		chip = bigWigDir_frag_RPM + "/{sampleName}.frag.rpm.bw",
-		ctrl = lambda wildcards: bigWigDir_frag_RPM + "/" + get_input_name(wildcards.sampleName) + ".frag.rpm.bw",
+		ctrl = lambda wildcards: bigWigDir_frag_RPM + "/" + get_input_name(wildcards.sampleName) + ".frag.rpm.bw"
 	output:
 		bigWigDir_frag_RPM_sub + "/{sampleName}.frag.rpm.subInput.bw",
 	message:
@@ -209,7 +218,7 @@ rule make_bigwig_frag_rpm_subinput:
 rule make_bigwig_ctr_rpsm_subinput:
 	input:
 		chip = bigWigDir_ctr_RPSM + "/{sampleName}.ctr.rpsm.bw",
-		ctrl = lambda wildcards: bigWigDir_ctr_RPSM + "/" + get_input_name(wildcards.sampleName) + ".ctr.rpsm.bw",
+		ctrl = lambda wildcards: bigWigDir_ctr_RPSM + "/" + get_input_name(wildcards.sampleName) + ".ctr.rpsm.bw"
 	output:
 		bigWigDir_ctr_RPSM_sub + "/{sampleName}.ctr.rpsm.subInput.bw",
 	message:
@@ -225,7 +234,7 @@ rule make_bigwig_ctr_rpsm_subinput:
 rule make_bigwig_frag_rpsm_subinput:
 	input:
 		chip = bigWigDir_frag_RPSM + "/{sampleName}.frag.rpsm.bw",
-		ctrl = lambda wildcards: bigWigDir_frag_RPSM + "/" + get_input_name(wildcards.sampleName) + ".frag.rpsm.bw",
+		ctrl = lambda wildcards: bigWigDir_frag_RPSM + "/" + get_input_name(wildcards.sampleName) + ".frag.rpsm.bw"
 	output:
 		bigWigDir_frag_RPSM_sub + "/{sampleName}.frag.rpsm.subInput.bw",
 	message:
