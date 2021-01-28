@@ -27,16 +27,16 @@ def get_downsample_depth(wildcards):
 	Default value is from 'downSampleN
 	If 'DownSample' column exists in sample.tsv file, it has priority
 	'''
-	n = None
-	if downSampleN > 0:
-		n = downSampleN
+	n = downSampleN
+	#if downSampleN > 0:
+	#	n = downSampleN
 
 	if "DownSample" in samples:
 		tmp = samples.DownSample[samples.Name == wildcards.sampleName].tolist()[0]
 		if tmp > 0:
 			n = tmp
 	
-	if isinstance(n, int):
+	if isinstance(n, int) and n >= 0:
 		return n
 	else:
 		raise RuntimeError('Invalid down sampling depth: %s' % n)
