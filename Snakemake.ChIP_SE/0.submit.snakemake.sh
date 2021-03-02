@@ -7,6 +7,7 @@ config=~/bin/Pipeline/Snakemake.ChIP_SE/cluster.yml
 
 if [ ! -f diag.pdf ];then
 	module load python3/3.6.3
+	module load graphviz/2.40.1
 	snakemake --dag | dot -Tpdf > diag.pdf
 fi
 
