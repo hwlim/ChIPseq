@@ -15,7 +15,7 @@ cluster_yml	= "~/bin/Pipeline/Snakemake.ChIP_SE/cluster.yml"
 import socket
 hostname = socket.gethostname()	
 if( hostname == "EA19-00359" ):
-	# my desktop
+	# For dry-run in my desktop
 	genome		= "mm10"
 	genomeFa	= "/Users/limc8h/Research/Common_Data/mm10/genome/genome.fa"
 	chrom_size	= "/Users/limc8h/Research/Common_Data/mm10/chrom.sizes"
@@ -66,9 +66,25 @@ star_option	= "--alignSJDBoverhangMin 999 --alignIntronMax 1 --outFilterMultimap
 
 #########################
 ## Job flags
+## Adapter trimming
 doTrim		= False
+## Deduplication of BAM file
 doDedup		= False
-#downSampleN	= 30000000
+## Robust fragment length estimation in Homer tag directory
+## Sometimes, Homer's default fragment length estimation is incorrect
+## If robustFragLen = True, fragment length is estimation is performed separately and override Homer result
+robustFragLen = False
+
+##########################
+## Down sampling parameter
+## - Down sampling is done usings BAM file, i.e. fragment level in case of Paired-end sequencing
+## - Down sampling depth can be defined in two ways
+##   1. downSampleN variable in Snakefile: equally applied to all samples. If 0, no down sampling.
+##   2. "DownSample" column in sample.tsv file: sample by sample down sampling depth.
+##      If sample.tsv has "DownSample" column, this override "downSampleN"
+##      Samples with DownSample > 0 will be down sampled accordingly.
+##   If doDedup == True, deduplication is done *after* down-sampling
+downSampleN	= 0
 
 #########################
 ## Directories
@@ -83,6 +99,9 @@ bigWigDir_avg="3.1.bigWig_avg"
 
 ########################
 ## Other parameteres
+## Homer "tbp" option, number of read per position to consider
+## If 0, all the reads are considered.
+## If deduplication is done, 0 is strongly recommended.
 Homer_tbp	= 1	# Homer tbp
 
 ################################
@@ -130,9 +149,9 @@ rule all:
 		expand(sampleDir + "/{sampleName}/HomerPeak.histone/peak.exBL.bed", sampleName=samplesHistone),
 		expand(sampleDir + "/{sampleName}/Motif/Homer.all/homerResults.html", sampleName=samplesFactor),
 		expand(sampleDir + "/{sampleName}/Motif/MEME.random5k/meme-chip.html", sampleName=samplesFactor),
-		expand(sampleDir + "/{sampleName}/igv.bw", sampleName=samplesAll),
-		expand(bigWigDir_avg + "/{groupName}.avg.bw" groupName=groupsAll),
-		expand(bigWigDir_avg + "/{groupName}.avg.subInput.bw" groupName=groupsChIP)
+		expand(sampleDir + "/{sampleName}/igv.bw", sampleName=samplesAll)
+		#expand(bigWigDir_avg + "/{groupName}.avg.bw" groupName=groupsAll),
+		#expand(bigWigDir_avg + "/{groupName}.avg.subInput.bw" groupName=groupsChIP)
 
 include: os.environ["MY_SCRIPT_BASE"] + "/Pipeline/Snakemake.ChIP_SE/rules.pre.smk"
 include: os.environ["MY_SCRIPT_BASE"] + "/Pipeline/Snakemake.ChIP_SE/rules.post.smk"
