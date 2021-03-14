@@ -42,6 +42,8 @@ def get_downsample_depth(wildcards):
 		raise RuntimeError('Invalid down sampling depth: %s' % n)
 
 
+## Note: downsampling is done in read-level not fragment level
+## Plan: option to select read vs fragment level downsampling
 rule downsample_bam:
 	input:
 		alignDir + "/{sampleName}/align.bam"
@@ -60,7 +62,9 @@ rule downsample_bam:
 
 def get_align_bam_for_dedup(wildcards):
 	# return ordered [ctrl , target] list.
-	if "DownSample" in samples and samples.DownSample[samples.Name == wildcards.sampleName].tolist()[0] > 0:
+	n = get_downsample_depth(wildcards)
+	#if "DownSample" in samples and samples.DownSample[samples.Name == wildcards.sampleName].tolist()[0] > 0:
+	if n > 0:
 		return downsampleDir + "/{sampleName}/align.bam"
 	else:
 		return alignDir + "/{sampleName}/align.bam"
@@ -76,7 +80,7 @@ rule dedup_align:
 		memory = "%dG" % ( cluster["dedup_align"]["memory"]/1000 - 2 )
 	shell:
 		"""
-		module load CnR/1.0
+		module load Cutlery/1.0
 		cnr.dedupBam.sh -m {params.memory} -o {output} -r {input}
 		"""
 
@@ -315,6 +319,6 @@ rule make_bigwig_avg_subinput:
 	#	memory = "%dG" % (  cluster["make_bigwig_subtract"]["memory"]/1000 - 1 )
 	shell:
 		"""
-		module load CnR/1.0
+		module load Cutlery/1.0
 		bigWigSubtract.sh -g {chrom_size} -m {params.memory} -t -1000 {output} {input.chip} {input.ctrl}
 		"""
