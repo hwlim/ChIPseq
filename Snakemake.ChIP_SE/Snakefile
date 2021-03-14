@@ -77,7 +77,10 @@ robustFragLen = False
 
 ##########################
 ## Down sampling parameter
-## - Down sampling is done usings BAM file, i.e. fragment level in case of Paired-end sequencing
+## - Down sampling is done usings BAM file
+## NOTE: Currently it is done in read level not fragment level for paired end sequencing. so may result in dangling read i.e. without the other read in pair.
+## NOTE: In the current version, bam file is automatically sorted by coordinate upon alignment
+## PLAN: Update is planned to incorporate option to handle fragment-level downsampling.
 ## - Down sampling depth can be defined in two ways
 ##   1. downSampleN variable in Snakefile: equally applied to all samples. If 0, no down sampling.
 ##   2. "DownSample" column in sample.tsv file: sample by sample down sampling depth.
