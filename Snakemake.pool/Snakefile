@@ -141,5 +141,5 @@ rule all:
 		#expand(homerDir + "/{sampleName}/TSV.{fragment}", sampleName=samples.Name.tolist(), fragment=["nfr","nuc"])
 
 
-include: os.environ["MY_SCRIPT_BASE"] + "/Pipeline/Snakemake/rules.post.smk"
-include: os.environ["MY_SCRIPT_BASE"] + "/Pipeline/Snakemake.pool/rules.smk"
+include: os.environ["LIMLAB_BASE"] + "/Pipeline/Snakemake/rules.post.smk"
+include: os.environ["LIMLAB_BASE"] + "/Pipeline/Snakemake.pool/rules.smk"

@@ -161,5 +161,5 @@ rule all:
 		#expand(homerDir + "/{sampleName}/TSV", sampleName=samples.Name.tolist())
 
 
-include: os.environ["MY_SCRIPT_BASE"] + "/Pipeline/Snakemake/rules.pre.smk"
-include: os.environ["MY_SCRIPT_BASE"] + "/Pipeline/Snakemake/rules.post.smk"
+include: os.environ["LIMLAB_BASE"] + "/Pipeline/Snakemake/rules.pre.smk"
+include: os.environ["LIMLAB_BASE"] + "/Pipeline/Snakemake/rules.post.smk"
