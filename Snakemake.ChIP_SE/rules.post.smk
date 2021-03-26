@@ -44,6 +44,7 @@ def get_downsample_depth(wildcards):
 
 ## Note: downsampling is done in read-level not fragment level
 ## Plan: option to select read vs fragment level downsampling
+## Plan: down sampling after chromosome filtering by chrRegex. Currently all the chromosomes are considerd for downsampling, and then random chromosomes are discarded downstream.
 rule downsample_bam:
 	input:
 		alignDir + "/{sampleName}/align.bam"
@@ -69,6 +70,8 @@ def get_align_bam_for_dedup(wildcards):
 	else:
 		return alignDir + "/{sampleName}/align.bam"
 
+## NOTE: Assuming paired-end deduplication
+## PLAN: Need to address single-end deduplication
 rule dedup_align:
 	input:
 		get_align_bam_for_dedup
