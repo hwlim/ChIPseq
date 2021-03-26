@@ -6,6 +6,8 @@ trap 'if [ `ls -1 __temp__.$$.* 2>/dev/null | wc -l` -gt 0 ];then rm __temp__.$$
 function printUsage {
 	echo "Usage: `basename $0` (options) [alignFile]
 Description: Create a homer tag directory using a given alignment file
+Input:
+	BAM/SAM/BED/BED.gz
 Options:
 	-o : output tag directory,required
 	-t : -tbp option for homer, default=0
@@ -21,7 +23,7 @@ outiDir=NULL
 tbp=0
 chrRegex=NULL
 robust=FALSE
-while getopts ":o:n:t:c:r" opt; do
+while getopts ":o:t:c:r" opt; do
 	case $opt in
 		o)
 			outDir=$OPTARG
@@ -78,6 +80,7 @@ echo -e "  src: $src" >&2
 echo -e "  outDir: $outDir" >&2
 echo -e "  tbp: $tbp" >&2
 echo -e "  chrRegex: $chrRegex" >&2
+echo -e "  robust: $robust" >&2
 echo -e "" >&2
 
 printAlign(){
