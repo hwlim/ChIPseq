@@ -16,7 +16,8 @@ rule make_spikeintable:
 	input:
 		expand(spikeinCntDir + "/{sampleName}.spikeCnt.txt", sampleName=samples.Name.tolist())
 	output:
-		spikeinCntDir + "/spikein.txt"
+		spikeinCntDir + "/spikein.txt",
+		spikeinCntDir + "/spikein.png"
 	message:
 		"Making spikein table..."
 	shell:
