@@ -123,6 +123,25 @@ rule dedup_align:
 		cnr.dedupBam.sh -m {params.memory} -o {output} -r {input}
 		"""
 
+## Split a BAM file into two: 1) target chromomosome 2) spike-in
+
+rule split_align:
+	input:
+		dedupDir + "/{sampleName}.dedup.bam" if doDedup else filteredDir + "/{sampleName}.filtered.bam" 
+	output:
+		target = splitDir + "/{sampleName}.target.bam",
+		spikein = splitDir + "/{sampleName}.spikein.bam"
+	message:
+		"Deduplicating... [{wildcards.sampleName}]"
+	params:
+		memory = "%dG" % ( cluster["dedup_align"]["memory"]/1000 - 2 )
+	shell:
+		"""
+		module load Cutlery/1.0
+		ngs.splitBam.sh -t {chrRegexTarget} -s {spikeinPrefix} -o {splitDir}/{wildcards.sampleName} {input}
+		"""
+
+
 rule check_baseFreq:
 	input:
 		filteredDir + "/{sampleName}.filtered.bam"
