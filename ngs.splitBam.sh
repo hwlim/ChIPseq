@@ -13,14 +13,17 @@ function printUsage {
 	echo -e "Usage: `basename $0` (options) [bam]
 Description:
 	Split an input bam file into two: target chromosomes & spikein chromosomes
+	Technically, chromosome selection done by ~ operator of gawk
 Input:
 	Paired-end BAM file
 Options:
     -o <outPrefix>: prefix for output files, required
     	<outPrefix>.target.bam
     	<outPrefix>.spikein.bam
-    -t <target chromosome regex>: Regular expression for target chromosome selection, default=^chr[0-9XY]+$
-    -s <spikein chromosome regex>: Regular expression for spikein chromosome selection, default=^dm (any chromosome start with 'dm'"
+    -t <target chromosome regex>: Regular expression for target chromosome selection
+		default=^chr[0-9XY]+$ i.e. select all regular and sex chromosomes
+    -s <spikein chromosome regex>: Regular expression for spikein chromosome selection
+		default=^dm i.e. any chromosome start with 'dm' (note missing $)"
 }
 
 if [ $# -eq 0 ];then
