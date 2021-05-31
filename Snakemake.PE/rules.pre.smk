@@ -1,6 +1,9 @@
 ## default STAR module
 if 'star_module' not in locals():
-	star_module="STAR/2.5"
+	star_module = "STAR/2.5"
+
+if 'splitDir' not in locals():
+	splitDir = "1.4.Align.split"
 
 
 
@@ -127,18 +130,17 @@ rule dedup_align:
 
 rule split_align:
 	input:
+		#dedupDir + "/{sampleName}.dedup.bam"
 		dedupDir + "/{sampleName}.dedup.bam" if doDedup else filteredDir + "/{sampleName}.filtered.bam" 
 	output:
 		target = splitDir + "/{sampleName}.target.bam",
 		spikein = splitDir + "/{sampleName}.spikein.bam"
 	message:
-		"Deduplicating... [{wildcards.sampleName}]"
-	params:
-		memory = "%dG" % ( cluster["dedup_align"]["memory"]/1000 - 2 )
+		"Spliting BAM file... [{wildcards.sampleName}]"
 	shell:
 		"""
 		module load Cutlery/1.0
-		ngs.splitBam.sh -t {chrRegexTarget} -s {spikeinPrefix} -o {splitDir}/{wildcards.sampleName} {input}
+		ngs.splitBam.sh -t {chrRegexTarget} -s {spikePrefix} -o {splitDir}/{wildcards.sampleName} {input}
 		"""
 
 
@@ -180,7 +182,8 @@ rule make_fragment_ctr:
 
 rule make_fragment:
 	input:
-		dedupDir + "/{sampleName}.dedup.bam" if doDedup else filteredDir + "/{sampleName}.filtered.bam"
+		dedupDir + "/{sampleName}.dedup.bam"
+		#dedupDir + "/{sampleName}.dedup.bam" if doDedup else filteredDir + "/{sampleName}.filtered.bam" 
 	output:
 		fragDir + "/{sampleName}.frag.bed.gz"
 	params:

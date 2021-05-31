@@ -40,7 +40,7 @@ spikeinRex="^dm"
 while getopts ":o:t:s:" opt; do
 	case $opt in
 		o)
-			des=$OPTARG
+			outPrefix=$OPTARG
 			;;
 		t)
 			targetRex=$OPTARG
@@ -73,7 +73,7 @@ src=$1
 ###################################
 ## main code
 
-optStr=""
+#optStr=""
 if [ "$outPrefix" == "" ];then
 	echo -e "Error: Output prefix (-o) must be specified" >&2
 	exit 1
@@ -84,7 +84,6 @@ desTarget=${outPrefix}.target.bam
 desSpikein=${outPrefix}.spikein.bam
 
 desDir=`dirname $outPrefix`
-desDir=`dirname $des`
 mkdir -p $desDir
 
 
@@ -92,7 +91,8 @@ echo -e "Splitting a BAM file
   - Input: $src
   - Target Chromosome: $targetRex
   - Spikein Chromosome: $spikeinRex
-  - outPrefix: $outPrefix" >&2
+  - outPrefix: $outPrefix
+" >&2
 
 
 tmp=${TMPDIR}/__temp__.$$.bam
@@ -100,13 +100,13 @@ tmp=${TMPDIR}/__temp__.$$.bam
 #samtools view -b -o $tmp $src $chrList 
 
 echo -e "Creating $desTarget" >&2
-samtools view -h $optStr $src \
-	| gawk '$3 ~ /'$desTarget'/ || $1 ~/^@/' \
-	| samtools view -b -1 -o $tmp
+samtools view -h $src \
+	| gawk '$3 ~ /'$targetRex'/ || $1 ~/^@/' \
+	| samtools view -b -1 -o $tmp -
 mv $tmp $desTarget
 
 echo -e "Creating $desSpikein" >&2
-samtools view -h $optStr $src \
-	| gawk '$3 ~ /'$desSpikein'/ || $1 ~/^@/' \
-	| samtools view -b -1 -o $tmp
+samtools view -h $src \
+	| gawk '$3 ~ /'$spikeinRex'/ || $1 ~/^@/' \
+	| samtools view -b -1 -o $tmp -
 mv $tmp $desSpikein
