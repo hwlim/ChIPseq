@@ -347,8 +347,8 @@ rule call_peak_hetchr:
 	shell:
 		"""
 		module load ChIPseq
-		spikeChip=`cat {input.spikeChip} | grep ^Spikein | cut -f 2`
-		spikeCtrl=`cat {input.spikeCtrl} | grep ^Spikein | cut -f 2`
+		spikeChip=`cat {input.spikeChip} | gawk '$1 == "Spikein"' | cut -f 2`
+		spikeCtrl=`cat {input.spikeCtrl} | gawk '$1 == "Spikein"' | cut -f 2`
 		if [ "$spikeChip" == "" ] || [ "$spikeCtrl" == "" ];then
 			echo -e "Error: empty spikein factor" >&2
 			exit 1
@@ -373,8 +373,8 @@ rule call_peak_hetchr2:
 	shell:
 		"""
 		module load ChIPseq
-		spikeChip=`cat {input.spikeChip} | grep ^Spikein | cut -f 2`
-		spikeCtrl=`cat {input.spikeCtrl} | grep ^Spikein | cut -f 2`
+		spikeChip=`cat {input.spikeChip} | gawk '$1 == "Spikein"' | cut -f 2`
+		spikeCtrl=`cat {input.spikeCtrl} | gawk '$1 == "Spikein"' | cut -f 2`
 		if [ "$spikeChip" == "" ] || [ "$spikeCtrl" == "" ];then
 			echo -e "Error: empty spikein factor" >&2
 			exit 1
