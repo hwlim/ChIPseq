@@ -164,26 +164,11 @@ rule check_baseFreq:
 
 
 
-rule make_fragment_ctr:
-	input:
-		dedupDir + "/{sampleName}.dedup.bam" if doDedup else filteredDir + "/{sampleName}.filtered.bam"
-	output:
-		fragDir_ctr + "/{sampleName}.frag.bed.gz"
-	params:
-		memory = "%dG" % ( cluster["make_fragment_ctr"]["memory"]/1000 - 2 )
-	message:
-		"Making fragment bed files... [{wildcards.sampleName}]"
-	shell:
-		"""
-		module load Cutlery/1.0
-		bamToFragment.sh -o {output} -l 150 -s -m {params.memory} {input}
-		"""
-
 
 rule make_fragment:
 	input:
-		dedupDir + "/{sampleName}.dedup.bam"
-		#dedupDir + "/{sampleName}.dedup.bam" if doDedup else filteredDir + "/{sampleName}.filtered.bam" 
+		#dedupDir + "/{sampleName}.dedup.bam"
+		dedupDir + "/{sampleName}.dedup.bam" if doDedup else filteredDir + "/{sampleName}.filtered.bam" 
 	output:
 		fragDir + "/{sampleName}.frag.bed.gz"
 	params:
@@ -195,3 +180,26 @@ rule make_fragment:
 		module load Cutlery/1.0
 		bamToFragment.sh -o {output} -l -1 -s -m {params.memory} {input}
 		"""
+
+
+rule make_fragment_ctr:
+	input:
+		fragDir + "/{sampleName}.frag.bed.gz"
+		#dedupDir + "/{sampleName}.dedup.bam"
+		#dedupDir + "/{sampleName}.dedup.bam" if doDedup else filteredDir + "/{sampleName}.filtered.bam"
+	output:
+		fragDir_ctr + "/{sampleName}.frag.bed.gz"
+	params:
+		memory = "%dG" % ( cluster["make_fragment_ctr"]["memory"]/1000 - 2 )
+	message:
+		"Making fragment bed files... [{wildcards.sampleName}]"
+	shell:
+		"""
+		module load Cutlery/1.0
+		zcat {input} \
+			| gawk '{{ c=($2+$3)/2; printf "%s\\t%d\\t%d\\t%s\\t%s\\t%s\\n", $1, c-75, c+75, $4, $5, $6 }}' \
+			| sort -S {params.memory} -k1,1 -k2,2n -k3,3n \
+			| gzip \
+			> {output}
+		"""
+		# bamToFragment.sh -o {output} -l 150 -s -m {params.memory} {input}
