@@ -331,6 +331,7 @@ def get_hetchr_ctrl(sampleName):
 #	return [ fragDir + "/" + sampleName + ".frag.bed.gz", fragDir + "/" + ctrlName + ".frag.bed.gz" ]
 
 
+## Need to double check if the "spikein" factor is correct (note that it is inverse of call_peak_hetchr_spikein_homer"
 rule call_peak_hetchr:
 	input:
 		chip = fragDir + "/{sampleName}.frag.bed.gz",
@@ -355,7 +356,7 @@ rule call_peak_hetchr:
 			exit 1
 		fi
 		spikein=`echo -e "${{spikeChip}}\t${{spikeCtrl}}" | gawk '{{ printf "%f", $2 / $1 }}'`
-		hetChr.call.sh -o {params.outPrefix} -g {chrom_size} -w {peakWindow} -s {peakStep} -a {peakAlpha} -k $spikein -t {peakFC} {input.chip} {input.ctrl}
+		hetChr.call.fc.sh -o {params.outPrefix} -g {chrom_size} -w {peakWindow} -s {peakStep} -a {peakAlpha} -k $spikein -t {peakFC} {input.chip} {input.ctrl}
 		"""
 
 
