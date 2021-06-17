@@ -5,6 +5,9 @@
 # Written by Hee-Wooong Lim
 # 
 # Pool bam files of multiple replicates by group
+#
+# To do:
+# - Handling premature stop by deleting incomplete output file
 
 source $COMMON_LIB_BASE/commonBash.sh
 trap 'if [ `ls -1 ${TMPDIR}/__temp__.$$.* 2>/dev/null | wc -l` -gt 0 ];then rm ${TMPDIR}/__temp__.$$.*; fi' EXIT
@@ -23,6 +26,8 @@ Input:
 	- final fragment files are named as <group>.frag.bed.gz
 
 Options:
+	-t: if set, print pooling plan lisintg src and des files
+		No actually pooling job, just for simulation
 	-b: if set, bsub are submitted for merging bam files, default=off
 		Submission may be limited by LSF setting of total job submission limit
 	-o: if set, overwrite existing destination bam files, default=off" >&2
@@ -37,9 +42,13 @@ fi
 ###################################
 ## option and input file handling
 bsub=FALSE
+testRun=FALSE
 overwrite=FALSE
-while getopts ":bo" opt; do
+while getopts ":bot" opt; do
 	case $opt in
+		t)
+			testRun=TRUE
+			;;
 		b)
 			bsub=TRUE
 			;;
@@ -106,20 +115,27 @@ do
 		echo -e "  - $src" >&2
 	done 2>&1 | tee $log
 
+	if [ "$testRun" == "TRUE" ];then
+		continue
+	fi
+
 	## command to uncompress
 	cmd="sort -m -k1,1 -k2,2n -k3,3n"
 	for src in ${srcL[@]}
 	do
 		cmd="${cmd} <( zcat $src )"
 	done
-	echo $cmd >&2
+	echo -e "Submitting" >&2
+	echo "  >> $cmd" >&2
 
 	if [ "$bsub" == "TRUE" ];then
 		## Parallel processing using HPC:lsf
-		bsub -W 24:00 -n 1 "eval $cmd | gzip > $des"
+		bsub -W 24:00 -n 1 "eval $cmd | gzip > ${TMPDIR}/__temp__.$$; mv ${TMPDIR}/__temp__.$$ $des"
 	else
 		## Sequential processing
-		eval $cmd | gzip > $des
+		eval $cmd | gzip > ${TMPDIR}/__temp__.$$
+		mv ${TMPDIR}/__temp__.$$ $des
+		#eval $cmd | gzip > $des
 		#ngs.concateBamFiles.sh -o $des ${srcL[@]}
 	fi
 	echo "" >&2
