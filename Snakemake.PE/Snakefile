@@ -99,7 +99,9 @@ bigWigDir_sub_avg	= bigWigDir_sub + "/Avg"
 bigWigScaledDir_sub_avg	= bigWigScaledDir_sub + "/Avg"
 #bigWigScaledDir_div_avg	= bigWigScaledDir_div + "/Avg"
 
-## Hetero-chromatin domain calling
+
+###################################################
+## Hetero-chromatin domain calling: naive slide window version
 peakDir 	= "PeakCall"
 peakWindow 	= 2000
 peakStep	= 1000
@@ -107,8 +109,16 @@ peakFC		= 2
 peakAlpha	= 1
 peakSuffix	= "w%d.s%d.fc%.1f" % ( peakWindow, peakStep, peakFC )
 
-peakDir2 	= "PeakCall.Homer"
-peakSuffix2	= "w%d.fc%.1f" % ( peakWindow, peakFC )
+#############################################
+## hetChr peak by Homer
+peakFC_homer	= 2
+peakWindow_homer = 2000
+minDist_homer	= 4000
+## hetChr peak directory with "raw fragment"
+hetChr_homer_spike 	= "hetChr.Homer.spikein.w%d_d%d_fc%.1f" % ( peakWindow_homer, minDist_homer, peakFC )
+## hetChr peak directory with "resized ctr fragment"
+hetChr_homer_spike_ctr = "hetChr.Homer.spikein.ctr.w%d_d%d_fc%.1f" % ( peakWindow_homer, minDist_homer, peakFC )
+
 
 ## CODE used in the initial version
 #def getfq(wildcards):
@@ -161,9 +171,10 @@ rule all:
 		expand(fragLenDir + "/{sampleName}.dist.png", sampleName=samples.Name.tolist()),
 #		expand(spikeinCntDir + "/{sampleName}.spikeCnt.txt", sampleName=samples.Name.tolist())
 		spikeinCntDir + "/spikein.txt",
-		alignDir + "/alignStat.txt"
+		alignDir + "/alignStat.txt",
+		expand(hetChr_homer_spike + "/{sampleName}.exBL.bed", sampleName=samples.Name[samples.Ctrl != "NULL"].tolist()),
+		expand(hetChr_homer_spike_ctr + "/{sampleName}.exBL.bed", sampleName=samples.Name[samples.Ctrl != "NULL"].tolist())
 #		expand(peakDir + "/{sampleName}.{suffix}.{ext}", sampleName=samples.Name[samples.Ctrl != "NULL"].tolist(), suffix=peakSuffix, ext=["bed","txt.gz"]),
-#		expand(peakDir2 + "/{sampleName}.{suffix}.exBL.bed", sampleName=samples.Name[samples.Ctrl != "NULL"].tolist(), suffix=peakSuffix2)
 		## homer tag dir
 		#expand(homerDir + "/{sampleName}/TSV", sampleName=samples.Name.tolist())
 

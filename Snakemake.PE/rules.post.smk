@@ -1,4 +1,5 @@
 
+
 rule count_spikein:
 	input:
 		fragDir + "/{sampleName}.frag.bed.gz"
@@ -357,17 +358,18 @@ rule call_peak_hetchr:
 		hetChr.call.sh -o {params.outPrefix} -g {chrom_size} -w {peakWindow} -s {peakStep} -a {peakAlpha} -k $spikein -t {peakFC} {input.chip} {input.ctrl}
 		"""
 
-rule call_peak_hetchr2:
+
+rule call_peak_hetchr_spikein_homer:
 	input:
 		chip = fragDir + "/{sampleName}.frag.bed.gz",
 		ctrl = lambda wildcards: fragDir + "/" + get_hetchr_ctrl(wildcards.sampleName) + ".frag.bed.gz",
 		spikeChip = spikeinCntDir + "/{sampleName}.spikeCnt.txt",
-		spikeCtrl = lambda wildcards: spikeinCntDir + "/" + get_hetchr_ctrl(wildcards.sampleName) + ".spikeCnt.txt"
+		spikeCtrl = lambda wildcards: spikeinCntDir + "/" + get_hetchr_ctrl(wildcards.sampleName) + ".spikeCnt.txt",
+		blacklist = peak_mask
 	output:
-		peakDir_homer + "/{sampleName}." + peakSuffix_homer + ".exBL.bed",
+		hetChr_homer_spike + "/{sampleName}.exBL.bed",
 	params:
-		outPrefix = peakDir_homer + "/{sampleName}." + peakSuffix_homer,
-
+		outPrefix = hetChr_homer_spike + "/{sampleName}",
 	message:
 		"Peak calling for heterochromatin... [{wildcards.sampleName}]"
 	shell:
@@ -380,7 +382,34 @@ rule call_peak_hetchr2:
 			exit 1
 		fi
 		spikein=`echo -e "${{spikeChip}}\t${{spikeCtrl}}" | gawk '{{ printf "%f", $1 / $2 }}'`
-		hetChr.call.homer.sh -o {params.outPrefix} -s {peakWindow_homer} -d {minDist_homer} -k $spikein -f {peakFC_homer} {input.chip} {input.ctrl}
+		hetChr.call.homer.sh -o {params.outPrefix} -s {peakWindow_homer} -d {minDist_homer} -k $spikein -f {peakFC_homer} -m {input.blacklist} {input.chip} {input.ctrl}
+		"""
+
+## hetero chromatin peak calling using Homer
+rule call_peak_hetchr_spikein_homer_ctr:
+	input:
+		chip = fragDir_ctr + "/{sampleName}.frag.bed.gz",
+		ctrl = lambda wildcards: fragDir_ctr + "/" + get_hetchr_ctrl(wildcards.sampleName) + ".frag.bed.gz",
+		spikeChip = spikeinCntDir + "/{sampleName}.spikeCnt.txt",
+		spikeCtrl = lambda wildcards: spikeinCntDir + "/" + get_hetchr_ctrl(wildcards.sampleName) + ".spikeCnt.txt",
+		blacklist = peak_mask
+	output:
+		hetChr_homer_spike_ctr + "/{sampleName}.exBL.bed",
+	params:
+		outPrefix = hetChr_homer_spike_ctr + "/{sampleName}",
+	message:
+		"Peak calling for heterochromatin... [{wildcards.sampleName}]"
+	shell:
+		"""
+		module load ChIPseq
+		spikeChip=`cat {input.spikeChip} | gawk '$1 == "Spikein"' | cut -f 2`
+		spikeCtrl=`cat {input.spikeCtrl} | gawk '$1 == "Spikein"' | cut -f 2`
+		if [ "$spikeChip" == "" ] || [ "$spikeCtrl" == "" ];then
+			echo -e "Error: empty spikein factor" >&2
+			exit 1
+		fi
+		spikein=`echo -e "${{spikeChip}}\t${{spikeCtrl}}" | gawk '{{ printf "%f", $1 / $2 }}'`
+		hetChr.call.homer.sh -o {params.outPrefix} -s {peakWindow_homer} -d {minDist_homer} -k $spikein -f {peakFC_homer} -m {input.blacklist} -l 150 {input.chip} {input.ctrl}
 		"""
 
 
