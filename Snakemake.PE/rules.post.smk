@@ -96,7 +96,7 @@ rule make_bigwig_ctr_rpsm:
 		"""
 		module load Cutlery/1.0
 		scaleFactor=`cat {input.spikeinCnt} | gawk '{{ if($1=="ScaleFactor") print $2 }}'`
-		if [ $scaleFactor == "" ];then
+		if [ "$scaleFactor" == "" ];then
 			echo -e "Error: empty scale factor" >&2
 			exit 1
 		fi
@@ -119,7 +119,7 @@ rule make_bigwig_frag_rpsm:
 		"""
 		module load Cutlery/1.0
 		scaleFactor=`cat {input.spikeinCnt} | gawk '{{ if($1=="ScaleFactor") print $2 }}'`
-		if [ $scaleFactor == "" ];then
+		if [ "$scaleFactor" == "" ];then
 			echo -e "Error: empty scale factor" >&2
 			exit 1
 		fi
@@ -159,7 +159,7 @@ rule make_bigwig_allfrag_rpsm:
 		"""
 		module load Cutlery/1.0
 		scaleFactor=`cat {input.spikeinCnt} | gawk '$1=="'{wildcards.sampleName}'"' | gawk '{{ printf "%f", 100000/$3 }}'`
-		if [ $scaleFactor == "" ];then
+		if [ "$scaleFactor" == "" ];then
 			echo -e "Error: empty scale factor" >&2
 			exit 1
 		fi
@@ -485,7 +485,7 @@ rule make_bigwig_scaled:
 		"""
 		module load Cutlery/1.0
 		scaleFactor=`cat {input.spikeinCnt} | gawk '$1=="'{wildcards.sampleName}'"' | cut -f 6`
-		if [ $scaleFactor == "" ];then
+		if [ "$scaleFactor" == "" ];then
 			echo -e "Error: empty scale factor" >&2
 			exit 1
 		fi
