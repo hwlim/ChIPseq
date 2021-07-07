@@ -20,7 +20,7 @@ genome		= "mm10"
 genomeFa	= "/data/limlab/Resource/GenomeData/mm/mm10/Genome/genome.fa"
 chrom_size	= "/data/limlab/Resource/GenomeData/mm/mm10/Genome/chrom.size"
 peak_mask	= "/data/limlab/Resource/GenomeData/mm/mm10/ENCODE-blacklist.bed"
-star_index	= "/data/limlab/Resource/STAR_Index/2.7.4/hg38_allChr_v29"
+star_index	= "/data/limlab/Resource/STAR_Index/2.7.4/mm10_allChr_vM20"
 
 '''
 ## hg38
@@ -28,7 +28,7 @@ genome		= "hg38"
 genomeFa	= "/data/limlab/Resource/GenomeData/hg/hg38/Genome/genome.fa"
 chrom_size	= "/data/limlab/Resource/GenomeData/hg/hg38/Genome/chrom.size"
 peak_mask	= "/data/limlab/Resource/GenomeData/hg/hg38/ENCODE-blacklist.bed"
-star_index	= "/data/limlab/Resource/STAR_Index/2.7.4/mm10_allChr_vM20"
+star_index	= "/data/limlab/Resource/STAR_Index/2.7.4/hg38_allChr_v29"
 '''
 
 
