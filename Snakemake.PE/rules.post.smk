@@ -10,7 +10,7 @@ rule count_spikein:
 	shell:
 		"""
 		module load Cutlery/1.0
-		countSpikein.sh -p {spikePrefix} {input} > {output}
+		ngs.countSpikein.sh -p {spikePrefix} {input} > {output}
 		"""
 
 rule make_spikeintable:
@@ -24,7 +24,7 @@ rule make_spikeintable:
 	shell:
 		"""
 		module load Cutlery/1.0
-		makeSpikeCntTable.r -o {spikeinCntDir}/spikein {input}
+		ngs.makeSpikeCntTable.r -o {spikeinCntDir}/spikein {input}
 		"""
 
 ## Draw a plot of fragment length distribution

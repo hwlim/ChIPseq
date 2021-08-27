@@ -137,7 +137,7 @@ rule count_spikein:
 	shell:
 		"""
 		module load CnR/1.0
-		countSpikein.sh -p {spikePrefix} {input} > {output}
+		ngs.countSpikein.sh -p {spikePrefix} {input} > {output}
 		"""
 
 rule make_spikeintable:
@@ -150,7 +150,7 @@ rule make_spikeintable:
 	shell:
 		"""
 		module load CnR/1.0
-		makeSpikeCntTable.r -o {spikeinCntDir}/spikein {input}
+		ngs.makeSpikeCntTable.r -o {spikeinCntDir}/spikein {input}
 		"""
 
 rule get_fragLenHist:
