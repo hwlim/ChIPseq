@@ -113,11 +113,16 @@ do
 	for src in ${srcL[@]}
 	do
 		echo -e "  - $src" >&2
-	done 2>&1 | tee $log
+	done
 
 	if [ "$testRun" == "TRUE" ];then
 		continue
 	fi
+
+	for src in ${srcL[@]}
+	do
+		echo -e "  - $src" >&2
+	done > $log
 
 	## command to uncompress
 	cmd="sort -m -k1,1 -k2,2n -k3,3n"
