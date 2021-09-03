@@ -10,7 +10,7 @@ rule count_spikein:
 	shell:
 		"""
 		module load Cutlery/1.0
-		ngs.countSpikein.sh -p {spikePrefix} {input} > {output}
+		ngs.countSpikein.sh -p {spikePrefix} -n {wildcards.sampleName} {input} > {output}
 		"""
 
 rule make_spikeintable:
@@ -50,7 +50,8 @@ rule get_fragLenHist:
 ## and the same in other bigwig file rules
 rule make_bigwig_ctr_rpm:
 	input:
-		fragDir_ctr + "/{sampleName}.frag.bed.gz"
+		#frag = fragDir_ctr + "/{sampleName}.frag.bed.gz"
+		frag = fragDir + "/{sampleName}.frag.bed.gz"
 	output:
 		bigWigDir_ctr_RPM + "/{sampleName}.ctr.rpm.bw",
 	message:
@@ -60,13 +61,13 @@ rule make_bigwig_ctr_rpm:
 	shell:
 		"""
 		module load Cutlery/1.0
-		cnr.fragToBigWig.sh -g {chrom_size} -m {params.memory} -o {output} {input}
+		cnr.fragToBigWig.sh -g {chrom_size} -c "{chrRegexTarget}" -r 150 -m {params.memory} -o {output} {input.frag}
 		"""
 
 ## bigwig file: original fragment in RPM scale
 rule make_bigwig_frag_rpm:
 	input:
-		fragDir + "/{sampleName}.frag.bed.gz"
+		frag = fragDir + "/{sampleName}.frag.bed.gz"
 	output:
 		bigWigDir_frag_RPM + "/{sampleName}.frag.rpm.bw",
 	message:
@@ -76,14 +77,15 @@ rule make_bigwig_frag_rpm:
 	shell:
 		"""
 		module load Cutlery/1.0
-		cnr.fragToBigWig.sh -g {chrom_size} -m {params.memory} -o {output} {input}
+		cnr.fragToBigWig.sh -g {chrom_size} -c "{chrRegexTarget}" -m {params.memory} -o {output} {input.frag}
 		"""
 
 
 ## bigwig file: resized fragment in RPSM scale
 rule make_bigwig_ctr_rpsm:
 	input:
-		bed = fragDir_ctr + "/{sampleName}.frag.bed.gz",
+		#frag = fragDir_ctr + "/{sampleName}.frag.bed.gz",
+		frag = fragDir + "/{sampleName}.frag.bed.gz",
 		spikeinCnt = spikeinCntDir + "/{sampleName}.spikeCnt.txt"
 		#spikeinCnt = spikeinCntDir + "/spikein.txt"
 	output:
@@ -100,13 +102,13 @@ rule make_bigwig_ctr_rpsm:
 			echo -e "Error: empty scale factor" >&2
 			exit 1
 		fi
-		cnr.fragToBigWig.sh -g {chrom_size} -m 5G -s $scaleFactor -o {output} {input.bed}
+		cnr.fragToBigWig.sh -g {chrom_size} -c "{chrRegexTarget}" -r 150 -m 5G -s $scaleFactor -o {output} {input.frag}
 		"""
 
 ## bigwig file: original fragment in RPSM scale
 rule make_bigwig_frag_rpsm:
 	input:
-		bed = fragDir + "/{sampleName}.frag.bed.gz",
+		frag = fragDir + "/{sampleName}.frag.bed.gz",
 		spikeinCnt = spikeinCntDir + "/{sampleName}.spikeCnt.txt"
 		#spikeinCnt = spikeinCntDir + "/spikein.txt"
 	output:
@@ -123,7 +125,7 @@ rule make_bigwig_frag_rpsm:
 			echo -e "Error: empty scale factor" >&2
 			exit 1
 		fi
-		cnr.fragToBigWig.sh -g {chrom_size} -m 5G -s $scaleFactor -o {output} {input.bed}
+		cnr.fragToBigWig.sh -g {chrom_size} -c "{chrRegexTarget}" -m 5G -s $scaleFactor -o {output} {input.frag}
 		"""
 #		scaleFactor=`cat {input.spikeinCnt} | gawk '$1=="'{wildcards.sampleName}'"' | gawk '{{ printf "%f", 100000/$3 }}'`
 
