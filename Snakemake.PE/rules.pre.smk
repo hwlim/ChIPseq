@@ -126,8 +126,9 @@ rule dedup_align:
 		cnr.dedupBam.sh -m {params.memory} -o {output} -r {input}
 		"""
 
+'''
+## Not being used
 ## Split a BAM file into two: 1) target chromomosome 2) spike-in
-
 rule split_align:
 	input:
 		#dedupDir + "/{sampleName}.dedup.bam"
@@ -142,7 +143,7 @@ rule split_align:
 		module load Cutlery/1.0
 		ngs.splitBam.sh -t {chrRegexTarget} -s {spikePrefix} -o {splitDir}/{wildcards.sampleName} {input}
 		"""
-
+'''
 
 rule check_baseFreq:
 	input:
@@ -181,7 +182,7 @@ rule make_fragment:
 		bamToFragment.sh -o {output} -l -1 -s -m {params.memory} {input}
 		"""
 
-
+'''
 rule make_fragment_ctr:
 	input:
 		fragDir + "/{sampleName}.frag.bed.gz"
@@ -203,3 +204,4 @@ rule make_fragment_ctr:
 			> {output}
 		"""
 		# bamToFragment.sh -o {output} -l 150 -s -m {params.memory} {input}
+'''
