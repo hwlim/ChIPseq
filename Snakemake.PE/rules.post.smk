@@ -385,14 +385,16 @@ rule call_peak_hetchr_spikein_homer:
 			exit 1
 		fi
 		spikein=`echo -e "${{spikeChip}}\t${{spikeCtrl}}" | gawk '{{ printf "%f", $1 / $2 }}'`
-		hetChr.call.homer.sh -o {params.outPrefix} -s {peakWindow_homer} -d {minDist_homer} -k $spikein -f {peakFC_homer} -m {input.blacklist} {input.chip} {input.ctrl}
+		hetChr.call.homer.sh -o {params.outPrefix} -c "{chrRegexTarget}" -s {peakWindow_homer} -d {minDist_homer} -k $spikein -f {peakFC_homer} -m {input.blacklist} {input.chip} {input.ctrl}
 		"""
 
 ## hetero chromatin peak calling using Homer
 rule call_peak_hetchr_spikein_homer_ctr:
 	input:
-		chip = fragDir_ctr + "/{sampleName}.frag.bed.gz",
-		ctrl = lambda wildcards: fragDir_ctr + "/" + get_hetchr_ctrl(wildcards.sampleName) + ".frag.bed.gz",
+		#chip = fragDir_ctr + "/{sampleName}.frag.bed.gz",
+		#ctrl = lambda wildcards: fragDir_ctr + "/" + get_hetchr_ctrl(wildcards.sampleName) + ".frag.bed.gz",
+		chip = fragDir + "/{sampleName}.frag.bed.gz",
+		ctrl = lambda wildcards: fragDir + "/" + get_hetchr_ctrl(wildcards.sampleName) + ".frag.bed.gz",
 		spikeChip = spikeinCntDir + "/{sampleName}.spikeCnt.txt",
 		spikeCtrl = lambda wildcards: spikeinCntDir + "/" + get_hetchr_ctrl(wildcards.sampleName) + ".spikeCnt.txt",
 		blacklist = peak_mask
@@ -412,7 +414,7 @@ rule call_peak_hetchr_spikein_homer_ctr:
 			exit 1
 		fi
 		spikein=`echo -e "${{spikeChip}}\t${{spikeCtrl}}" | gawk '{{ printf "%f", $1 / $2 }}'`
-		hetChr.call.homer.sh -o {params.outPrefix} -s {peakWindow_homer} -d {minDist_homer} -k $spikein -f {peakFC_homer} -m {input.blacklist} -l 150 {input.chip} {input.ctrl}
+		hetChr.call.homer.sh -o {params.outPrefix} -c "{chrRegexTarget}" -r 150 -s {peakWindow_homer} -d {minDist_homer} -k $spikein -f {peakFC_homer} -m {input.blacklist} -l 150 {input.chip} {input.ctrl}
 		"""
 
 
