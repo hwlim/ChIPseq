@@ -6,7 +6,7 @@ if [ -z ${COMMON_LIB_BASE+x} ]; then
 fi
 source $COMMON_LIB_BASE/commonBash.sh
 
-CHIP_PATH=~/bin/Pipeline/Snamemake.PE
+CHIP_PATH=~/bin/Pipeline/Snakemake.PE
 #if [ -z ${CUTLERY+x} ]; then
 #	echo -e "Error: Environment variable CUTLERY is not defined" >&2
 #	exit 1
