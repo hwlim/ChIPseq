@@ -122,24 +122,6 @@ rule make_tagdir:
 #		mypipe.makeTagDir.sh -o {params.desDir} -n {params.name} -t {Homer_tbp} -c {chrRegexTarget} {input}
 
 
-'''
-## Not being used; replaced with get_input_tagdir for handling NULL ctrl
-def get_input_name(sampleName):
-	ctrlName = samples.Ctrl[samples.Name == sampleName]
-	ctrlName = ctrlName.tolist()[0]
-	return ctrlName
-'''
-
-'''
-def get_input_tagdir(sampleName):
-	ctrlName = samples.Ctrl[samples.Name == sampleName]
-	ctrlName = ctrlName.tolist()[0]
-	if ctrlName == "NULL":
-		return "NULL"
-	else:
-		return sampleDir + "/" + ctrlName + "/TSV"
-'''
-
 def get_input_name(sampleName):
 	ctrlName = samples.Ctrl[samples.Name == sampleName]
 	assert( len(ctrlName) == 1 )
@@ -197,7 +179,7 @@ rule call_peak_histone:
 	output:
 		sampleDir + "/{sampleName}/HomerPeak.histone/peak.exBL.bed"
 	message:
-		"Making bigWig files... [{wildcards.sampleName}]"
+		"Peak Calling... [{wildcards.sampleName}]"
 	params:
 		desDir = sampleDir + "/{sampleName}",
 		mask = peak_mask,
@@ -239,6 +221,40 @@ rule run_meme_motif_rand5k:
 			-o {sampleDir}/{wildcards.sampleName}/Motif/MEME.random5k {input}
 		"""
 
+
+rule draw_peak_heatmap_factor:
+	input:
+		bed = sampleDir + "/{sampleName}/HomerPeak.factor/peak.exBL.1rpm.bed",
+		bw = sampleDir + "/{sampleName}/igv.bw"
+	output:
+		sampleDir + "/{sampleName}/HomerPeak.factor/heatmap.exBL.1rpm.png"
+	message:
+		"Drawing peak profile heatmap... [{wildcards.sampleName}]"
+	shell:
+		"""
+		module load Cutlery/1.0
+		drawBigWigHeatmap.r -t {wildcards.sampleName} -m 0,0.5,2,0.5 -w 2000 -b 20 -s 3,6 \
+			-o {sampleDir}/{wildcards.sampleName}/HomerPeak.factor/heatmap.exBL.1rpm \
+			{input.bed} {input.bw}
+		"""
+
+
+rule draw_peak_heatmap_histone:
+	input:
+		bed = sampleDir + "/{sampleName}/HomerPeak.histone/peak.exBL.bed",
+		bw = sampleDir + "/{sampleName}/igv.bw"
+	output:
+		sampleDir + "/{sampleName}/HomerPeak.histone/heatmap.exBL.png"
+	message:
+		"Drawing peak profile heatmap... [{wildcards.sampleName}]"
+	shell:
+		"""
+		module load Cutlery/1.0
+		drawBigWigHeatmap.r -t {wildcards.sampleName} -m 0,0.5,2,0.5 -w 10000 -b 20 -c NFR,NUC -s 3,6 \
+			-o {sampleDir}/{wildcards.sampleName}/HomerPeak.histone/heatmap.exBL \
+			{input.bed} {input.bw}
+		"""
+
 '''
 rule run_homermotif_no_ctrl:
 	input:
@@ -259,7 +275,7 @@ rule make_bigwig:
 	input:
 		sampleDir + "/{sampleName}/TSV"
 	output:
-		sampleDir + "/{sampleName}/igv.bw",
+		sampleDir + "/{sampleName}/igv.bw"
 	message:
 		"Making bigWig files... [{wildcards.sampleName}]"
 	shell:
