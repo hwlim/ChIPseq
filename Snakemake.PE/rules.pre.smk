@@ -87,7 +87,7 @@ rule make_align_stat_table:
 	input:
 		expand(alignDir+"/{sampleName}/align.bam", sampleName=samples.Name.tolist())
 	output:
-		alignDir + "/alignStat.txt"
+		qcDir + "/alignStat.txt"
 	params:
 		inputDir = get_align_dir(expand(alignDir+"/{sampleName}/align.bam", sampleName=samples.Name.tolist()))
 	message:
@@ -115,7 +115,7 @@ rule dedup_align:
 	input:
 		filteredDir + "/{sampleName}.filtered.bam"
 	output:
-		dedupDir + "/{sampleName}.dedup.bam"
+		dedupDir + "/{sampleName}/align.bam"
 	message:
 		"Deduplicating... [{wildcards.sampleName}]"
 	params:
@@ -149,18 +149,20 @@ rule check_baseFreq:
 	input:
 		filteredDir + "/{sampleName}.filtered.bam"
 	output:
-		read1 = baseFreqDir + "/{sampleName}.R1.freq.png",
-		read2 = baseFreqDir + "/{sampleName}.R2.freq.png"
+		#read1 = baseFreqDir + "/{sampleName}.R1.freq.png",
+		#read2 = baseFreqDir + "/{sampleName}.R2.freq.png"
+		read1 = sampleDir + "/{sampleName}/QC/baseFreq.R1.png",
+		read2 = sampleDir + "/{sampleName}/QC/baseFreq.R2.png"
 	message:
 		"Checking baseFrequency... [{wildcards.sampleName}]"
 	shell:
 		"""
 		module load Cutlery/1.0
-		bamToBed.separate.sh -o {baseFreqDir}/{wildcards.sampleName} {input}
-		checkBaseFreq.plot.sh -g {genomeFa} -n {wildcards.sampleName} -c {chrRegexTarget} -o {baseFreqDir}/{wildcards.sampleName}.R1 {baseFreqDir}/{wildcards.sampleName}.R1.bed.gz
-		checkBaseFreq.plot.sh -g {genomeFa} -n {wildcards.sampleName} -c {chrRegexTarget} -o {baseFreqDir}/{wildcards.sampleName}.R2 {baseFreqDir}/{wildcards.sampleName}.R2.bed.gz
-		rm {baseFreqDir}/{wildcards.sampleName}.R1.bed.gz
-		rm {baseFreqDir}/{wildcards.sampleName}.R2.bed.gz
+		bamToBed.separate.sh -o {sampleDir}/{wildcards.sampleName}/QC/baseFreq {input}
+		checkBaseFreq.plot.sh -g {genomeFa} -n {wildcards.sampleName} -c {chrRegexTarget} -o {sampleDir}/{wildcards.sampleName}/QC/baesFreq.R1 {baseFreqDir}/{wildcards.sampleName}.R1.bed.gz
+		checkBaseFreq.plot.sh -g {genomeFa} -n {wildcards.sampleName} -c {chrRegexTarget} -o {sampleDir}/{wildcards.sampleName}/QC/baesFreq.R2 {baseFreqDir}/{wildcards.sampleName}.R2.bed.gz
+		rm {sampleDir}/{wildcards.sampleName}/QC/baseFreq.R1.bed.gz
+		rm {sampleDir}/{wildcards.sampleName}/QC/baseFreq.R2.bed.gz
 		"""
 
 
@@ -169,9 +171,10 @@ rule check_baseFreq:
 rule make_fragment:
 	input:
 		#dedupDir + "/{sampleName}.dedup.bam"
-		dedupDir + "/{sampleName}.dedup.bam" if doDedup else filteredDir + "/{sampleName}.filtered.bam" 
+		dedupDir + "/{sampleName}/align.bam" if doDedup else filteredDir + "/{sampleName}.filtered.bam" 
 	output:
-		fragDir + "/{sampleName}.frag.bed.gz"
+		#fragDir + "/{sampleName}.frag.bed.gz"
+		sampleDir + "/{sampleName}/fragment.bed.gz"
 	params:
 		memory = "%dG" % ( cluster["make_fragment"]["memory"]/1000 - 2 )
 	message:
