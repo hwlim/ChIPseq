@@ -135,7 +135,7 @@ grep -v "^#" ${peak0} \
 
 echo -e "Blacking masking & merging" >&2
 if [ "$mask" != "NULL" ];then
-	subtractBed -a ${peakBed} -b $mask \
+	intersectBed -a ${peakBed} -b $mask -v \
 		| sortBed \
 		| mergeBed \
 		| gawk '{ printf "%s\t%d\t%d\tpeak.%d\t0\t+\n", $1,$2,$3,NR }' \
@@ -156,13 +156,18 @@ else
 	echo -e "Tag counts in RPKM" >&2
 
 	getPeakTags $tmpPeakMasked $target -tagAdjust 0 -tbp 0 -fixed \
-		| sort -k1,1 \
 		> ${tmpTagCount}
 
-	paste ${tmpPeakMasked} ${tmpTagCount} \
-		| gawk '{ printf "%s\t%d\t%d\tpeak.%d\t%.5f\t%s\n", $1,$2,$3,NR,$8*1000000/'${ttc}'*1000/($3-$2),$6 }' \
-		| sort -k5,5nr \
+	paste <( sort -k4,4 ${tmpPeakMasked} ) <( sort -k1,1 ${tmpTagCount} ) \
+		| gawk '{ printf "%s\t%d\t%d\tpeak.%d\t%.5f\t%s\t%d\t%.1f\n", $1,$2,$3, NR, $8*1000000/'${ttc}'*1000/($3-$2), $6,$3-$2, $8*1000000/'${ttc}' }' \
+		| sort -k8,8nr \
+		| cut -f 1-6 \
 		> $peakMasked
+
+	#paste ${tmpPeakMasked} ${tmpTagCount} \
+	#	| gawk '{ printf "%s\t%d\t%d\tpeak.%d\t%.5f\t%s\n", $1,$2,$3,NR,$8*1000000/'${ttc}'*1000/($3-$2),$6 }' \
+	#	| sort -k5,5nr \
+	#	> $peakMasked
 fi
 #cp ${tmpPeakMasked} .
 #cp ${tmpTagCount} .
