@@ -81,7 +81,7 @@ rule make_bigwig_ctr_rpm:
 		#bigWigDir_ctr_RPM + "/{sampleName}.ctr.rpm.bw",
 		sampleDir + "/{sampleName}/igv.ctr.rpm.bw"
 	message:
-		"Making bigWig files... [{wildcards.sampleName}]"
+		"Making bigWig files, ctr.rpm ... [{wildcards.sampleName}]"
 	params:
 		memory = "%dG" % (  cluster["make_bigwig"]["memory"]/1000 - 2 )
 	shell:
@@ -98,7 +98,7 @@ rule make_bigwig_frag_rpm:
 	output:
 		sampleDir + "/{sampleName}/igv.frag.rpm.bw",
 	message:
-		"Making bigWig files... [{wildcards.sampleName}]"
+		"Making bigWig files, frag.rpm ... [{wildcards.sampleName}]"
 	params:
 		memory = "%dG" % (  cluster["make_bigwig"]["memory"]/1000 - 2 )
 	shell:
@@ -118,7 +118,7 @@ rule make_bigwig_ctr_rpsm:
 	output:
 		sampleDir + "/{sampleName}/igv.ctr.rpsm.bw",
 	message:
-		"Making bigWig files... [{wildcards.sampleName}]"
+		"Making bigWig files, ctr.rpsm ... [{wildcards.sampleName}]"
 	params:
 		memory = "%dG" % ( cluster["make_bigwig"]["memory"]/1000 - 2 )
 	shell:
@@ -141,7 +141,7 @@ rule make_bigwig_frag_rpsm:
 	output:
 		sampleDir + "/{sampleName}/igv.frag.rpsm.bw",
 	message:
-		"Making bigWig files... [{wildcards.sampleName}]"
+		"Making bigWig files, frag.rpsm ... [{wildcards.sampleName}]"
 	params:
 		memory = "%dG" % (  cluster["make_bigwig"]["memory"]/1000 - 2 )
 	shell:
@@ -223,7 +223,7 @@ rule make_bigwig_ctr_rpm_subinput:
 		#bigWigDir_ctr_RPM_sub + "/{sampleName}.ctr.rpm.subInput.bw",
 		sampleDir + "/{sampleName}/igv.ctr.rpm.subInput.bw",
 	message:
-		"Making bigWig files... [{wildcards.sampleName}]"
+		"Making bigWig files, ctr.rpm.subInput ... [{wildcards.sampleName}]"
 	#params:
 	#	memory = "%dG" % (  cluster["make_bigwig_subtract"]["memory"]/1000 - 1 )
 	shell:
@@ -242,7 +242,7 @@ rule make_bigwig_frag_rpm_subinput:
 		#bigWigDir_frag_RPM_sub + "/{sampleName}.frag.rpm.subInput.bw",
 		sampleDir + "/{sampleName}/igv.frag.rpm.subInput.bw",
 	message:
-		"Making bigWig files... [{wildcards.sampleName}]"
+		"Making bigWig files, frag.rpm.subInput ... [{wildcards.sampleName}]"
 	#params:
 	#	memory = "%dG" % (  cluster["make_bigwig_subtract"]["memory"]/1000 - 1 )
 	shell:
@@ -262,7 +262,7 @@ rule make_bigwig_ctr_rpsm_subinput:
 		#bigWigDir_ctr_RPSM_sub + "/{sampleName}.ctr.rpsm.subInput.bw",
 		sampleDir + "/{sampleName}/igv.ctr.rpsm.subInput.bw",
 	message:
-		"Making bigWig files... [{wildcards.sampleName}]"
+		"Making bigWig files, ctr.rpsm.subInput ... [{wildcards.sampleName}]"
 	#params:
 	#	memory = "%dG" % (  cluster["make_bigwig_subtract"]["memory"]/1000 - 1 )
 	shell:
@@ -281,7 +281,7 @@ rule make_bigwig_frag_rpsm_subinput:
 		#bigWigDir_frag_RPSM_sub + "/{sampleName}.frag.rpsm.subInput.bw",
 		sampleDir + "/{sampleName}/igv.frag.rpsm.subInput.bw",
 	message:
-		"Making bigWig files... [{wildcards.sampleName}]"
+		"Making bigWig files, frag.rpsm.subInput ... [{wildcards.sampleName}]"
 	#params:
 	#	memory = "%dG" % (  cluster["make_bigwig_subtract"]["memory"]/1000 - 1 )
 	shell:
@@ -386,7 +386,7 @@ rule call_peak_hetchr:
 		outPrefix = peakDir + "/{sampleName}." + peakSuffix,
 
 	message:
-		"Peak calling for heterochromatin... [{wildcards.sampleName}]"
+		"Peak calling for heterochromatin by fold-change ... [{wildcards.sampleName}]"
 	shell:
 		"""
 		module load ChIPseq
@@ -413,7 +413,7 @@ rule call_peak_hetchr_spikein_homer:
 	params:
 		outPrefix = hetChr_homer_spike + "/{sampleName}",
 	message:
-		"Peak calling for heterochromatin... [{wildcards.sampleName}]"
+		"Peak calling for heterochromatin by Homer/frag ... [{wildcards.sampleName}]"
 	shell:
 		"""
 		module load ChIPseq
@@ -442,7 +442,7 @@ rule call_peak_hetchr_spikein_homer_ctr:
 	params:
 		outPrefix = hetChr_homer_spike_ctr + "/{sampleName}",
 	message:
-		"Peak calling for heterochromatin... [{wildcards.sampleName}]"
+		"Peak calling for heterochromatin by Homer/ctr ... [{wildcards.sampleName}]"
 	shell:
 		"""
 		module load ChIPseq
@@ -479,7 +479,7 @@ rule make_tagdir_se:
 		name = "{sampleName}",
 		optStr = "" if "robustFragLen" not in locals() or robustFragLen == False else "-r"
 	message:
-		"Making Homer tag directory... [{wildcards.sampleName}]"
+		"Making Homer tag directory/SE... [{wildcards.sampleName}]"
 	shell:
 		"""
 		module load ChIPseq/1.0
@@ -518,7 +518,7 @@ rule call_peak_factor:
 	output:
 		sampleDir + "/{sampleName}/HomerPeak.factor/peak.exBL.1rpm.bed"
 	message:
-		"Calling TF peaks... [{wildcards.sampleName}]"
+		"Calling TF peaks/SE ... [{wildcards.sampleName}]"
 	params:
 		desDir = sampleDir + "/{sampleName}",
 		mask = peak_mask,
@@ -540,7 +540,7 @@ rule call_peak_histone:
 	output:
 		sampleDir + "/{sampleName}/HomerPeak.histone/peak.exBL.bed"
 	message:
-		"Peak Calling... [{wildcards.sampleName}]"
+		"Calling histone peaks/SE ... [{wildcards.sampleName}]"
 	params:
 		desDir = sampleDir + "/{sampleName}",
 		mask = peak_mask,
