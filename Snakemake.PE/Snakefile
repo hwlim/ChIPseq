@@ -3,7 +3,7 @@
 
 ## Sample information file with five columns: id / name / group / fq1 / fq2
 src_sampleInfo	= "./sample.tsv"
-cluster_yml		= "~/bin/Pipeline/Snakemake.PE/cluster.yml"
+cluster_yml		= os.environ["LIMLAB_BASE"] + "/Pipeline/Snakemake.PE/cluster.yml"
 
 ## Genome folder depending on platform: CCHMC:HPC vs my desktop
 ## Mouse
@@ -57,21 +57,22 @@ doDedup		= True
 
 #########################
 ## Directories
-fastqDir	= "/data/iwafuchilab/NGS_Data_NextSeq/Seq006_011320_NB501763_0325_AHVLYNBGXC_CnR.ChIP/fastq_files"
+fastqDir	= "0.Fastq"
 trimDir		= "0.Fastq.Trim"
 alignDir	= "1.1.Align"
 filteredDir	= "1.2.Align.filtered"
 dedupDir	= "1.3.Align.dedup"
-splitDir	= "1.4.Align.split"
+qcDir		= "2.QualityControl"
+sampleDir	= "3.Samples"
+
+
+'''
+## not used since conversion to newer sample-by-sample structure
 fragDir		= "1.4.Frag"
 fragDir_ctr	= "1.4.Frag.ctr"
-
 baseFreqDir = filteredDir + "/BaseFreq"
 fragLenDir	= fragDir + "/fragLenHist"
-homerDir	= "3.Homer"
-
 spikeinCntDir = fragDir + "/spikeinCnt"
-
 bigWigDir_ctr_RPM	= "2.1.1.BigWig.ctr.RPM"
 bigWigDir_ctr_RPM_sub	= "2.1.2.BigWig.ctr.RPM.subInput"
 bigWigDir_ctr_RPM_div	= "2.1.3.BigWig.ctr.RPM.divInput"
@@ -88,16 +89,7 @@ bigWigDir_ctr_RPSM_div	= "2.3.3.BigWig.ctr.RPSM.divInput"
 bigWigDir_frag_RPSM	= "2.4.1.BigWig.frag.RPSM"
 bigWigDir_frag_RPSM_sub	= "2.4.2.BigWig.frag.RPSM.subInput"
 bigWigDir_frag_RPSM_div	= "2.4.3.BigWig.frag.RPSM.divInput"
-
-#bigWigScaledDir	= "3.1.BigWig.scaled"
-#bigWigScaledDir_sub	= "3.2.BigWig.scaled.subInput"
-#bigWigScaledDir_div = "3.3.BigWig.scaled.divInput"
-#bigWigAllFrag_RPSM = "3.4.BigWig.allFrag.RPSM"
-#bigWigAllFrag_RPSM_subInput = "3.5.BigWig.allFrag.RPSM.subInput"
-
-bigWigDir_sub_avg	= bigWigDir_sub + "/Avg"
-bigWigScaledDir_sub_avg	= bigWigScaledDir_sub + "/Avg"
-#bigWigScaledDir_div_avg	= bigWigScaledDir_div + "/Avg"
+'''
 
 
 ###################################################
@@ -142,14 +134,9 @@ if not samples.Name.is_unique:
 
 #################################
 ## Cluster configuration file
-#cluster = json.load(open("./cluster.json"))
 import yaml
 with open(os.path.expanduser(cluster_yml), 'r') as fh:
-	cluster = yaml.load(fh)
-#    cluster = yaml.full_load(fh)
-
-
-
+	cluster = yaml.safe_load(fh)
 
 
 
@@ -179,5 +166,5 @@ rule all:
 		#expand(homerDir + "/{sampleName}/TSV", sampleName=samples.Name.tolist())
 
 
-include: os.environ["LIMLAB_BASE"] + "/Pipeline/Snakemake/rules.pre.smk"
-include: os.environ["LIMLAB_BASE"] + "/Pipeline/Snakemake/rules.post.smk"
+include: os.environ["LIMLAB_BASE"] + "/Pipeline/Snakemake.PE/rules.pre.smk"
+include: os.environ["LIMLAB_BASE"] + "/Pipeline/Snakemake.PE/rules.post.smk"
