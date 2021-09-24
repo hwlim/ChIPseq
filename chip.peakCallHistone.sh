@@ -18,8 +18,10 @@ Options:
 	-o <outPrefix>: output prefix including path, required
 	-i <ctrl>: (optional) ctrl homer tag directory, default=NULL
 	-m <mask>: mask bed file for filtering such as ENCODE blacklist
+	-f <foldchange>: foldchange cut off for against control sample, default=4
+	-k <spikein>: spike-in factor to multiply to the foldchange cut off (-f). (target spikein cnt)/(Input spikein cnt), default= 1
 	-s <optStr>: additional option for 'findPeaks' of Homer
-		to internally pre-set option: \"-style histone -tbp 0 -norm 1000000 \"
+		in addition to internally pre-set option: \"-style histone -tbp 0 -norm 1000000 \"
 		such as -size or -minDist
 Output:
 	- <outPrefix>.txt              Homer peak calling result
@@ -38,9 +40,11 @@ fi
 outPrefix=NULL
 ctrl=NULL
 mask=NULL
+foldchange=4
+spikein=1
 optStr="-style histone -tbp 0 -norm 1000000 -strand both"
 #lengthParam=NULL,NULL
-while getopts ":o:i:m:s:" opt; do
+while getopts ":o:i:m:f:k:s:" opt; do
 	case $opt in
 		o)
 			outPrefix=$OPTARG
@@ -50,6 +54,12 @@ while getopts ":o:i:m:s:" opt; do
 			;;
 		m)
 			mask=$OPTARG
+			;;
+		f)
+			foldchange=$OPTARG
+			;;
+		k)
+			spikein=$OPTARG
 			;;
 		s)
 			optStr="$optStr $OPTARG"
@@ -99,13 +109,14 @@ fi
 
 ###################################
 ## main code
-echo -e "Homer peak-calling" >&2
-echo -e "  - target = $target" >&2
-echo -e "  - ctrl = $ctrl" >&2
-echo -e "  - outPrefix = $outPrefix" >&2
-echo -e "  - TTC = $ttc" >&2
-echo -e "  - optStr = $optStr" >&2
-echo -e "" >&2
+echo -e "Homer peak-calling
+  - target = $target
+  - ctrl = $ctrl
+  - blacklist = $mask
+  - outPrefix = $outPrefix
+  - TTC = $ttc
+  - fold-change = $foldchange
+  - spikein = $spikein" >&2
 
 log=${outPrefix}.log
 peak0=${outPrefix}.txt
@@ -113,6 +124,17 @@ peakBed=${outPrefix}.bed
 peakMasked=${outPrefix}.exBL.bed
 tmpPeakMasked=${TMPDIR}/__temp__.$$.bed
 tmpTagCount=${TMPDIR}/__temp__.$$.target
+
+## optional fold-change cut off adjustment by spikein factor
+if [ "$spikein" != "1" ];then
+	foldchange=`echo -e "${foldchange}\t${spikein}" | gawk '{ printf "%f", $1 * $2 }'`
+	echo -e "  - Spikein factor applied, new fold-change:
+	spikein factor = $spikein
+	new fold change = $foldchange
+" >&2
+fi
+optStr="$optStr -F $foldchange"
+echo -e "  - optStr = $optStr\n" >&2
 
 desDir=`dirname $outPrefix`
 mkdir -p $desDir
