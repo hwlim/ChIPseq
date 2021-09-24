@@ -157,47 +157,7 @@ rule make_bigwig_frag_rpsm:
 #		scaleFactor=`cat {input.spikeinCnt} | gawk '$1=="'{wildcards.sampleName}'"' | gawk '{{ printf "%f", 100000/$3 }}'`
 
 
-
-'''
-rule make_bigwig_allfrag:
-	input:
-		fragDir + "/{sampleName}.frag.bed.gz"
-	output:
-		bigWigDirAllFrag + "/{sampleName}.allFrag.bw"
-	message:
-		"Making bigWig files... [{wildcards.sampleName}]"
-#	params:
-#		memory = "5G"
-	shell:
-		"""
-		module load Cutlery/1.0
-		cnr.fragToBigWig.sh -g {chrom_size} -m 5G -o {output} {input}
-		"""
-
-rule make_bigwig_allfrag_rpsm:
-	input:
-		bed = fragDir + "/{sampleName}.frag.bed.gz",
-		spikeinCnt = spikeinCntDir + "/spikein.txt"
-	output:
-		bigWigAllFrag_RPSM + "/{sampleName}.allFrag.rpsm.bw"
-	message:
-		"Making spike-in scaled allFrag bigWig files... [{wildcards.sampleName}]"
-#	params:
-#		memory = "5G"
-	shell:
-		"""
-		module load Cutlery/1.0
-		scaleFactor=`cat {input.spikeinCnt} | gawk '$1=="'{wildcards.sampleName}'"' | gawk '{{ printf "%f", 100000/$3 }}'`
-		if [ "$scaleFactor" == "" ];then
-			echo -e "Error: empty scale factor" >&2
-			exit 1
-		fi
-		cnr.fragToBigWig.sh -g {chrom_size} -m 5G -s $scaleFactor -o {output} {input.bed}
-		"""
-'''
-
-
-def get_input_name(sampleName):
+def get_ctrl_name(sampleName):
 	# return ordered [ctrl , target] list.
 	ctrlName = samples.Ctrl[samples.Name == sampleName]
 	ctrlName = ctrlName.tolist()[0]
@@ -216,9 +176,9 @@ def get_input_name(sampleName):
 rule make_bigwig_ctr_rpm_subinput:
 	input:
 		#chip = bigWigDir_ctr_RPM + "/{sampleName}.ctr.rpm.bw",
-		#ctrl = lambda wildcards: bigWigDir_ctr_RPM + "/" + get_input_name(wildcards.sampleName) + ".ctr.rpm.bw"
+		#ctrl = lambda wildcards: bigWigDir_ctr_RPM + "/" + get_ctrl_name(wildcards.sampleName) + ".ctr.rpm.bw"
 		chip = sampleDir + "/{sampleName}/igv.ctr.rpm.bw",
-		ctrl = lambda wildcards: sampleDir + "/" + get_input_name(wildcards.sampleName) + "/igv.ctr.rpm.bw"
+		ctrl = lambda wildcards: sampleDir + "/" + get_ctrl_name(wildcards.sampleName) + "/igv.ctr.rpm.bw"
 	output:
 		#bigWigDir_ctr_RPM_sub + "/{sampleName}.ctr.rpm.subInput.bw",
 		sampleDir + "/{sampleName}/igv.ctr.rpm.subInput.bw",
@@ -235,9 +195,9 @@ rule make_bigwig_ctr_rpm_subinput:
 rule make_bigwig_frag_rpm_subinput:
 	input:
 		#chip = bigWigDir_frag_RPM + "/{sampleName}.frag.rpm.bw",
-		#ctrl = lambda wildcards: bigWigDir_frag_RPM + "/" + get_input_name(wildcards.sampleName) + ".frag.rpm.bw"
+		#ctrl = lambda wildcards: bigWigDir_frag_RPM + "/" + get_ctrl_name(wildcards.sampleName) + ".frag.rpm.bw"
 		chip = sampleDir + "/{sampleName}/igv.frag.rpm.bw",
-		ctrl = lambda wildcards: sampleDir + "/" + get_input_name(wildcards.sampleName) + "/igv.frag.rpm.bw"
+		ctrl = lambda wildcards: sampleDir + "/" + get_ctrl_name(wildcards.sampleName) + "/igv.frag.rpm.bw"
 	output:
 		#bigWigDir_frag_RPM_sub + "/{sampleName}.frag.rpm.subInput.bw",
 		sampleDir + "/{sampleName}/igv.frag.rpm.subInput.bw",
@@ -255,9 +215,9 @@ rule make_bigwig_frag_rpm_subinput:
 rule make_bigwig_ctr_rpsm_subinput:
 	input:
 		#chip = bigWigDir_ctr_RPSM + "/{sampleName}.ctr.rpsm.bw",
-		#ctrl = lambda wildcards: bigWigDir_ctr_RPSM + "/" + get_input_name(wildcards.sampleName) + ".ctr.rpsm.bw"
+		#ctrl = lambda wildcards: bigWigDir_ctr_RPSM + "/" + get_ctrl_name(wildcards.sampleName) + ".ctr.rpsm.bw"
 		chip = sampleDir + "/{sampleName}/igv.ctr.rpsm.bw",
-		ctrl = lambda wildcards: sampleDir + "/" + get_input_name(wildcards.sampleName) + "/igv.ctr.rpsm.bw"
+		ctrl = lambda wildcards: sampleDir + "/" + get_ctrl_name(wildcards.sampleName) + "/igv.ctr.rpsm.bw"
 	output:
 		#bigWigDir_ctr_RPSM_sub + "/{sampleName}.ctr.rpsm.subInput.bw",
 		sampleDir + "/{sampleName}/igv.ctr.rpsm.subInput.bw",
@@ -274,9 +234,9 @@ rule make_bigwig_ctr_rpsm_subinput:
 rule make_bigwig_frag_rpsm_subinput:
 	input:
 #		chip = bigWigDir_frag_RPSM + "/{sampleName}.frag.rpsm.bw",
-#		ctrl = lambda wildcards: bigWigDir_frag_RPSM + "/" + get_input_name(wildcards.sampleName) + ".frag.rpsm.bw"
+#		ctrl = lambda wildcards: bigWigDir_frag_RPSM + "/" + get_ctrl_name(wildcards.sampleName) + ".frag.rpsm.bw"
 		chip = sampleDir + "/{sampleName}/igv.frag.rpsm.bw",
-		ctrl = lambda wildcards: sampleDir + "/" + get_input_name(wildcards.sampleName) + "/igv.frag.rpsm.bw"
+		ctrl = lambda wildcards: sampleDir + "/" + get_ctrl_name(wildcards.sampleName) + "/igv.frag.rpsm.bw"
 	output:
 		#bigWigDir_frag_RPSM_sub + "/{sampleName}.frag.rpsm.subInput.bw",
 		sampleDir + "/{sampleName}/igv.frag.rpsm.subInput.bw",
@@ -290,48 +250,7 @@ rule make_bigwig_frag_rpsm_subinput:
 		bigWigSubtract.sh -g {chrom_size} -m 5G -t -1000 {output} {input.chip} {input.ctrl}
 		"""
 
-
 '''
-rule make_bigwig_allfrag_rpsm_subtract:
-	input:
-		chip = bigWigAllFrag_RPSM + "/{sampleName}.allFrag.rpsm.bw",
-		ctrl = lambda wildcards: bigWigAllFrag_RPSM + "/" + get_input_name(wildcards.sampleName) + ".allFrag.rpsm.bw",
-	output:
-		bigWigAllFrag_RPSM_subInput + "/{sampleName}.allFrag.rpsm.subInput.bw",
-	message:
-		"Making bigWig files... [{wildcards.sampleName}]"
-	#params:
-	#	memory = "%dG" % (  cluster["make_bigwig_subtract"]["memory"]/1000 - 1 )
-	shell:
-		"""
-		module load Cutlery/1.0
-		bigWigSubtract.sh -g {chrom_size} -m 5G -t -1000 {output} {input.chip} {input.ctrl}
-		"""
-
-
-def get_bigwig_input(wildcards):
-	# return ordered [ctrl , target] list.
-	ctrlName = samples.Ctrl[samples.Name == wildcards.sampleName]
-	ctrlName = ctrlName.tolist()[0]
-	return [ bigWigDir + "/" + wildcards.sampleName + ".bw", bigWigDir + "/" + ctrlName + ".bw" ]
-
-## RPM-scaled bigWig input-subtracted
-rule make_bigwig_subtract:
-	input:
-		get_bigwig_input
-	output:
-		bigWigDir_sub + "/{sampleName}.subInput.bw",
-	message:
-		"Making bigWig files... [{wildcards.sampleName}]"
-	#params:
-	#	memory = "%dG" % (  cluster["make_bigwig_subtract"]["memory"]/1000 - 1 )
-	shell:
-		"""
-		module load Cutlery/1.0
-		bigWigSubtract.sh -g {chrom_size} -m 5G -t -1000 {output} {input}
-		"""
-
-
 ## RPM-scaled bigWig input-divided log2FC
 rule make_bigwig_divide:
 	input:
@@ -362,7 +281,7 @@ rule make_tagdir:
 		module load Cutlery/1.0
 		cnr.makeHomerDir.sh -c {chrRegexTarget} -o {output} -n {params.name} {input}
 		"""
-'''
+
 
 def get_hetchr_ctrl(sampleName):
 	#print(sampleName)
@@ -370,15 +289,15 @@ def get_hetchr_ctrl(sampleName):
 	ctrlName = ctrlName.tolist()[0]
 	return ctrlName
 #	return [ fragDir + "/" + sampleName + ".frag.bed.gz", fragDir + "/" + ctrlName + ".frag.bed.gz" ]
-
+'''
 
 ## Need to double check if the "spikein" factor is correct (note that it is inverse of call_peak_hetchr_spikein_homer"
 rule call_peak_hetchr:
 	input:
 		chip = sampleDir + "/{sampleName}/fragment.bed.gz",
-		ctrl = lambda wildcards: sampleDir + "/" + get_hetchr_ctrl(wildcards.sampleName) + "/fragment.bed.gz",
+		ctrl = lambda wildcards: sampleDir + "/" + get_ctrl_name(wildcards.sampleName) + "/fragment.bed.gz",
 		spikeChip = sampleDir + "/{sampleName}/QC/spikeCnt.txt",
-		spikeCtrl = lambda wildcards: sampleDir + "/" + get_hetchr_ctrl(wildcards.sampleName) + "/QC/spikeCnt.txt"
+		spikeCtrl = lambda wildcards: sampleDir + "/" + get_ctrl_name(wildcards.sampleName) + "/QC/spikeCnt.txt"
 	output:
 		peakDir + "/{sampleName}." + peakSuffix + ".bed",
 		peakDir + "/{sampleName}." + peakSuffix + ".txt.gz"
@@ -404,10 +323,9 @@ rule call_peak_hetchr:
 rule call_peak_hetchr_spikein_homer:
 	input:
 		chip = sampleDir + "/{sampleName}/fragment.bed.gz",
-		ctrl = lambda wildcards: sampleDir + "/" + get_hetchr_ctrl(wildcards.sampleName) + "/fragment.bed.gz",
+		ctrl = lambda wildcards: sampleDir + "/" + get_ctrl_name(wildcards.sampleName) + "/fragment.bed.gz",
 		spikeChip = sampleDir + "/{sampleName}/QC/spikeCnt.txt",
-		spikeCtrl = lambda wildcards: sampleDir + "/" + get_hetchr_ctrl(wildcards.sampleName) + "/QC/spikeCnt.txt",
-		blacklist = peak_mask
+		spikeCtrl = lambda wildcards: sampleDir + "/" + get_ctrl_name(wildcards.sampleName) + "/QC/spikeCnt.txt"
 	output:
 		hetChr_homer_spike + "/{sampleName}.exBL.bed",
 	params:
@@ -424,7 +342,7 @@ rule call_peak_hetchr_spikein_homer:
 			exit 1
 		fi
 		spikein=`echo -e "${{spikeChip}}\t${{spikeCtrl}}" | gawk '{{ printf "%f", $1 / $2 }}'`
-		hetChr.call.homer.sh -o {params.outPrefix} -c "{chrRegexTarget}" -s {peakWindow_homer} -d {minDist_homer} -k $spikein -f {peakFC_homer} -m {input.blacklist} {input.chip} {input.ctrl}
+		hetChr.call.homer.sh -o {params.outPrefix} -c "{chrRegexTarget}" -s {peakWindow_homer} -d {minDist_homer} -k $spikein -f {peakFC_homer} -m {peak_mask} {input.chip} {input.ctrl}
 		"""
 
 ## hetero chromatin peak calling using Homer
@@ -433,10 +351,9 @@ rule call_peak_hetchr_spikein_homer_ctr:
 		#chip = fragDir_ctr + "/{sampleName}.frag.bed.gz",
 		#ctrl = lambda wildcards: fragDir_ctr + "/" + get_hetchr_ctrl(wildcards.sampleName) + ".frag.bed.gz",
 		chip = sampleDir + "/{sampleName}/fragment.bed.gz",
-		ctrl = lambda wildcards: sampleDir + "/" + get_hetchr_ctrl(wildcards.sampleName) + "/fragment.bed.gz",
+		ctrl = lambda wildcards: sampleDir + "/" + get_ctrl_name(wildcards.sampleName) + "/fragment.bed.gz",
 		spikeChip = sampleDir + "/{sampleName}/QC/spikeCnt.txt",
-		spikeCtrl = lambda wildcards: sampleDir + "/" + get_hetchr_ctrl(wildcards.sampleName) + "/QC/spikeCnt.txt",
-		blacklist = peak_mask
+		spikeCtrl = lambda wildcards: sampleDir + "/" + get_ctrl_name(wildcards.sampleName) + "/QC/spikeCnt.txt"
 	output:
 		hetChr_homer_spike_ctr + "/{sampleName}.exBL.bed",
 	params:
@@ -453,8 +370,12 @@ rule call_peak_hetchr_spikein_homer_ctr:
 			exit 1
 		fi
 		spikein=`echo -e "${{spikeChip}}\t${{spikeCtrl}}" | gawk '{{ printf "%f", $1 / $2 }}'`
-		hetChr.call.homer.sh -o {params.outPrefix} -c "{chrRegexTarget}" -r 150 -s {peakWindow_homer} -d {minDist_homer} -k $spikein -f {peakFC_homer} -m {input.blacklist} -l 150 {input.chip} {input.ctrl}
+		hetChr.call.homer.sh -o {params.outPrefix} -c "{chrRegexTarget}" -r 150 -s {peakWindow_homer} -d {minDist_homer} -k $spikein -f {peakFC_homer} -m {peak_mask} -l 150 {input.chip} {input.ctrl}
 		"""
+
+
+
+
 
 ################ Single-END style rules START #######################
 def get_align_bam_for_tagdir(wildcards):
@@ -489,8 +410,8 @@ rule make_tagdir_se:
 		"""
 
 
-def get_peakcall_input(sampleName):
-	ctrlName = get_input_name(sampleName)
+def get_peakcall_input_tagdir(sampleName):
+	ctrlName = get_ctrl_name(sampleName)
 	if ctrlName.upper() == "NULL":
 		return [ sampleDir + "/" + sampleName + "/TSV.SE" ]
 	else:
@@ -512,7 +433,7 @@ def get_peakcall_opt(sampleName):
 ## Peak size is fixed as 200bp
 rule call_peak_factor:
 	input:
-		lambda wildcards: get_peakcall_input(wildcards.sampleName)
+		lambda wildcards: get_peakcall_input_tagdir(wildcards.sampleName)
 		#chip = sampleDir + "/{sampleName}/TSV",
 		#ctrl = lambda wildcards: get_input_tagdir(wildcards.sampleName)
 	output:
@@ -534,7 +455,7 @@ rule call_peak_factor:
 ## NOTE: "-tbp 0" is implicitly set within chip.peakCallHistone.sh 
 rule call_peak_histone:
 	input:
-		lambda wildcards: get_peakcall_input(wildcards.sampleName)
+		lambda wildcards: get_peakcall_input_tagdir(wildcards.sampleName)
 		#chip = sampleDir + "/{sampleName}/TSV",
 		#ctrl = lambda wildcards: get_input_tagdir(wildcards.sampleName)
 	output:
@@ -550,6 +471,52 @@ rule call_peak_histone:
 		module load ChIPseq/1.0
 		chip.peakCallHistone.sh -o {params.desDir}/HomerPeak.histone/peak -m {params.mask} -s {params.optStr} {input}
 		"""
+
+## Extract spikein % from spikein data file
+def extract_spikeinfrac(src):
+	# src="spikeCnt.txt"
+	import pandas as pd
+	import sys
+	data = pd.read_csv(src, header=0, index_col="Name", sep="\t", comment="#", na_filter=False)
+	assert("SpikeinFrac" in data.index)
+	data = data.set_axis(["value"], axis=1)
+	spikeinFrac = data["value"]["SpikeinFrac"]
+	return spikeinFrac
+
+## Calculate spikein ratio to multiply to fold-change criteria
+## TODO 2021/09/22: need to apply this to hetChr Homer routin since it depends on spikein count not spike fraction
+def get_spikein_ratio(chip, ctrl):
+	spikeChip = extract_spikeinfrac(sampleDir + "/" + chip + "/QC/spikeCnt.txt")
+	spikeCtrl = extract_spikeinfrac(sampleDir + "/" + ctrl + "/QC/spikeCnt.txt")
+	return spikeChip / spikeCtrl
+
+rule call_peak_histone_spikein:
+	input:
+		lambda wildcards: get_peakcall_input_tagdir(wildcards.sampleName)
+		#spikeChip = sampleDir + "/{sampleName}/QC/spikeCnt.txt",
+		#spikeCtrl = lambda wildcards: sampleDir + "/" + get_ctrl_name(wildcards.sampleName) + "/QC/spikeCnt.txt"
+	output:
+		sampleDir + "/{sampleName}/HomerPeak.histone.spikein/peak.exBL.bed"
+	message:
+		"Calling histone peaks/SE with spikein ... [{wildcards.sampleName}]"
+	params:
+		spikeFactor = lambda wildcards: get_spikein_ratio(wildcards.sampleName, get_ctrl_name(wildcards.sampleName)),
+		outPrefix = lambda wildcards, output: __import__("re").sub(".exBL.bed$","", output[0]),
+		optStr = lambda wildcards, input:( "\"" + get_peakcall_opt(wildcards.sampleName) + "\"" + " -i" ) if len(input)>1 else "\"" + get_peakcall_opt(wildcards.sampleName) + "\""
+	shell:
+		"""
+		module load ChIPseq/1.0
+		chip.peakCallHistone.sh -o {params.outPrefix} -m {peak_mask} -f 4 -k {params.spikeFactor} -s {params.optStr} {input}
+		"""
+		#chip.peakCallHistone.sh -o {params.desDir}/HomerPeak.histone.spikein/peak -m {params.mask} -F 4 -k {params.spikeFactor} -s {params.optStr} {input}
+
+#		spikeChip=`cat {input.spikeChip} | gawk '$1 == "SpikeinFrac"' | cut -f 2`
+#		spikeCtrl=`cat {input.spikeCtrl} | gawk '$1 == "SpikeinFrac"' | cut -f 2`
+#		if [ "$spikeChip" == "" ] || [ "$spikeCtrl" == "" ];then
+#			echo -e "Error: empty spikein factor" >&2
+#			exit 1
+#		fi
+#		spikein=`echo -e "${{spikeChip}}\t${{spikeCtrl}}" | gawk '{{ printf "%f", $1 / $2 }}'`
 
 
 rule run_homer_motif:
