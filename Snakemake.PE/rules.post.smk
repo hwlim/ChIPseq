@@ -1,6 +1,10 @@
 if 'Homer_tbp' not in locals():
 	Homer_tbp=0
 
+
+########## Auxilary functions definition start #################
+
+## Decide downsampling depth if any
 def get_downsample_depth(wildcards):
 	'''
 	Get down sampling depth
@@ -23,7 +27,34 @@ def get_downsample_depth(wildcards):
 		raise RuntimeError('Invalid down sampling depth: %s' % n)
 
 
+## Extract spikein % from spikein data file
+def extract_spikeinfrac(src):
+	# src="spikeCnt.txt"
+	import pandas as pd
+	import sys
+	data = pd.read_csv(src, header=0, index_col="Name", sep="\t", comment="#", na_filter=False)
+	assert("SpikeinFrac" in data.index)
+	data = data.set_axis(["value"], axis=1)
+	spikeinFrac = data["value"]["SpikeinFrac"]
+	return spikeinFrac
 
+## Calculate spikein ratio to multiply to fold-change criteria
+## TODO 2021/09/22: need to apply this to hetChr Homer routin since it depends on spikein count not spike fraction
+def get_spikein_ratio(chip, ctrl):
+	spikeChip = extract_spikeinfrac(sampleDir + "/" + chip + "/QC/spikeCnt.txt")
+	spikeCtrl = extract_spikeinfrac(sampleDir + "/" + ctrl + "/QC/spikeCnt.txt")
+	return spikeChip / spikeCtrl
+
+########## Auxilary functions definition end #################
+
+
+
+## spikein information processing yielding
+## - main read count from chromosomes starting with "chr"
+## - spikein read count from chromosomes starting with spikein prefix
+## - unknown read count from chomoromes starting with others
+## - spikein % out of spike + main, not unknown
+## - scaleFactor for RPSM normalization to multiply to raw read count
 rule count_spikein:
 	input:
 		#fragDir + "/{sampleName}.frag.bed.gz"
@@ -45,10 +76,12 @@ rule make_spikeintable:
 		qcDir + "/spikein.txt"
 	message:
 		"Making spikein table..."
+	params:
+		outPrefix = lambda wildcards, output: __import__("re").sub(".txt$","", output[0])
 	shell:
 		"""
 		module load Cutlery/1.0
-		ngs.makeSpikeCntTable.r -o {qcDir}/spikein {input}
+		ngs.makeSpikeCntTable.r -o {params.outPrefix}{input}
 		"""
 
 ## Draw a plot of fragment length distribution
@@ -58,14 +91,16 @@ rule get_fragLenHist:
 		#sampleDir + "/{sampleName}/Fragments/frag.all.con.bed.gz"
 		sampleDir + "/{sampleName}/fragment.bed.gz"
 	output:
-		sampleDir + "/{sampleName}/QC/fragLen.txt",
-		sampleDir + "/{sampleName}/QC/fragLen.png"
+		txt = sampleDir + "/{sampleName}/QC/fragLen.txt",
+		png = sampleDir + "/{sampleName}/QC/fragLen.png"
 	message:
 		"Checking fragment length... [{wildcards.sampleName}]"
+	params:
+		outPrefix = lambda wildcards, output: __import__("re").sub(".txt$","", output[0])
 	shell:
 		"""
 		module load Cutlery/1.0
-		ngs.fragLenHist.r -o {sampleDir}/{wildcards.sampleName}/QC/fragLen -n {wildcards.sampleName} {input}
+		ngs.fragLenHist.r -o {params.outPrefix} -n {wildcards.sampleName} {input}
 		"""
 
 ## bigwig file: resized fragment in RPM scale
@@ -109,6 +144,7 @@ rule make_bigwig_frag_rpm:
 
 
 ## bigwig file: resized fragment in RPSM scale
+## scaling factor already calculated in spikeCnt.txt 
 rule make_bigwig_ctr_rpsm:
 	input:
 		#frag = fragDir_ctr + "/{sampleName}.frag.bed.gz",
@@ -299,11 +335,10 @@ rule call_peak_hetchr:
 		spikeChip = sampleDir + "/{sampleName}/QC/spikeCnt.txt",
 		spikeCtrl = lambda wildcards: sampleDir + "/" + get_ctrl_name(wildcards.sampleName) + "/QC/spikeCnt.txt"
 	output:
-		peakDir + "/{sampleName}." + peakSuffix + ".bed",
-		peakDir + "/{sampleName}." + peakSuffix + ".txt.gz"
+		bed = peakDir + "/{sampleName}." + peakSuffix + ".bed",
+		txt = peakDir + "/{sampleName}." + peakSuffix + ".txt.gz"
 	params:
-		outPrefix = peakDir + "/{sampleName}." + peakSuffix,
-
+		outPrefix = lambda wildcards, output: __import__("re").sub(".bed$","", output[0])
 	message:
 		"Peak calling for heterochromatin by fold-change ... [{wildcards.sampleName}]"
 	shell:
@@ -327,9 +362,9 @@ rule call_peak_hetchr_spikein_homer:
 		spikeChip = sampleDir + "/{sampleName}/QC/spikeCnt.txt",
 		spikeCtrl = lambda wildcards: sampleDir + "/" + get_ctrl_name(wildcards.sampleName) + "/QC/spikeCnt.txt"
 	output:
-		hetChr_homer_spike + "/{sampleName}.exBL.bed",
+		hetChr_homer_spike + "/{sampleName}.exBL.bed"
 	params:
-		outPrefix = hetChr_homer_spike + "/{sampleName}",
+		outPrefix = lambda wildcards, output: __import__("re").sub(".exBL.bed$","", output[0])
 	message:
 		"Peak calling for heterochromatin by Homer/frag ... [{wildcards.sampleName}]"
 	shell:
@@ -357,7 +392,7 @@ rule call_peak_hetchr_spikein_homer_ctr:
 	output:
 		hetChr_homer_spike_ctr + "/{sampleName}.exBL.bed",
 	params:
-		outPrefix = hetChr_homer_spike_ctr + "/{sampleName}",
+		outPrefix = lambda wildcards, output: __import__("re").sub(".exBL.bed$","", output[0])
 	message:
 		"Peak calling for heterochromatin by Homer/ctr ... [{wildcards.sampleName}]"
 	shell:
@@ -434,20 +469,18 @@ def get_peakcall_opt(sampleName):
 rule call_peak_factor:
 	input:
 		lambda wildcards: get_peakcall_input_tagdir(wildcards.sampleName)
-		#chip = sampleDir + "/{sampleName}/TSV",
-		#ctrl = lambda wildcards: get_input_tagdir(wildcards.sampleName)
 	output:
 		sampleDir + "/{sampleName}/HomerPeak.factor/peak.exBL.1rpm.bed"
 	message:
 		"Calling TF peaks/SE ... [{wildcards.sampleName}]"
 	params:
-		desDir = sampleDir + "/{sampleName}",
 		mask = peak_mask,
+		outPrefix = lambda wildcards, output: __import__("re").sub(".exBL.1rpm.bed$","", output[0]),
 		optStr = lambda wildcards, input:( "\"-size 200 " + get_peakcall_opt(wildcards.sampleName) + "\"" + " -i" ) if len(input)>1 else "\"-size 200 " + get_peakcall_opt(wildcards.sampleName) + "\""
 	shell:
 		"""
 		module load ChIPseq/1.0
-		chip.peakCallFactor.sh -o {params.desDir}/HomerPeak.factor/peak -m {params.mask} -s {params.optStr} {input}
+		chip.peakCallFactor.sh -o {params.outPrefix} -m {params.mask} -s {params.optStr} {input}
 		"""
 #		chip.peakCallFactor.sh -o {params.desDir}/HomerPeak.factor -i {input.ctrl} -m {params.mask} -s "-size 200" {input}
 
@@ -456,45 +489,25 @@ rule call_peak_factor:
 rule call_peak_histone:
 	input:
 		lambda wildcards: get_peakcall_input_tagdir(wildcards.sampleName)
-		#chip = sampleDir + "/{sampleName}/TSV",
-		#ctrl = lambda wildcards: get_input_tagdir(wildcards.sampleName)
 	output:
 		sampleDir + "/{sampleName}/HomerPeak.histone/peak.exBL.bed"
 	message:
 		"Calling histone peaks/SE ... [{wildcards.sampleName}]"
 	params:
-		desDir = sampleDir + "/{sampleName}",
 		mask = peak_mask,
+		outPrefix = lambda wildcards, output: __import__("re").sub(".exBL.bed$","", output[0]),
 		optStr = lambda wildcards, input:( "\"" + get_peakcall_opt(wildcards.sampleName) + "\"" + " -i" ) if len(input)>1 else "\"" + get_peakcall_opt(wildcards.sampleName) + "\""
 	shell:
 		"""
 		module load ChIPseq/1.0
-		chip.peakCallHistone.sh -o {params.desDir}/HomerPeak.histone/peak -m {params.mask} -s {params.optStr} {input}
+		chip.peakCallHistone.sh -o {params.outPrefix} -m {params.mask} -s {params.optStr} {input}
 		"""
 
-## Extract spikein % from spikein data file
-def extract_spikeinfrac(src):
-	# src="spikeCnt.txt"
-	import pandas as pd
-	import sys
-	data = pd.read_csv(src, header=0, index_col="Name", sep="\t", comment="#", na_filter=False)
-	assert("SpikeinFrac" in data.index)
-	data = data.set_axis(["value"], axis=1)
-	spikeinFrac = data["value"]["SpikeinFrac"]
-	return spikeinFrac
 
-## Calculate spikein ratio to multiply to fold-change criteria
-## TODO 2021/09/22: need to apply this to hetChr Homer routin since it depends on spikein count not spike fraction
-def get_spikein_ratio(chip, ctrl):
-	spikeChip = extract_spikeinfrac(sampleDir + "/" + chip + "/QC/spikeCnt.txt")
-	spikeCtrl = extract_spikeinfrac(sampleDir + "/" + ctrl + "/QC/spikeCnt.txt")
-	return spikeChip / spikeCtrl
-
+## homer histone peak calling considering spikein
 rule call_peak_histone_spikein:
 	input:
 		lambda wildcards: get_peakcall_input_tagdir(wildcards.sampleName)
-		#spikeChip = sampleDir + "/{sampleName}/QC/spikeCnt.txt",
-		#spikeCtrl = lambda wildcards: sampleDir + "/" + get_ctrl_name(wildcards.sampleName) + "/QC/spikeCnt.txt"
 	output:
 		sampleDir + "/{sampleName}/HomerPeak.histone.spikein/peak.exBL.bed"
 	message:
@@ -508,15 +521,24 @@ rule call_peak_histone_spikein:
 		module load ChIPseq/1.0
 		chip.peakCallHistone.sh -o {params.outPrefix} -m {peak_mask} -f 4 -k {params.spikeFactor} -s {params.optStr} {input}
 		"""
-		#chip.peakCallHistone.sh -o {params.desDir}/HomerPeak.histone.spikein/peak -m {params.mask} -F 4 -k {params.spikeFactor} -s {params.optStr} {input}
 
-#		spikeChip=`cat {input.spikeChip} | gawk '$1 == "SpikeinFrac"' | cut -f 2`
-#		spikeCtrl=`cat {input.spikeCtrl} | gawk '$1 == "SpikeinFrac"' | cut -f 2`
-#		if [ "$spikeChip" == "" ] || [ "$spikeCtrl" == "" ];then
-#			echo -e "Error: empty spikein factor" >&2
-#			exit 1
-#		fi
-#		spikein=`echo -e "${{spikeChip}}\t${{spikeCtrl}}" | gawk '{{ printf "%f", $1 / $2 }}'`
+## homer TF peak calling considering spikein
+rule call_peak_factor_spikein:
+	input:
+		lambda wildcards: get_peakcall_input_tagdir(wildcards.sampleName)
+	output:
+		sampleDir + "/{sampleName}/HomerPeak.factor.spikein/peak.exBL.1rpm.bed"
+	message:
+		"Calling histone peaks/SE with spikein ... [{wildcards.sampleName}]"
+	params:
+		spikeFactor = lambda wildcards: get_spikein_ratio(wildcards.sampleName, get_ctrl_name(wildcards.sampleName)),
+		outPrefix = lambda wildcards, output: __import__("re").sub(".exBL.1rpm.bed$","", output[0]),
+		optStr = lambda wildcards, input:( "\"" + get_peakcall_opt(wildcards.sampleName) + "\"" + " -i" ) if len(input)>1 else "\"" + get_peakcall_opt(wildcards.sampleName) + "\""
+	shell:
+		"""
+		module load ChIPseq/1.0
+		chip.peakCallFactor.sh -o {params.outPrefix} -m {peak_mask} -f 4 -k {params.spikeFactor} -s {params.optStr} {input}
+		"""
 
 
 rule run_homer_motif:
@@ -526,15 +548,15 @@ rule run_homer_motif:
 		sampleDir + "/{sampleName}/HomerPeak.factor/Motif/Homer.all/homerResults.html"
 	message:
 		"Running Homer motif search... [{wildcards.sampleName}]"
-	#params:
-	#	outPrefix = os.path.dirname("{output}")
+	params:
+		outPrefix =  lambda wildcards, output: __import__("os").path.dirname(output[0])
 	shell:
 		"""
 		module load Motif/1.0
-		outPrefix=`dirname {output}`
 		runHomerMotifSingle.sh -g {genome} -s 200 -p 4 -b /data/limlab/Resource/Homer.preparse \
-			-o $outPrefix {input}
+			-o {params.outPrefix} {input}
 		"""
+#		outPrefix=`dirname {output}`
 
 
 rule run_meme_motif_rand5k:
@@ -544,15 +566,15 @@ rule run_meme_motif_rand5k:
 		sampleDir + "/{sampleName}/HomerPeak.factor/Motif/MEME.random5k/meme-chip.html"
 	message:
 		"Running MEME-ChIP motif search for random 5k TSS peaks [{wildcards.sampleName}]"
-	#params:
-	#	outPrefix = os.path.dirname("{output}")
+	params:
+		outPrefix =  lambda wildcards, output: __import__("os").path.dirname(output[0])
 	shell:
 		"""
 		module purge
 		module load MotifMEME/1.0
 		outPrefix=`dirname {output}`
 		runMemeChipSingle.sh -g {genomeFa} -s 200 -p 4 -r 5000 -d ~/bin/Motif/MEME_DB/Merged_By_Lim.meme \
-			-o $outPrefix {input}
+			-o {params.outPrefix} {input}
 		"""
 
 
@@ -564,11 +586,13 @@ rule draw_peak_heatmap_factor:
 		sampleDir + "/{sampleName}/HomerPeak.factor/heatmap.exBL.1rpm.png"
 	message:
 		"Drawing peak profile heatmap... [{wildcards.sampleName}]"
+	params:
+		outPrefix = lambda wildcards, output: __import__("re").sub(".png$","", output[0])
 	shell:
 		"""
 		module load Cutlery/1.0
 		drawBigWigHeatmap.r -t {wildcards.sampleName} -m 0,0.5,2,0.5 -w 2000 -b 20 -s 3,6 \
-			-o {sampleDir}/{wildcards.sampleName}/HomerPeak.factor/heatmap.exBL.1rpm \
+			-o {params.outPrefix} \
 			{input.bed} {input.bw}
 		"""
 
@@ -581,11 +605,13 @@ rule draw_peak_heatmap_histone:
 		sampleDir + "/{sampleName}/HomerPeak.histone/heatmap.exBL.png"
 	message:
 		"Drawing peak profile heatmap... [{wildcards.sampleName}]"
+	params:
+		outPrefix = lambda wildcards, output: __import__("re").sub(".png$","", output[0])
 	shell:
 		"""
 		module load Cutlery/1.0
 		drawBigWigHeatmap.r -t {wildcards.sampleName} -m 0,0.5,2,0.5 -w 10000 -b 20 -s 3,6 \
-			-o {sampleDir}/{wildcards.sampleName}/HomerPeak.histone/heatmap.exBL \
+			-o {params.outPrefix}\
 			{input.bed} {input.bw}
 		"""
 

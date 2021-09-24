@@ -23,6 +23,7 @@ Options:
 	-s <optStr>: additional option for 'findPeaks' of Homer
 		in addition to internally pre-set option: \"-style histone -tbp 0 -norm 1000000 \"
 		such as -size or -minDist
+		Warning: -tbp 0 is implicitly set (may be revised in the future)
 Output:
 	- <outPrefix>.txt              Homer peak calling result
 	- <outPrefix>.bed              Homer peak in bed format
@@ -109,7 +110,7 @@ fi
 
 ###################################
 ## main code
-echo -e "Homer peak-calling
+echo -e "Homer histone peak-calling
   - target = $target
   - ctrl = $ctrl
   - blacklist = $mask
@@ -128,7 +129,7 @@ tmpTagCount=${TMPDIR}/__temp__.$$.target
 ## optional fold-change cut off adjustment by spikein factor
 if [ "$spikein" != "1" ];then
 	foldchange=`echo -e "${foldchange}\t${spikein}" | gawk '{ printf "%f", $1 * $2 }'`
-	echo -e "  - Spikein factor applied, new fold-change:
+	echo -e "  - Spikein factor applied, new fold-change threshold:
 	spikein factor = $spikein
 	new fold change = $foldchange
 " >&2

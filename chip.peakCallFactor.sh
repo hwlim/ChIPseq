@@ -5,6 +5,7 @@
 # 
 # Wrapper script for peak calling
 #
+# To do & consider:
 # - default option & additional option handling
 
 source $COMMON_LIB_BASE/commonBash.sh
@@ -17,6 +18,8 @@ Options:
 	-o <outPrefix>: output prefix including path, required
 	-i <ctrl>: (optional) ctrl homer tag directory, default=NULL
 	-m <mask>: mask bed file for filtering such as ENCODE blacklist
+	-f <foldchange>: foldchange cut off for against control sample, default=4
+	-k <spikein>: spike-in factor to multiply to the foldchange cut off (-f). (target spikein cnt)/(Input spikein cnt), default= 1
 	-s <optStr>: additional option for 'findPeaks' of Homer
 		Internal pre-set option: \"-style factor -norm 1000000 -center\"
 		Warning: -tbp 0 is implicitly set (may be revised in the future)
@@ -39,9 +42,11 @@ fi
 outPrefix=NULL
 ctrl=NULL
 mask=NULL
+foldchange=4
+spikein=1
 optStr=""
 #lengthParam=NULL,NULL
-while getopts ":o:i:m:s:" opt; do
+while getopts ":o:i:m:f:k:s:" opt; do
 	case $opt in
 		o)
 			outPrefix=$OPTARG
@@ -96,18 +101,32 @@ mkdir -p $desDir
 
 ###################################
 ## main code
-echo -e "Homer peak-calling" >&2
-echo -e "- target = $target" >&2
-echo -e "- ctrl = $ctrl" >&2
-echo -e "- desDir = $desDir" >&2
-echo -e "- optStr = $optStr" >&2
-echo -e "" >&2
+echo -e "Homer TF peak-calling
+  - target = $target
+  - ctrl = $ctrl
+  - blacklist = $mask
+  - outPrefix = $outPrefix
+  - TTC = $ttc
+  - fold-change = $foldchange
+  - spikein = $spikein" >&2
 
 log=${outPrefix}.homer.log
 peak0=${outPrefix}.txt
 peakBed=${outPrefix}.bed
 peakMasked=${outPrefix}.exBL.bed
 peak1rpm=${outPrefix}.exBL.1rpm.bed
+
+
+## optional fold-change cut off adjustment by spikein factor
+if [ "$spikein" != "1" ];then
+	foldchange=`echo -e "${foldchange}\t${spikein}" | gawk '{ printf "%f", $1 * $2 }'`
+	echo -e "  - Spikein factor applied, new fold-change threshold:
+	spikein factor = $spikein
+	new fold change = $foldchange
+" >&2
+fi
+optStr="$optStr -F $foldchange"
+echo -e "  - optStr = $optStr\n" >&2
 
 
 if [ "$ctrl" == "NULL" ];then
