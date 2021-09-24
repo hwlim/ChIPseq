@@ -122,14 +122,14 @@ rule make_tagdir:
 #		mypipe.makeTagDir.sh -o {params.desDir} -n {params.name} -t {Homer_tbp} -c {chrRegexTarget} {input}
 
 
-def get_input_name(sampleName):
+def get_ctrl_name(sampleName):
 	ctrlName = samples.Ctrl[samples.Name == sampleName]
 	assert( len(ctrlName) == 1 )
 	ctrlName = ctrlName.tolist()[0]
 	return ctrlName
 
 def get_peakcall_input(sampleName):
-	ctrlName = get_input_name(sampleName)
+	ctrlName = get_ctrl_name(sampleName)
 	if ctrlName.upper() == "NULL":
 		return [ sampleDir + "/" + sampleName + "/TSV" ]
 	else:
