@@ -26,7 +26,8 @@ def get_downsample_depth(wildcards):
 	else:
 		raise RuntimeError('Invalid down sampling depth: %s' % n)
 
-
+'''
+## NOTE: These two functions cannot be used for Snakemake in normal situation because spikeCnt.txt file does not exist upfront in most of times
 ## Extract spikein % from spikein data file
 def extract_spikeinfrac(src):
 	# src="spikeCnt.txt"
@@ -39,11 +40,11 @@ def extract_spikeinfrac(src):
 	return spikeinFrac
 
 ## Calculate spikein ratio to multiply to fold-change criteria
-## TODO 2021/09/22: need to apply this to hetChr Homer routin since it depends on spikein count not spike fraction
 def get_spikein_ratio(chip, ctrl):
 	spikeChip = extract_spikeinfrac(sampleDir + "/" + chip + "/QC/spikeCnt.txt")
 	spikeCtrl = extract_spikeinfrac(sampleDir + "/" + ctrl + "/QC/spikeCnt.txt")
 	return spikeChip / spikeCtrl
+'''
 
 ########## Auxilary functions definition end #################
 
@@ -327,6 +328,8 @@ def get_hetchr_ctrl(sampleName):
 #	return [ fragDir + "/" + sampleName + ".frag.bed.gz", fragDir + "/" + ctrlName + ".frag.bed.gz" ]
 '''
 
+## TODO: The currrent version of Spikein does not precisely reflect spikein scaling factor
+##      "Spikein" must be repladced with "SpikeinFrac"
 ## Need to double check if the "spikein" factor is correct (note that it is inverse of call_peak_hetchr_spikein_homer"
 rule call_peak_hetchr:
 	input:
@@ -507,36 +510,54 @@ rule call_peak_histone:
 ## homer histone peak calling considering spikein
 rule call_peak_histone_spikein:
 	input:
-		lambda wildcards: get_peakcall_input_tagdir(wildcards.sampleName)
+		tagDir = lambda wildcards: get_peakcall_input_tagdir(wildcards.sampleName)
+		spikeChip = sampleDir + "/{sampleName}/QC/spikeCnt.txt",
+		spikeCtrl = lambda wildcards: sampleDir + "/" + get_ctrl_name(wildcards.sampleName) + "/QC/spikeCnt.txt"
 	output:
 		sampleDir + "/{sampleName}/HomerPeak.histone.spikein/peak.exBL.bed"
 	message:
 		"Calling histone peaks/SE with spikein ... [{wildcards.sampleName}]"
 	params:
-		spikeFactor = lambda wildcards: get_spikein_ratio(wildcards.sampleName, get_ctrl_name(wildcards.sampleName)),
+		#spikeFactor = lambda wildcards: get_spikein_ratio(wildcards.sampleName, get_ctrl_name(wildcards.sampleName)),
 		outPrefix = lambda wildcards, output: __import__("re").sub(".exBL.bed$","", output[0]),
 		optStr = lambda wildcards, input:( "\"" + get_peakcall_opt(wildcards.sampleName) + "\"" + " -i" ) if len(input)>1 else "\"" + get_peakcall_opt(wildcards.sampleName) + "\""
 	shell:
 		"""
 		module load ChIPseq/1.0
-		chip.peakCallHistone.sh -o {params.outPrefix} -m {peak_mask} -f 4 -k {params.spikeFactor} -s {params.optStr} {input}
+		spikeChip=`cat {input.spikeChip} | gawk '$1 == "SpikeinFrac"' | cut -f 2`
+		spikeCtrl=`cat {input.spikeCtrl} | gawk '$1 == "SpikeinFrac"' | cut -f 2`
+		if [ "$spikeChip" == "" ] || [ "$spikeCtrl" == "" ];then
+			echo -e "Error: empty spikein factor" >&2
+			exit 1
+		fi
+		spikein=`echo -e "${{spikeChip}}\t${{spikeCtrl}}" | gawk '{{ printf "%f", $1 / $2 }}'`
+		chip.peakCallHistone.sh -o {params.outPrefix} -m {peak_mask} -f 4 -k {params.spikeFactor} -s {params.optStr} {input.tagDir}
 		"""
 
 ## homer TF peak calling considering spikein
 rule call_peak_factor_spikein:
 	input:
-		lambda wildcards: get_peakcall_input_tagdir(wildcards.sampleName)
+		tagDir = lambda wildcards: get_peakcall_input_tagdir(wildcards.sampleName)
+		spikeChip = sampleDir + "/{sampleName}/QC/spikeCnt.txt",
+		spikeCtrl = lambda wildcards: sampleDir + "/" + get_ctrl_name(wildcards.sampleName) + "/QC/spikeCnt.txt"
 	output:
 		sampleDir + "/{sampleName}/HomerPeak.factor.spikein/peak.exBL.1rpm.bed"
 	message:
 		"Calling histone peaks/SE with spikein ... [{wildcards.sampleName}]"
 	params:
-		spikeFactor = lambda wildcards: get_spikein_ratio(wildcards.sampleName, get_ctrl_name(wildcards.sampleName)),
+		#spikeFactor = lambda wildcards: get_spikein_ratio(wildcards.sampleName, get_ctrl_name(wildcards.sampleName)),
 		outPrefix = lambda wildcards, output: __import__("re").sub(".exBL.1rpm.bed$","", output[0]),
 		optStr = lambda wildcards, input:( "\"" + get_peakcall_opt(wildcards.sampleName) + "\"" + " -i" ) if len(input)>1 else "\"" + get_peakcall_opt(wildcards.sampleName) + "\""
 	shell:
 		"""
 		module load ChIPseq/1.0
+		spikeChip=`cat {input.spikeChip} | gawk '$1 == "SpikeinFrac"' | cut -f 2`
+		spikeCtrl=`cat {input.spikeCtrl} | gawk '$1 == "SpikeinFrac"' | cut -f 2`
+		if [ "$spikeChip" == "" ] || [ "$spikeCtrl" == "" ];then
+			echo -e "Error: empty spikein factor" >&2
+			exit 1
+		fi
+		spikein=`echo -e "${{spikeChip}}\t${{spikeCtrl}}" | gawk '{{ printf "%f", $1 / $2 }}'`
 		chip.peakCallFactor.sh -o {params.outPrefix} -m {peak_mask} -f 4 -k {params.spikeFactor} -s {params.optStr} {input}
 		"""
 
