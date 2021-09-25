@@ -106,7 +106,6 @@ echo -e "Homer TF peak-calling
   - ctrl = $ctrl
   - blacklist = $mask
   - outPrefix = $outPrefix
-  - TTC = $ttc
   - fold-change = $foldchange
   - spikein = $spikein" >&2
 
