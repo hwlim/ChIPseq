@@ -1,4 +1,4 @@
-Plan
+# Plan #
 
 - Remove filtering step --> intrinsic handling by options in worker scripts
 - Use both of BAM and fragment for downstream anlaysis
