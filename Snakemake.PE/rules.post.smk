@@ -82,7 +82,7 @@ rule make_spikeintable:
 	shell:
 		"""
 		module load Cutlery/1.0
-		ngs.makeSpikeCntTable.r -o {params.outPrefix}{input}
+		ngs.makeSpikeCntTable.r -o {params.outPrefix} {input}
 		"""
 
 ## Draw a plot of fragment length distribution
@@ -123,7 +123,7 @@ rule make_bigwig_ctr_rpm:
 	shell:
 		"""
 		module load Cutlery/1.0
-		cnr.fragToBigWig.sh -g {chrom_size} -c "{chrRegexTarget}" -r 150 -m {params.memory} -o {output} {input.frag}
+		cnr.fragToBigWig.sh -g {chrom_size} -c "{chrRegexTarget}" -r 150 -m {params.memory} -o {output} {input}
 		"""
 
 ## bigwig file: original fragment in RPM scale
@@ -140,7 +140,7 @@ rule make_bigwig_frag_rpm:
 	shell:
 		"""
 		module load Cutlery/1.0
-		cnr.fragToBigWig.sh -g {chrom_size} -c "{chrRegexTarget}" -m {params.memory} -o {output} {input.frag}
+		cnr.fragToBigWig.sh -g {chrom_size} -c "{chrRegexTarget}" -m {params.memory} -o {output} {input}
 		"""
 
 
@@ -151,7 +151,7 @@ rule make_bigwig_ctr_rpsm:
 		#frag = fragDir_ctr + "/{sampleName}.frag.bed.gz",
 		#frag = fragDir + "/{sampleName}.frag.bed.gz",
 		frag = sampleDir + "/{sampleName}/fragment.bed.gz",
-		spikeinCnt = qcDir + "/{sampleName}.spikeCnt.txt"
+		spikeinCnt = sampleDir + "/{sampleName}/QC/spikeCnt.txt"
 	output:
 		sampleDir + "/{sampleName}/igv.ctr.rpsm.bw",
 	message:
@@ -174,7 +174,7 @@ rule make_bigwig_frag_rpsm:
 	input:
 		#frag = fragDir + "/{sampleName}.frag.bed.gz",
 		frag = sampleDir + "/{sampleName}/fragment.bed.gz",
-		spikeinCnt = qcDir + "/{sampleName}.spikeCnt.txt"
+		spikeinCnt = sampleDir + "/{sampleName}/QC/spikeCnt.txt"
 	output:
 		sampleDir + "/{sampleName}/igv.frag.rpsm.bw",
 	message:
@@ -510,7 +510,7 @@ rule call_peak_histone:
 ## homer histone peak calling considering spikein
 rule call_peak_histone_spikein:
 	input:
-		tagDir = lambda wildcards: get_peakcall_input_tagdir(wildcards.sampleName)
+		tagDir = lambda wildcards: get_peakcall_input_tagdir(wildcards.sampleName),
 		spikeChip = sampleDir + "/{sampleName}/QC/spikeCnt.txt",
 		spikeCtrl = lambda wildcards: sampleDir + "/" + get_ctrl_name(wildcards.sampleName) + "/QC/spikeCnt.txt"
 	output:
@@ -530,14 +530,14 @@ rule call_peak_histone_spikein:
 			echo -e "Error: empty spikein factor" >&2
 			exit 1
 		fi
-		spikein=`echo -e "${{spikeChip}}\t${{spikeCtrl}}" | gawk '{{ printf "%f", $1 / $2 }}'`
-		chip.peakCallHistone.sh -o {params.outPrefix} -m {peak_mask} -f 4 -k {params.spikeFactor} -s {params.optStr} {input.tagDir}
+		spikeFactor=`echo -e "${{spikeChip}}\t${{spikeCtrl}}" | gawk '{{ printf "%f", $1 / $2 }}'`
+		chip.peakCallHistone.sh -o {params.outPrefix} -m {peak_mask} -f 4 -k $spikeFactor -s {params.optStr} {input.tagDir}
 		"""
 
 ## homer TF peak calling considering spikein
 rule call_peak_factor_spikein:
 	input:
-		tagDir = lambda wildcards: get_peakcall_input_tagdir(wildcards.sampleName)
+		tagDir = lambda wildcards: get_peakcall_input_tagdir(wildcards.sampleName),
 		spikeChip = sampleDir + "/{sampleName}/QC/spikeCnt.txt",
 		spikeCtrl = lambda wildcards: sampleDir + "/" + get_ctrl_name(wildcards.sampleName) + "/QC/spikeCnt.txt"
 	output:
@@ -557,8 +557,8 @@ rule call_peak_factor_spikein:
 			echo -e "Error: empty spikein factor" >&2
 			exit 1
 		fi
-		spikein=`echo -e "${{spikeChip}}\t${{spikeCtrl}}" | gawk '{{ printf "%f", $1 / $2 }}'`
-		chip.peakCallFactor.sh -o {params.outPrefix} -m {peak_mask} -f 4 -k {params.spikeFactor} -s {params.optStr} {input}
+		spikeFactor=`echo -e "${{spikeChip}}\t${{spikeCtrl}}" | gawk '{{ printf "%f", $1 / $2 }}'`
+		chip.peakCallFactor.sh -o {params.outPrefix} -m {peak_mask} -f 4 -k $spikeFactor -s {params.optStr} {input}
 		"""
 
 
