@@ -1,6 +1,8 @@
 if 'Homer_tbp' not in locals():
 	Homer_tbp=0
 
+if 'fc_histone' not in locals():
+	fc_histone=4
 
 ########## Auxilary functions definition start #################
 
@@ -503,7 +505,7 @@ rule call_peak_histone:
 	shell:
 		"""
 		module load ChIPseq/1.0
-		chip.peakCallHistone.sh -o {params.outPrefix} -m {params.mask} -s {params.optStr} {input}
+		chip.peakCallHistone.sh -o {params.outPrefix} -m {params.mask} -f {fc_histone} -s {params.optStr}  {input}
 		"""
 
 
@@ -531,7 +533,7 @@ rule call_peak_histone_spikein:
 			exit 1
 		fi
 		spikeFactor=`echo -e "${{spikeChip}}\t${{spikeCtrl}}" | gawk '{{ printf "%f", $1 / $2 }}'`
-		chip.peakCallHistone.sh -o {params.outPrefix} -m {peak_mask} -f 4 -k $spikeFactor -s {params.optStr} {input.tagDir}
+		chip.peakCallHistone.sh -o {params.outPrefix} -m {peak_mask} -f {fc_histone}  -k $spikeFactor -s {params.optStr} {input.tagDir}
 		"""
 
 ## homer TF peak calling considering spikein
