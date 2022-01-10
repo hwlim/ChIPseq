@@ -156,12 +156,12 @@ do
 	if [ "$exportBW" == "y" ] || [ "$exportBW" == "Y" ];then
 		echo -e "1) Exporting bigwig files" >&2
 		#mkdir -p ${desDir}/BigWig
-		for prefix in ctr.rpm ctr.rpsm frag.rpm frag.rpsm
+		for prefix in "" .ctr.rpm .ctr.rpsm .frag.rpm .frag.rpsm
 		do
 			for suffix in "" ".subInput"
 			do
-				src=${srcDir}/${sample}/igv.${prefix}${suffix}.bw
-				des=${desDir}/BigWig.${prefix}${suffix}/${sample}.${prefix}${suffix}.bw
+				src=${srcDir}/${sample}/igv${prefix}${suffix}.bw
+				des=${desDir}/BigWig${prefix}${suffix}/${sample}${prefix}${suffix}.bw
 				exportFile $src $des FALSE
 			done
 		done
