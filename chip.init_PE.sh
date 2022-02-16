@@ -15,5 +15,5 @@ CHIP_PATH=~/bin/Pipeline/Snakemake.PE
 echo -e "Initializing ChIP-seq:PE analysis" >&2
 
 
-cp -v ${CHIP_PATH}/sample.tsv .
-cp -v ${CHIP_PATH}/Snakefile .
+cp -i -v ${CHIP_PATH}/sample.tsv .
+cp -i -v ${CHIP_PATH}/Snakefile .
