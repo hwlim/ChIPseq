@@ -42,7 +42,7 @@ spikePrefix		= "dm-"
 
 ########################
 ## STAR index & options
-
+star_module="STAR/2.7.4"
 ## ChIP-seq / ATAC-seq / Cut&Run
 star_option	= "--alignSJDBoverhangMin 999 --alignIntronMax 1 --alignMatesGapMax 2000 --outFilterMultimapNmax 1 --outFilterMismatchNoverLmax 0.05 --outReadsUnmapped None"
 ## Note:
