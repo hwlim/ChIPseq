@@ -18,20 +18,17 @@ Input:
 	- src bam directory: contaning sample folders containing replicate bam file
 	  e.g. 1.3.Align.dedup
 	  1.3.Align.dedup/DE_Ctrl_ChIP_H2Aub_CloneA6
-	  ├── align.bam
-	  └── align.metric
+	  └── align.bam
 	  1.3.Align.dedup/DE_Ctrl_ChIP_H2Aub_CloneH5
-	  ├── align.bam
-	  └── align.metric
+	  └── align.bam
 	- des bam directory: to write merged bam files
 		bam files are named as <group>.bam
 Options:
 	-t: if set, print pooling plan lisintg src and des files
 		No actual pooling job, just for simulation
 	-b: if set, bsub are submitted for merging bam files, default=off
-	-u: if set, assuming unsorted replicate bam file (name-sorted as in old version of Cutlery), default=off
-		FYI, previosu Cutlery created unsorted bam file.
-		But the current version create coordinate-sorted bam files after alignment
+	-u: if set, assuming unsorted input bam files and create unsorted output, default=off
+		NOTE:, previosu Cutlery created unsorted bam file. But the current version create coordinate-sorted bam files after alignment
 	-f: if set, force overwrite existing destination bam files, default=off" >&2
 }
 
