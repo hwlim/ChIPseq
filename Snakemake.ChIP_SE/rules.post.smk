@@ -286,6 +286,20 @@ rule make_bigwig:
 #	params:
 #		memory = "%dG" % (  cluster["make_bigwig"]["memory"]/1000 - 1 )
 
+rule make_bigwig_ctr_rpm_subinput:
+	input:
+		chip = sampleDir + "/{sampleName}/igv.bw",
+		ctrl = lambda wildcards: sampleDir + "/" + get_ctrl_name(wildcards.sampleName) + "/igv.bw"
+	output:
+		sampleDir + "/{sampleName}/igv.subInput.bw"
+	message:
+		"Making bigWig files, subInput ... [{wildcards.sampleName}]"
+	shell:
+		"""
+		module load Cutlery/1.0
+		bigWigSubtract.sh -g {chrom_size} -m 5G -t -1000 {output} {input.chip} {input.ctrl}
+		"""
+
 ##### Average bigWig files
 def get_bigwig_rep(groupName, srcDir):
 	repL = samples.Name[samples.Group == groupName].tolist()
