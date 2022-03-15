@@ -30,7 +30,6 @@ star_index	= "/Volumes/limlab/Resource/STAR_Index/2.7.4/hg38_allChr_v29"
 
 
 ## Other essential pameters
-genome			= "hg38"
 adapter			= "AGATCGGAAGAGC"	# illumina universal adapter
 #adapter			= "CTGTCTCTTATA"	# Nextera adapter for ATAC-seq or Cut&Tag
 #trim_maxLen=100	## Maximum read length after trimming. ** NOT YET IMPLEMENTED **
@@ -54,6 +53,13 @@ star_option	= "--alignSJDBoverhangMin 999 --alignIntronMax 1 --alignMatesGapMax 
 ## Job flags
 doTrim		= False
 doDedup		= True
+
+########################
+## Other parameteres
+## Homer "tbp" option, number of read per position to consider
+## If 0, all the reads are considered.
+## If deduplication is done, 0 is strongly recommended.
+Homer_tbp=0
 
 #########################
 ## Directories
