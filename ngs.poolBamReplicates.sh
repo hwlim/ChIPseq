@@ -16,19 +16,35 @@ Description:
 Input:
 	- sample.tsv file: containing columns 'Name' and 'Group', from original/replicate Cutlery run
 	- src bam directory: contaning sample folders containing replicate bam file
-	  e.g. 1.3.Align.dedup
-	  1.3.Align.dedup/DE_Ctrl_ChIP_H2Aub_CloneA6
-	  └── align.bam
-	  1.3.Align.dedup/DE_Ctrl_ChIP_H2Aub_CloneH5
-	  └── align.bam
+		Case 1: all bam files in a single foldler
+			<src sample dir>
+			├── <sample1>.bam
+			└── <sample2>.bam
+		Case 2: stratified by sample folder
+			<src sample dir>
+			├── sample1
+			│    └── align.bam
+			└── sample12
+			     └── align.bam
 	- des bam directory: to write merged bam files
-		bam files are named as <group>.bam
+		Case 1:
+			<des group dir>
+			├── <group1>.bam
+			└── <group2>.bam
+		Case 2:
+			<des group dir>
+			├── group1
+			│    └── align.bam
+			└── group2
+			     └── align.bam
 Options:
 	-t: if set, print pooling plan lisintg src and des files
 		No actual pooling job, just for simulation
+	-s: if set, input bam files are stratified by sample folders as shown in Case 2
+		In default, all input bam files are assumed to be in a single src folder as shown in Case 1
 	-b: if set, bsub are submitted for merging bam files, default=off
-	-u: if set, assuming unsorted input bam files and create unsorted output, default=off
-		NOTE:, previosu Cutlery created unsorted bam file. But the current version create coordinate-sorted bam files after alignment
+	-u: if set, assume unsorted input bam files and create unsorted output, default=off
+		NOTE: Previousu Cutlery created unsorted bam file. But the current version create coordinate-sorted bam files after alignment
 	-f: if set, force overwrite existing destination bam files, default=off" >&2
 }
 
@@ -44,10 +60,14 @@ bsub=FALSE
 unsortedBam=FALSE
 overwrite=FALSE
 testOnly=FALSE
-while getopts ":buft" opt; do
+bySampleDir=FALSE
+while getopts ":bsuft" opt; do
 	case $opt in
 		b)
 			bsub=TRUE
+			;;
+		s)
+			bySampleDir=TRUE
 			;;
 		u)
 			unsortedBam=TRUE
@@ -101,6 +121,7 @@ echo -e "Pooling replicate bam files" >&2
 echo -e "  - sampleInfo: $sampleInfo" >&2
 echo -e "  - srcDir: $srcDir" >&2
 echo -e "  - desDir: $desDir" >&2
+echo -e "  - bySampleDir: $bySampleDir" >&2
 echo -e "  - testOnly: $testOnly" >&2
 echo -e "  - unsorted bam: $unsortedBam" >&2
 echo -e "  - bsub:   $bsub" >&2
@@ -109,8 +130,13 @@ echo -e "" >&2
 mkdir -p $desDir
 for group in ${groupL[@]}
 do
-	des=${desDir}/${group}/align.bam
-	log=${desDir}/${group}/align.log
+	if [ "$bySampleDir" == "TRUE" ];then
+		des=${desDir}/${group}/align.bam
+		log=${desDir}/${group}/align.log
+	else
+		des=${desDir}/${group}.bam
+		log=${desDir}/${group}.log
+	fi
 
 	## Checking existing destination file
 	if [ -f $des ] && [ "$overwrite" != "TRUE" ];then
@@ -119,7 +145,11 @@ do
 	fi
 
 	## List of replicate bam files
-	srcL=( `tail -n +2 $sampleInfo | grep -v -e ^$ -e "^#" | gawk '{ if($3 == "'$group'") printf "'$srcDir'/%s/align.bam\n", $2 }'` )
+	if [ "$bySampleDir" == "TRUE" ];then
+		srcL=( `tail -n +2 $sampleInfo | grep -v -e ^$ -e "^#" | gawk '{ if($3 == "'$group'") printf "'$srcDir'/%s/align.bam\n", $2 }'` )
+	else
+		srcL=( `tail -n +2 $sampleInfo | grep -v -e ^$ -e "^#" | gawk '{ if($3 == "'$group'") printf "'$srcDir'/%s.bam\n", $2 }'` )
+	fi
 	assertFileExist ${srcL[@]}
 
 	## Merging to destination
@@ -139,7 +169,9 @@ do
 		optStr="-S"
 	fi
 
-	mkdir -p ${desDir}/${group}
+	if [ "$bySampleDir" == "TRUE" ];then
+		mkdir -p ${desDir}/${group}
+	fi
 
 	echo -ne "" > $log
 	for src in ${srcL[@]}

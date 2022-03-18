@@ -13,24 +13,26 @@ source $COMMON_LIB_BASE/commonBash.sh
 trap 'if [ `ls -1 ${TMPDIR}/__temp__.$$.* 2>/dev/null | wc -l` -gt 0 ];then rm ${TMPDIR}/__temp__.$$.*; fi' EXIT
 
 function printUsage {
-	echo -e "Usage: `basename $0` (options) <sample.tsv> <src bam directory> <des bam directory>
+	echo -e "Usage: `basename $0` (options) <sample.tsv> <src sample directory> <des sample directory>
 Description:
 	Merge multiple fragment bed files of a group according to sample/group information within a given sample.tsv file
 Input:
 	- sample.tsv file: containing columns 'Name' and 'Group'
-	- src fragment directory: contanin replicate bed files
-	- des fragment directory: to write merged bed files
-
-	Note:
-	- frgament files are assumed to have a common suffix, *.frag.bed.gz
-	- final fragment files are named as <group>.frag.bed.gz
+	- src fragment directory: contanin replicate fragment bed files
+	  e.g. <sample dir>
+	  ├── <sample1>.frag.bed.gz
+	  └── <sample2>.frag.bed.gz
+	  In default, input fragments files are assumed to be sorted. So merge-sort will be performed to create output.
+	- des fragment directory: to write merged fragment bed files
+	  e.g. <group dir>
+	  ├── <group1>.frag.bed.gz
+	  └── <group2>.frag.bed.gz
 
 Options:
-	-t: if set, print pooling plan lisintg src and des files
-		No actually pooling job, just for simulation
+	-t: if set, dry run simply displaying pooling message, default=off
 	-b: if set, bsub are submitted for merging bam files, default=off
-		Submission may be limited by LSF setting of total job submission limit
-	-o: if set, overwrite existing destination bam files, default=off" >&2
+	-u: if set, input/output fragment files are assumed to be 'unsorted', not merge sort performed. default=off
+	-f: if set, force overwrite existing destination bam files, default=off" >&2
 }
 
 if [ $# -eq 0 ];then
@@ -43,14 +45,18 @@ fi
 ## option and input file handling
 bsub=FALSE
 testRun=FALSE
+unsorted=FALSE
 overwrite=FALSE
-while getopts ":bot" opt; do
+while getopts ":buft" opt; do
 	case $opt in
 		t)
 			testRun=TRUE
 			;;
 		b)
 			bsub=TRUE
+			;;
+		u)
+			unsorted=TRUE
 			;;
 		o)
 			overwrite=TRUE
@@ -90,13 +96,14 @@ echo -e "Pooling replicate fragment bed files" >&2
 echo -e "  - sampleInfo: $sampleInfo" >&2
 echo -e "  - srcDir: $srcDir" >&2
 echo -e "  - desDir: $desDir" >&2
+echo -e "  - unsorted: $unsorted" >&2
 echo -e "  - bsub:   $bsub" >&2
 
 mkdir -p $desDir
 for group in ${groupL[@]}
 do
 	des=${desDir}/${group}.frag.bed.gz
-	log=${desDir}/${group}.log
+	log=${desDir}/${group}.frag.log
 
 	## Checking existing destination file
 	if [ -f $des ] && [ "$overwrite" != "TRUE" ];then
@@ -119,30 +126,65 @@ do
 		continue
 	fi
 
+	echo -ne "" > $log
 	for src in ${srcL[@]}
 	do
-		echo -e "  - $src" >&2
-	done > $log
-
-	## command to uncompress
-	cmd="sort -m -k1,1 -k2,2n -k3,3n"
-	for src in ${srcL[@]}
-	do
-		cmd="${cmd} <( zcat $src )"
+		echo -e "- $src" >> $log
 	done
-	echo -e "Submitting" >&2
-	echo "  >> $cmd" >&2
 
-	if [ "$bsub" == "TRUE" ];then
-		## Parallel processing using HPC:lsf
-		bsub -W 24:00 -n 1 "eval $cmd | gzip > ${TMPDIR}/__temp__.$$; mv ${TMPDIR}/__temp__.$$ $des"
+	# ## command to uncompress
+	# cmd="sort -m -k1,1 -k2,2n -k3,3n"
+	# for src in ${srcL[@]}
+	# do
+	# 	cmd="${cmd} <( zcat $src )"
+	# done
+	# echo -e "Submitting" >&2
+	# echo "  >> $cmd" >&2
+
+	# if [ "$bsub" == "TRUE" ];then
+	# 	## Parallel processing using HPC:lsf
+	# 	bsub -W 24:00 -n 1 "eval $cmd | gzip > ${TMPDIR}/__temp__.$$; mv ${TMPDIR}/__temp__.$$ $des"
+	# else
+	# 	## Sequential processing
+	# 	eval $cmd | gzip > ${TMPDIR}/__temp__.$$
+	# 	mv ${TMPDIR}/__temp__.$$ $des
+	# 	#eval $cmd | gzip > $des
+	# 	#ngs.concateBamFiles.sh -o $des ${srcL[@]}
+	# fi
+	# echo "" >&2
+
+	tmp=${TMPDIR}/__temp__.$$.${group}.bed.gz
+	if [ "$unsorted" == "TRUE" ];then
+		if [ "$bsub" == "TRUE" ];then
+			## Parallel processing using HPC:lsf
+			bsub -W 24:00 -n 1 "cat ${srcL[@]} > $tmp; mv $tmp $des"
+		else
+			## Sequential processing
+			cat ${srcL[@]} > $tmp
+			mv $tmp $des
+		fi
 	else
-		## Sequential processing
-		eval $cmd | gzip > ${TMPDIR}/__temp__.$$
-		mv ${TMPDIR}/__temp__.$$ $des
-		#eval $cmd | gzip > $des
-		#ngs.concateBamFiles.sh -o $des ${srcL[@]}
+		inputStr=""
+		for src in ${srcL[@]}
+		do
+			inputStr="${inputStr} <( zcat $src )"
+		done
+
+		if [ "$bsub" == "TRUE" ];then
+			## Parallel processing using HPC:lsf
+			bsub -W 24:00 -n 1  <<- EOF
+				#!/usr/bin/env bash
+				sort -m -k1,1 -k2,2n -k3,3n ${inputStr} | gzip > $tmp
+				mv $tmp $des
+			EOF
+		else
+			## Sequential processing
+			#echo -e "sort -m -k1,1 -k2,2n -k3,3n ${inputStr}"
+			eval "sort -m -k1,1 -k2,2n -k3,3n ${inputStr} | gzip > $tmp"
+			mv $tmp $des
+		fi
 	fi
 	echo "" >&2
+
 done
 
