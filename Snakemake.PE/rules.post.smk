@@ -4,6 +4,9 @@ if 'Homer_tbp' not in locals():
 if 'fc_histone' not in locals():
 	fc_histone=4
 
+if 'spikein_chrom_size' not in locals():
+	spikein_chrom_size="NULL"
+
 ########## Auxilary functions definition start #################
 
 ## Decide downsampling depth if any
@@ -91,7 +94,6 @@ rule make_spikeintable:
 ## Automatically consider targer chromosomes only starting with "chr" excluding others such as "DM-chr"
 rule get_fragLenHist:
 	input:
-		#sampleDir + "/{sampleName}/Fragments/frag.all.con.bed.gz"
 		sampleDir + "/{sampleName}/fragment.bed.gz"
 	output:
 		txt = sampleDir + "/{sampleName}/QC/fragLen.txt",
@@ -112,11 +114,8 @@ rule get_fragLenHist:
 ## and the same in other bigwig file rules
 rule make_bigwig_ctr_rpm:
 	input:
-		#frag = fragDir_ctr + "/{sampleName}.frag.bed.gz"
-		#frag = fragDir + "/{sampleName}.frag.bed.gz"
 		sampleDir + "/{sampleName}/fragment.bed.gz"
 	output:
-		#bigWigDir_ctr_RPM + "/{sampleName}.ctr.rpm.bw",
 		sampleDir + "/{sampleName}/igv.ctr.rpm.bw"
 	message:
 		"Making bigWig files, ctr.rpm ... [{wildcards.sampleName}]"
@@ -131,7 +130,6 @@ rule make_bigwig_ctr_rpm:
 ## bigwig file: original fragment in RPM scale
 rule make_bigwig_frag_rpm:
 	input:
-		#frag = fragDir + "/{sampleName}.frag.bed.gz"
 		sampleDir + "/{sampleName}/fragment.bed.gz"
 	output:
 		sampleDir + "/{sampleName}/igv.frag.rpm.bw",
@@ -150,8 +148,6 @@ rule make_bigwig_frag_rpm:
 ## scaling factor already calculated in spikeCnt.txt 
 rule make_bigwig_ctr_rpsm:
 	input:
-		#frag = fragDir_ctr + "/{sampleName}.frag.bed.gz",
-		#frag = fragDir + "/{sampleName}.frag.bed.gz",
 		frag = sampleDir + "/{sampleName}/fragment.bed.gz",
 		spikeinCnt = sampleDir + "/{sampleName}/QC/spikeCnt.txt"
 	output:
@@ -174,7 +170,6 @@ rule make_bigwig_ctr_rpsm:
 ## bigwig file: original fragment in RPSM scale
 rule make_bigwig_frag_rpsm:
 	input:
-		#frag = fragDir + "/{sampleName}.frag.bed.gz",
 		frag = sampleDir + "/{sampleName}/fragment.bed.gz",
 		spikeinCnt = sampleDir + "/{sampleName}/QC/spikeCnt.txt"
 	output:
@@ -214,12 +209,9 @@ def get_ctrl_name(sampleName):
 
 rule make_bigwig_ctr_rpm_subinput:
 	input:
-		#chip = bigWigDir_ctr_RPM + "/{sampleName}.ctr.rpm.bw",
-		#ctrl = lambda wildcards: bigWigDir_ctr_RPM + "/" + get_ctrl_name(wildcards.sampleName) + ".ctr.rpm.bw"
 		chip = sampleDir + "/{sampleName}/igv.ctr.rpm.bw",
 		ctrl = lambda wildcards: sampleDir + "/" + get_ctrl_name(wildcards.sampleName) + "/igv.ctr.rpm.bw"
 	output:
-		#bigWigDir_ctr_RPM_sub + "/{sampleName}.ctr.rpm.subInput.bw",
 		sampleDir + "/{sampleName}/igv.ctr.rpm.subInput.bw",
 	message:
 		"Making bigWig files, ctr.rpm.subInput ... [{wildcards.sampleName}]"
@@ -233,12 +225,9 @@ rule make_bigwig_ctr_rpm_subinput:
 
 rule make_bigwig_frag_rpm_subinput:
 	input:
-		#chip = bigWigDir_frag_RPM + "/{sampleName}.frag.rpm.bw",
-		#ctrl = lambda wildcards: bigWigDir_frag_RPM + "/" + get_ctrl_name(wildcards.sampleName) + ".frag.rpm.bw"
 		chip = sampleDir + "/{sampleName}/igv.frag.rpm.bw",
 		ctrl = lambda wildcards: sampleDir + "/" + get_ctrl_name(wildcards.sampleName) + "/igv.frag.rpm.bw"
 	output:
-		#bigWigDir_frag_RPM_sub + "/{sampleName}.frag.rpm.subInput.bw",
 		sampleDir + "/{sampleName}/igv.frag.rpm.subInput.bw",
 	message:
 		"Making bigWig files, frag.rpm.subInput ... [{wildcards.sampleName}]"
@@ -253,12 +242,9 @@ rule make_bigwig_frag_rpm_subinput:
 
 rule make_bigwig_ctr_rpsm_subinput:
 	input:
-		#chip = bigWigDir_ctr_RPSM + "/{sampleName}.ctr.rpsm.bw",
-		#ctrl = lambda wildcards: bigWigDir_ctr_RPSM + "/" + get_ctrl_name(wildcards.sampleName) + ".ctr.rpsm.bw"
 		chip = sampleDir + "/{sampleName}/igv.ctr.rpsm.bw",
 		ctrl = lambda wildcards: sampleDir + "/" + get_ctrl_name(wildcards.sampleName) + "/igv.ctr.rpsm.bw"
 	output:
-		#bigWigDir_ctr_RPSM_sub + "/{sampleName}.ctr.rpsm.subInput.bw",
 		sampleDir + "/{sampleName}/igv.ctr.rpsm.subInput.bw",
 	message:
 		"Making bigWig files, ctr.rpsm.subInput ... [{wildcards.sampleName}]"
@@ -272,12 +258,9 @@ rule make_bigwig_ctr_rpsm_subinput:
 
 rule make_bigwig_frag_rpsm_subinput:
 	input:
-#		chip = bigWigDir_frag_RPSM + "/{sampleName}.frag.rpsm.bw",
-#		ctrl = lambda wildcards: bigWigDir_frag_RPSM + "/" + get_ctrl_name(wildcards.sampleName) + ".frag.rpsm.bw"
 		chip = sampleDir + "/{sampleName}/igv.frag.rpsm.bw",
 		ctrl = lambda wildcards: sampleDir + "/" + get_ctrl_name(wildcards.sampleName) + "/igv.frag.rpsm.bw"
 	output:
-		#bigWigDir_frag_RPSM_sub + "/{sampleName}.frag.rpsm.subInput.bw",
 		sampleDir + "/{sampleName}/igv.frag.rpsm.subInput.bw",
 	message:
 		"Making bigWig files, frag.rpsm.subInput ... [{wildcards.sampleName}]"
@@ -388,8 +371,6 @@ rule call_peak_hetchr_spikein_homer:
 ## hetero chromatin peak calling using Homer
 rule call_peak_hetchr_spikein_homer_ctr:
 	input:
-		#chip = fragDir_ctr + "/{sampleName}.frag.bed.gz",
-		#ctrl = lambda wildcards: fragDir_ctr + "/" + get_hetchr_ctrl(wildcards.sampleName) + ".frag.bed.gz",
 		chip = sampleDir + "/{sampleName}/fragment.bed.gz",
 		ctrl = lambda wildcards: sampleDir + "/" + get_ctrl_name(wildcards.sampleName) + "/fragment.bed.gz",
 		spikeChip = sampleDir + "/{sampleName}/QC/spikeCnt.txt",
@@ -637,6 +618,35 @@ rule draw_peak_heatmap_histone:
 			-o {params.outPrefix}\
 			{input.bed} {input.bw}
 		"""
+
+
+
+##### Rules for spike-in bigwig files ########################
+
+## bigwig file: resized fragment in RPM scale
+## Draw a plot of fragment length distribution
+## Automatically consider targer chromosomes only starting with "chr" excluding others such as "DM-chr"
+## and the same in other bigwig file rules
+rule make_bigwig_ctr_rpm_spike:
+	input:
+		sampleDir + "/{sampleName}/fragment.bed.gz"
+	output:
+		sampleDir + "/{sampleName}/spikein.igv.ctr.rpm.bw"
+	message:
+		"Making bigWig files, ctr.rpm ... [{wildcards.sampleName}]"
+	params:
+		memory = "%dG" % (  cluster["make_bigwig"]["memory"]/1000 - 2 )
+	shell:
+		"""
+		module load Cutlery/1.0
+		ngs.fragToSpikeBigWig.sh -g {spikein_chrom_size} -p "{spikePrefix}" -r 150 -m {params.memory} -o {output} {input}
+		"""
+
+
+
+
+
+
 
 ################ Single-END style END #######################
 
