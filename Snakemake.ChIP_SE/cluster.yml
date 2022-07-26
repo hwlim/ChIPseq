@@ -30,6 +30,10 @@ align_star:
 dedup_align:
     memory      : 10000
 
+downsample_bam:
+    cpu         : 2
+    memory      : 20000
+
 make_bigwig:
     memory      : 10000
 
