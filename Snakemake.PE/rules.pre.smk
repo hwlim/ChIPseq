@@ -45,8 +45,6 @@ def get_fastq(wildcards):
 rule align_pe:
 	input:
 		get_fastq
-		#fq1 = lambda wildcards: trimDir + "/" + samples.Id[samples.Name == wildcards.sampleName] + "_1.trim.fq.gz",
-		#fq2 = lambda wildcards: trimDir + "/" + samples.Id[samples.Name == wildcards.sampleName] + "_2.trim.fq.gz"
 	output:
 		alignDir+"/{sampleName}/align.bam"
 	message:
