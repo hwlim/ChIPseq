@@ -121,7 +121,7 @@ rule dedup_align:
 	shell:
 		"""
 		module load Cutlery/1.0
-		cnr.dedupBam.sh -m {params.memory} -o {output} -r {input}
+		cnr.dedupBam.sh -m {params.memory} -o {output} -n -r {input}
 		"""
 
 '''
