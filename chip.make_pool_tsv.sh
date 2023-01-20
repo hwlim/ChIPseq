@@ -2,6 +2,13 @@
 
 source $COMMON_LIB_BASE/commonBash.sh
 
+if [ $# -lt 1 ];then
+	echo -e "Usage: chip.make_pool_tsv.sh <sample.tsv>
+Description:
+	Create sample.tsv for pooled data processing" >&2
+	exit 1
+fi
+
 tsv=$1
 
 assertFileExist $tsv
