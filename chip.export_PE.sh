@@ -30,6 +30,8 @@ Output:
 	└── <sample3>.bed
 
 Options:
+	-l : Create a symbolic link instead of copying for large files including
+		bigwig and motif search result
 	-f : Overwrite existing files/folders if set" >&2
 }
 
@@ -43,9 +45,13 @@ fi
 ###################################
 ## option and input file handling
 force=FALSE
+makelink=FALSE
 #lengthParam=NULL,NULL
-while getopts ":f" opt; do
+while getopts ":lf" opt; do
 	case $opt in
+		l)
+			makelink=TRUE
+			;;
 		f)
 			force=TRUE
 			;;
@@ -83,6 +89,7 @@ echo -e "Exporting Cutlery results" >&2
 echo -e "  src: $srcDir" >&2
 echo -e "  des: $desDir" >&2
 echo -e "  force: $force" >&2
+echo -e "  makelink: $makelink" >&2
 
 
 sampleL=( `ls -d ${srcDir}/*/` )
@@ -96,6 +103,7 @@ exportFile(){
 	local src=$1
 	local des=$2
 	local isDir=$3
+	local makelink=$4
 
 	if [ "$isDir" == "TRUE" ];then
 		optStr="-r"
@@ -110,14 +118,21 @@ exportFile(){
 		if [ -f $des ];then
 			if [ "$force" == "TRUE" ];then
 				echo -e "  Warning: Overwriting $des" >&2
-				#echo -e "$src -> $des"
-				cp $optStr -f -v $src $des
+				if [ "$makelink" == "TRUE" ];then
+					rm -f $des
+					ln -svr $src $des
+				else
+					cp $optStr -f -v $src $des
+				fi
 			else
 				echo -e "  Warning: $des already exists, skip" >&2
 			fi
 		else
-			#echo -e "$src -> $des"
-			cp $optStr -v $src $des
+			if [ "$makelink" == "TRUE" ];then
+				ln -svr $src $des
+			else
+				cp $optStr -v $src $des
+			fi
 		fi
 	else
 		echo -e "  Warning: $src does not exist, skipping" >&2
@@ -147,7 +162,7 @@ do
 		#mkdir -p ${desDir}/QualityControl
 		src=${srcDir}/${sample}/QC/fragLen.png
 		des=${desDir}/QualityControl/${sample}.fragLen.png
-		exportFile $src $des FALSE
+		exportFile $src $des FALSE FALSE
 	else
 		echo -e "0) Skipping fragment length distribution" >&2
 	fi
@@ -162,7 +177,7 @@ do
 			do
 				src=${srcDir}/${sample}/igv${prefix}${suffix}.bw
 				des=${desDir}/BigWig${prefix}${suffix}/${sample}${prefix}${suffix}.bw
-				exportFile $src $des FALSE
+				exportFile $src $des FALSE $makelink
 			done
 		done
 	else
@@ -176,16 +191,16 @@ do
 		for mode in factor histone
 		do
 			src=${srcDir}/${sample}/HomerPeak.${mode}/peak.exBL.bed
-			des=${desDir}/Peak/${sample}.all.bed
-			exportFile $src $des FALSE
+			des=${desDir}/Peak.${mode}/${sample}.all.bed
+			exportFile $src $des FALSE FALSE
 
 			src=${srcDir}/${sample}/HomerPeak.${mode}/peak.exBL.1rpm.bed
-			des=${desDir}/Peak/${sample}.1rpm.bed
-			exportFile $src $des FALSE
+			des=${desDir}/Peak.${mode}/${sample}.1rpm.bed
+			exportFile $src $des FALSE FALSE
 
 			src=${srcDir}/${sample}/HomerPeak.${mode}/heatmap.exBL.1rpm.png
-			des=${desDir}/Peak/${sample}.1rpm.heatmap.png
-			exportFile $src $des FALSE
+			des=${desDir}/Peak.${mode}/${sample}.1rpm.heatmap.png
+			exportFile $src $des FALSE FALSE
 		done
 	else
 		echo -e "2) Skipping peak files & heatmaps" >&2
@@ -198,8 +213,8 @@ do
 		for src in ${srcDir}/${sample}/HomerPeak.factor/Motif/Homer.all ${srcDir}/${sample}/HomerPeak.factor/Motif/MEME.random5k
 		do
 			suffix=`basename $src`
-			des=${desDir}/Peak/Motif/${sample}.${suffix}
-			exportFile $src $des TRUE
+			des=${desDir}/Peak.factor/Motif/${sample}.${suffix}
+			exportFile $src $des TRUE $makelink
 		done
 	else
 		echo -e "3) Skipping motif search results" >&2
