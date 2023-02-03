@@ -10,16 +10,16 @@ source $COMMON_LIB_BASE/commonBash.sh
 trap 'if [ `ls -1 ${TMPDIR}/__temp__.$$.* 2>/dev/null | wc -l` -gt 0 ];then rm ${TMPDIR}/__temp__.$$.*; fi' EXIT
 
 function printUsage {
-	echo -e "Usage: `basename $0` (options) <sample.tsv> <src bam directory> <des bam directory>
+	echo -e "Usage: `basename $0` (options) <sample.tsv> <src sample directory> <des sample directory>
 Description:
 	Merge multiple Homer tag directories of a group according to sample/group information within a given sample.tsv file
 	Creating one tag directory per group
 Input:
 	- sample.tsv file: containing columns 'Name' and 'Group'
 	- src sample directory: contanining a Homer Tag directory, TSV, i.e., <src sample dir>/<sampleName>/TSV
-	- des group directory: destination sample directory to put sample folders, i.e., <des group dir>/<groupName>/TSV
+	- des sample directory: destination sample directory to put sample (i.e. group) folders, i.e., <des sample dir>/<groupName>/TSV
 Options:
-	-b: if set, bsub are submitted for merging bam files, default=off
+	-b: if set, bsub are submitted for jobs, default=off
 	-r : If set, perform robust estimation of fragment length, default=OFF
 		because Homer gives unreliable fragment length when fragment length is close to the read length" >&2
 }
@@ -76,7 +76,6 @@ else
 	optStr=""
 fi
 
-groupL=`tail -n +2 $sampleInfo | grep -v -e ^$ -e ^# | cut -f 3 | sort | uniq`
 
 echo -e "Pooling replicate bam files" >&2
 echo -e "  - sampleInfo: $sampleInfo" >&2
@@ -86,9 +85,12 @@ echo -e "  - bsub:   $bsub" >&2
 echo -e "  - robust: $robust" >&2
 echo -e "" >&2
 
+groupL=`tail -n +2 $sampleInfo | grep -v -e ^$ -e ^# -e ^Id | cut -f 3 | sort | uniq`
+
 mkdir -p $desDir
 for group in ${groupL[@]}
 do
+	echo -e "Processin $group" >&2
 	des=${desDir}/${group}/TSV
 	log=${desDir}/${group}/pool.log
 
