@@ -210,7 +210,7 @@ do
 	if [ "$exportMotif" == "y" ] || [ "$exportMotif" == "Y" ];then
 		echo -e "3) Exporting motif search results" >&2
 		#mkdir -p ${desDir}/Motif
-		for src in ${srcDir}/${sample}/HomerPeak.factor/Motif/Homer.all ${srcDir}/${sample}/HomerPeak.factor/Motif/MEME.random5k
+		for src in ${srcDir}/${sample}/HomerPeak.factor/Motif/Homer.all ${srcDir}/${sample}/HomerPeak.factor/Motif/MEME.random5k ${srcDir}/${sample}/Motif/Homer.all ${srcDir}/${sample}/Motif/MEME.random5k
 		do
 			suffix=`basename $src`
 			des=${desDir}/Peak.factor/Motif/${sample}.${suffix}
