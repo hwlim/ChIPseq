@@ -4,7 +4,7 @@
 # Cut&Run tools
 # Written by Hee-Wooong Lim
 # 
-# Pool bam files of multiple replicates by group
+# Pool multiple homer tag dirs replicates by group
 
 source $COMMON_LIB_BASE/commonBash.sh
 trap 'if [ `ls -1 ${TMPDIR}/__temp__.$$.* 2>/dev/null | wc -l` -gt 0 ];then rm ${TMPDIR}/__temp__.$$.*; fi' EXIT
@@ -13,12 +13,14 @@ function printUsage {
 	echo -e "Usage: `basename $0` (options) <sample.tsv> <src sample directory> <des sample directory>
 Description:
 	Merge multiple Homer tag directories of a group according to sample/group information within a given sample.tsv file
-	Creating one tag directory per group
+	Creat one tag directory per group
+	** Skip already existing destination folder
 Input:
 	- sample.tsv file: containing columns 'Name' and 'Group'
 	- src sample directory: contanining a Homer Tag directory, TSV, i.e., <src sample dir>/<sampleName>/TSV
 	- des sample directory: destination sample directory to put sample (i.e. group) folders, i.e., <des sample dir>/<groupName>/TSV
 Options:
+	-t: if set, dry run simply displaying pooling message, default=off
 	-b: if set, bsub are submitted for jobs, default=off
 	-r : If set, perform robust estimation of fragment length, default=OFF
 		because Homer gives unreliable fragment length when fragment length is close to the read length" >&2
@@ -32,10 +34,14 @@ fi
 
 ###################################
 ## option and input file handling
+testOnly=FALSE
 bsub=FALSE
 robust=FALSE
-while getopts ":br" opt; do
+while getopts ":brt" opt; do
 	case $opt in
+		t)
+			testOnly=TRUE
+			;;
 		b)
 			bsub=TRUE
 			;;
@@ -81,6 +87,7 @@ echo -e "Pooling replicate bam files" >&2
 echo -e "  - sampleInfo: $sampleInfo" >&2
 echo -e "  - srcDir: $srcDir" >&2
 echo -e "  - desDir: $desDir" >&2
+echo -e "  - testOnly: $testOnly" >&2
 echo -e "  - bsub:   $bsub" >&2
 echo -e "  - robust: $robust" >&2
 echo -e "" >&2
@@ -98,29 +105,43 @@ do
 	srcL=( `tail -n +2 $sampleInfo | grep -v -e ^$ -e "^#" | gawk '{ if($3 == "'$group'") printf "'$srcDir'/%s/TSV\n", $2 }'` )
 	assertDirExist ${srcL[@]}
 
-	## info.txt creation
-	mkdir -p $des
-	echo -e "Creating ${des}/../info.txt" >&2
-	echo ${group} > ${des}/../info.txt
+	if [ -d $des ] && [ -f ${des}/Autocorrelation.png ];then
+		echo -e "  - Warning: $des already exists, skip" >&2
+		continue
+	fi
+
 
 	## Merging to destination
-	echo -e "Creating $des" >&2
+	echo -e "  - Creating $des" >&2
 	for src in ${srcL[@]}
 	do
-		echo -e "  - $src" >&2
+		echo -e "\t$src" >&2
 	done 2>&1 | tee $log
 
-	#continue
+	if [ "$testOnly" = "TRUE" ];then
+		continue
+	fi
+
+	## info.txt creation
+	mkdir -p $des
+	echo -e "  - Creating ${des}/../info.txt" >&2
+	echo ${group} > ${des}/../info.txt
+
 	## Pooling
-	if [ "$bsub" == "TRUE" ];then
-		## Parallel processing using HPC:lsf
-		bsub -W 24:00 -M 1000 -n 1 "module load samtools/1.9.0; module load R/3.5.0; module load homer/4.11;
-		ngs.poolHomerTagDir.sh -o $des $optStr ${srcL[@]};
-		drawHomerAutoCorr.r -t ${group} ${des};"
+	if [ ${#srcL[@]} -eq 1 ];then
+		echo -e "  - Only single sample; Creating a symbolic link" >&2
+		ln -vsr ${srcL[@]} $des;
 	else
-		## Sequential processing
-		ngs.poolHomerTagDir.sh -o $des $optStr ${srcL[@]}
-		drawHomerAutoCorr.r -t ${group} ${des}
+		if [ "$bsub" == "TRUE" ];then
+			## Parallel processing using HPC:lsf
+			bsub -W 24:00 -M 1000 -n 1 "module load samtools/1.9.0; module load R/3.5.0; module load homer/4.11;
+			ngs.poolHomerTagDir.sh -o $des $optStr ${srcL[@]};
+			drawHomerAutoCorr.r -t ${group} ${des};"
+		else
+			## Sequential processing
+			ngs.poolHomerTagDir.sh -o $des $optStr ${srcL[@]}
+			drawHomerAutoCorr.r -t ${group} ${des}
+		fi
 	fi
 done
 
