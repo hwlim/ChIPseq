@@ -9,6 +9,7 @@ if 'spikein_chrom_size' not in locals():
 
 ########## Auxilary functions definition start #################
 
+
 ## Decide downsampling depth if any
 def get_downsample_depth(wildcards):
 	'''
@@ -31,6 +32,59 @@ def get_downsample_depth(wildcards):
 	else:
 		raise RuntimeError('Invalid down sampling depth: %s' % n)
 
+
+## find control sample name for peak calling using target sample name
+def get_ctrl_name(sampleName):
+	# return ordered [ctrl , target] list.
+	ctrlName = samples.Ctrl[samples.Name == sampleName]
+	ctrlName = ctrlName.tolist()[0]
+	""" Temporary debug code
+	print("%s : %s" % (sampleName, ctrlName), file=sys.stderr)
+	src=bigWigDir_ctr_RPM + "/" + ctrlName + ".ctr.rpm.bw"
+	import os.path
+	if os.path.isfile(src):
+		print("%s exists" % ctrlName, file=sys.stderr)
+	else:
+		print("%s not exist" % ctrlName, file=sys.stderr)
+	"""
+	return ctrlName
+
+## find bam file folder for single-end style homer tag directory creation
+def get_align_bam_for_tagdir(wildcards):
+	# return ordered [ctrl , target] list.
+	downDepth=get_downsample_depth(wildcards)
+	if doDedup:
+		srcDir = dedupDir
+	else:
+		#if "DownSample" in samples and samples.DownSample[samples.Name == wildcards.sampleName].tolist()[0] > 0:
+		if downDepth > 0:
+			srcDir = downsampleDir
+		else:
+			srcDir = alignDir	
+	return srcDir + "/{sampleName}/align.bam"
+
+## find input homer tag directory for peak calling
+def get_peakcall_input_tagdir(sampleName):
+	ctrlName = get_ctrl_name(sampleName)
+	if ctrlName.upper() == "NULL":
+		return [ sampleDir + "/" + sampleName + "/TSV.SE" ]
+	else:
+		return [ sampleDir + "/" + ctrlName + "/TSV.SE", sampleDir + "/" + sampleName + "/TSV.SE" ]
+
+## retrieve peak calling option from sample.tsv file
+def get_peakcall_opt(sampleName):
+	if "PeakOpt" not in samples:
+		return ""
+	else:
+		optStr = samples.PeakOpt[samples.Name == sampleName]
+		assert( len(optStr) == 1 )
+		optStr = optStr.tolist()[0]
+		if optStr == "NULL":
+			return ""
+		else:
+			return optStr
+
+
 '''
 ## NOTE: These two functions cannot be used for Snakemake in normal situation because spikeCnt.txt file does not exist upfront in most of times
 ## Extract spikein % from spikein data file
@@ -52,6 +106,72 @@ def get_spikein_ratio(chip, ctrl):
 '''
 
 ########## Auxilary functions definition end #################
+
+
+
+
+
+
+
+
+########## Rules Start #################
+
+
+rule dedup_align:
+	input:
+		filteredDir + "/{sampleName}.filtered.bam"
+	output:
+		dedupDir + "/{sampleName}/align.bam"
+	message:
+		"Deduplicating... [{wildcards.sampleName}]"
+	params:
+		memory = "%dG" % ( cluster["dedup_align"]["memory"]/1000 - 2 )
+	shell:
+		"""
+		module load Cutlery/1.0
+		cnr.dedupBam.sh -m {params.memory} -o {output} -n -r {input}
+		"""
+
+
+rule check_baseFreq:
+	input:
+		filteredDir + "/{sampleName}.filtered.bam"
+	output:
+		#read1 = baseFreqDir + "/{sampleName}.R1.freq.png",
+		#read2 = baseFreqDir + "/{sampleName}.R2.freq.png"
+		read1 = sampleDir + "/{sampleName}/QC/baseFreq.R1.png",
+		read2 = sampleDir + "/{sampleName}/QC/baseFreq.R2.png"
+	message:
+		"Checking baseFrequency... [{wildcards.sampleName}]"
+	shell:
+		"""
+		module load Cutlery/1.0
+		bamToBed.separate.sh -o {sampleDir}/{wildcards.sampleName}/QC/baseFreq {input}
+		checkBaseFreq.plot.sh -g {genomeFa} -n {wildcards.sampleName} -c {chrRegexTarget} -o {sampleDir}/{wildcards.sampleName}/QC/baesFreq.R1 {baseFreqDir}/{wildcards.sampleName}.R1.bed.gz
+		checkBaseFreq.plot.sh -g {genomeFa} -n {wildcards.sampleName} -c {chrRegexTarget} -o {sampleDir}/{wildcards.sampleName}/QC/baesFreq.R2 {baseFreqDir}/{wildcards.sampleName}.R2.bed.gz
+		rm {sampleDir}/{wildcards.sampleName}/QC/baseFreq.R1.bed.gz
+		rm {sampleDir}/{wildcards.sampleName}/QC/baseFreq.R2.bed.gz
+		"""
+
+
+
+rule make_fragment:
+	input:
+		#dedupDir + "/{sampleName}.dedup.bam"
+		dedupDir + "/{sampleName}/align.bam" if doDedup else filteredDir + "/{sampleName}.filtered.bam" 
+	output:
+		#fragDir + "/{sampleName}.frag.bed.gz"
+		sampleDir + "/{sampleName}/fragment.bed.gz"
+	params:
+		memory = "%dG" % ( cluster["make_fragment"]["memory"]/1000 - 2 )
+	message:
+		"Making fragment bed files... [{wildcards.sampleName}]"
+	shell:
+		"""
+		module load Cutlery/1.0
+		bamToFragment.sh -o {output} -l -1 -s -m {params.memory} {input}
+		"""
+
 
 
 
@@ -190,21 +310,6 @@ rule make_bigwig_frag_rpsm:
 		"""
 #		scaleFactor=`cat {input.spikeinCnt} | gawk '$1=="'{wildcards.sampleName}'"' | gawk '{{ printf "%f", 100000/$3 }}'`
 
-
-def get_ctrl_name(sampleName):
-	# return ordered [ctrl , target] list.
-	ctrlName = samples.Ctrl[samples.Name == sampleName]
-	ctrlName = ctrlName.tolist()[0]
-	""" Temporary debug code
-	print("%s : %s" % (sampleName, ctrlName), file=sys.stderr)
-	src=bigWigDir_ctr_RPM + "/" + ctrlName + ".ctr.rpm.bw"
-	import os.path
-	if os.path.isfile(src):
-		print("%s exists" % ctrlName, file=sys.stderr)
-	else:
-		print("%s not exist" % ctrlName, file=sys.stderr)
-	"""
-	return ctrlName
 
 
 rule make_bigwig_ctr_rpm_subinput:
@@ -399,18 +504,6 @@ rule call_peak_hetchr_spikein_homer_ctr:
 
 
 ################ Single-END style rules START #######################
-def get_align_bam_for_tagdir(wildcards):
-	# return ordered [ctrl , target] list.
-	downDepth=get_downsample_depth(wildcards)
-	if doDedup:
-		srcDir = dedupDir
-	else:
-		#if "DownSample" in samples and samples.DownSample[samples.Name == wildcards.sampleName].tolist()[0] > 0:
-		if downDepth > 0:
-			srcDir = downsampleDir
-		else:
-			srcDir = alignDir	
-	return srcDir + "/{sampleName}/align.bam"
 
 rule make_tagdir_se:
 	input:
@@ -429,26 +522,6 @@ rule make_tagdir_se:
 		drawHomerAutoCorr.r -t {params.name} -o {output}/Autocorrelation.png {output}
 		echo "{params.name}" > {sampleDir}/{wildcards.sampleName}/info.txt
 		"""
-
-
-def get_peakcall_input_tagdir(sampleName):
-	ctrlName = get_ctrl_name(sampleName)
-	if ctrlName.upper() == "NULL":
-		return [ sampleDir + "/" + sampleName + "/TSV.SE" ]
-	else:
-		return [ sampleDir + "/" + ctrlName + "/TSV.SE", sampleDir + "/" + sampleName + "/TSV.SE" ]
-
-def get_peakcall_opt(sampleName):
-	if "PeakOpt" not in samples:
-		return ""
-	else:
-		optStr = samples.PeakOpt[samples.Name == sampleName]
-		assert( len(optStr) == 1 )
-		optStr = optStr.tolist()[0]
-		if optStr == "NULL":
-			return ""
-		else:
-			return optStr
 
 ## NOTE: "-tbp 0" is implicitly set within chip.peakCallFactor.sh
 ## Peak size is fixed as 200bp
@@ -557,6 +630,14 @@ rule run_homer_motif:
 	shell:
 		"""
 		module load Motif/1.0
+
+		n_loci=`cat {input} | wc -l`
+		if [ $n_loci -eq 0 ];then
+			echo -e "Warning: no peak found, creating empty heatmap"
+			touch {params.outPrefix}/homerResults.html
+			exit 0
+		fi
+
 		runHomerMotifSingle.sh -g {genome} -s 200 -p 4 -b /data/limlab/Resource/Homer.preparse \
 			-o {params.outPrefix} {input}
 		"""
@@ -577,6 +658,14 @@ rule run_meme_motif_rand5k:
 		module purge
 		module load MotifMEME/1.0
 		outPrefix=`dirname {output}`
+
+		n_loci=`cat {input} | wc -l`
+		if [ $n_loci -eq 0 ];then
+			echo -e "Warning: no peak found, creating empty heatmap"
+			touch {params.outPrefix}/meme-chip.html
+			exit 0
+		fi
+
 		runMemeChipSingle.sh -g {genomeFa} -s 200 -p 4 -r 5000 -d ~/bin/Motif/MEME_DB/Merged_By_Lim.meme \
 			-o {params.outPrefix} {input}
 		"""
@@ -595,6 +684,12 @@ rule draw_peak_heatmap_factor:
 	shell:
 		"""
 		module load Cutlery/1.0
+		n_loci=`cat {input.bed} | wc -l`
+		if [ $n_loci -eq 0 ];then
+			echo -e "Warning: no peak found, creating empty heatmap"
+			touch {params.outPrefix}.png
+			exit 0
+		fi
 		drawBigWigHeatmap.r -t {wildcards.sampleName} -m 0,0.5,2,0.5 -w 2000 -b 20 -s 3,6 \
 			-o {params.outPrefix} \
 			{input.bed} {input.bw}
@@ -614,6 +709,12 @@ rule draw_peak_heatmap_histone:
 	shell:
 		"""
 		module load Cutlery/1.0
+		n_loci=`cat {input.bed} | wc -l`
+		if [ $n_loci -eq 0 ];then
+			echo -e "Warning: no peak found, creating empty heatmap"
+			touch {params.outPrefix}.png
+			exit 0
+		fi
 		drawBigWigHeatmap.r -t {wildcards.sampleName} -m 0,0.5,2,0.5 -w 10000 -b 20 -s 3,6 \
 			-o {params.outPrefix}\
 			{input.bed} {input.bw}

@@ -2,8 +2,8 @@
 if 'star_module' not in locals():
 	star_module = "STAR/2.5"
 
-if 'splitDir' not in locals():
-	splitDir = "1.4.Align.split"
+#if 'splitDir' not in locals():
+#	splitDir = "1.4.Align.split"
 
 
 
@@ -108,101 +108,3 @@ rule filter_align:
 		module load Cutlery/1.0
 		cnr.filterBam.sh  -o {output} -c "{chrRegexAll}" {input}
 		"""
-
-rule dedup_align:
-	input:
-		filteredDir + "/{sampleName}.filtered.bam"
-	output:
-		dedupDir + "/{sampleName}/align.bam"
-	message:
-		"Deduplicating... [{wildcards.sampleName}]"
-	params:
-		memory = "%dG" % ( cluster["dedup_align"]["memory"]/1000 - 2 )
-	shell:
-		"""
-		module load Cutlery/1.0
-		cnr.dedupBam.sh -m {params.memory} -o {output} -n -r {input}
-		"""
-
-'''
-## Not being used
-## Split a BAM file into two: 1) target chromomosome 2) spike-in
-rule split_align:
-	input:
-		#dedupDir + "/{sampleName}.dedup.bam"
-		dedupDir + "/{sampleName}.dedup.bam" if doDedup else filteredDir + "/{sampleName}.filtered.bam" 
-	output:
-		target = splitDir + "/{sampleName}.target.bam",
-		spikein = splitDir + "/{sampleName}.spikein.bam"
-	message:
-		"Spliting BAM file... [{wildcards.sampleName}]"
-	shell:
-		"""
-		module load Cutlery/1.0
-		ngs.splitBam.sh -t {chrRegexTarget} -s {spikePrefix} -o {splitDir}/{wildcards.sampleName} {input}
-		"""
-'''
-
-rule check_baseFreq:
-	input:
-		filteredDir + "/{sampleName}.filtered.bam"
-	output:
-		#read1 = baseFreqDir + "/{sampleName}.R1.freq.png",
-		#read2 = baseFreqDir + "/{sampleName}.R2.freq.png"
-		read1 = sampleDir + "/{sampleName}/QC/baseFreq.R1.png",
-		read2 = sampleDir + "/{sampleName}/QC/baseFreq.R2.png"
-	message:
-		"Checking baseFrequency... [{wildcards.sampleName}]"
-	shell:
-		"""
-		module load Cutlery/1.0
-		bamToBed.separate.sh -o {sampleDir}/{wildcards.sampleName}/QC/baseFreq {input}
-		checkBaseFreq.plot.sh -g {genomeFa} -n {wildcards.sampleName} -c {chrRegexTarget} -o {sampleDir}/{wildcards.sampleName}/QC/baesFreq.R1 {baseFreqDir}/{wildcards.sampleName}.R1.bed.gz
-		checkBaseFreq.plot.sh -g {genomeFa} -n {wildcards.sampleName} -c {chrRegexTarget} -o {sampleDir}/{wildcards.sampleName}/QC/baesFreq.R2 {baseFreqDir}/{wildcards.sampleName}.R2.bed.gz
-		rm {sampleDir}/{wildcards.sampleName}/QC/baseFreq.R1.bed.gz
-		rm {sampleDir}/{wildcards.sampleName}/QC/baseFreq.R2.bed.gz
-		"""
-
-
-
-
-rule make_fragment:
-	input:
-		#dedupDir + "/{sampleName}.dedup.bam"
-		dedupDir + "/{sampleName}/align.bam" if doDedup else filteredDir + "/{sampleName}.filtered.bam" 
-	output:
-		#fragDir + "/{sampleName}.frag.bed.gz"
-		sampleDir + "/{sampleName}/fragment.bed.gz"
-	params:
-		memory = "%dG" % ( cluster["make_fragment"]["memory"]/1000 - 2 )
-	message:
-		"Making fragment bed files... [{wildcards.sampleName}]"
-	shell:
-		"""
-		module load Cutlery/1.0
-		bamToFragment.sh -o {output} -l -1 -s -m {params.memory} {input}
-		"""
-
-'''
-rule make_fragment_ctr:
-	input:
-		fragDir + "/{sampleName}.frag.bed.gz"
-		#dedupDir + "/{sampleName}.dedup.bam"
-		#dedupDir + "/{sampleName}.dedup.bam" if doDedup else filteredDir + "/{sampleName}.filtered.bam"
-	output:
-		fragDir_ctr + "/{sampleName}.frag.bed.gz"
-	params:
-		memory = "%dG" % ( cluster["make_fragment_ctr"]["memory"]/1000 - 2 )
-	message:
-		"Making fragment bed files... [{wildcards.sampleName}]"
-	shell:
-		"""
-		module load Cutlery/1.0
-		zcat {input} \
-			| gawk '{{ c=($2+$3)/2; printf "%s\\t%d\\t%d\\t%s\\t%s\\t%s\\n", $1, c-75, c+75, $4, $5, $6 }}' \
-			| sort -S {params.memory} -k1,1 -k2,2n -k3,3n \
-			| gzip \
-			> {output}
-		"""
-		# bamToFragment.sh -o {output} -l 150 -s -m {params.memory} {input}
-'''
