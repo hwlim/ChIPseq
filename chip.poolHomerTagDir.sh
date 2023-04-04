@@ -15,6 +15,7 @@ Description:
 	Merge multiple Homer tag directories of a group according to sample/group information within a given sample.tsv file
 	Creat one tag directory per group
 	** Skip already existing destination folder
+	** If there is only one replicate, simply symbolic link is created not performing pooling.
 Input:
 	- sample.tsv file: containing columns 'Name' and 'Group'
 	- src sample directory: contanining a Homer Tag directory, TSV, i.e., <src sample dir>/<sampleName>/TSV
@@ -95,11 +96,13 @@ echo -e "" >&2
 groupL=`tail -n +2 $sampleInfo | grep -v -e ^$ -e ^# -e ^Id | cut -f 3 | sort | uniq`
 
 mkdir -p $desDir
+log=${desDir}/pool.log
+echo -ne "" > $log
+
 for group in ${groupL[@]}
 do
 	echo -e "Processin $group" >&2
 	des=${desDir}/${group}/TSV
-	log=${desDir}/${group}/pool.log
 
 	## List of replicate tag directories
 	srcL=( `tail -n +2 $sampleInfo | grep -v -e ^$ -e "^#" | gawk '{ if($3 == "'$group'") printf "'$srcDir'/%s/TSV\n", $2 }'` )
@@ -113,19 +116,27 @@ do
 
 	## Merging to destination
 	echo -e "  - Creating $des" >&2
-	for src in ${srcL[@]}
-	do
-		echo -e "\t$src" >&2
-	done 2>&1 | tee $log
 
 	if [ "$testOnly" = "TRUE" ];then
+		for src in ${srcL[@]}
+		do
+			echo -e "\t$src" >&2
+		done 
 		continue
+	else
+		mkdir -p $desDir
+		echo -e "$group" >> $log
+		for src in ${srcL[@]}
+		do
+			echo -e "\t$src" >&2
+		done 2>&1 | tee -a $log
 	fi
 
 	## info.txt creation
-	mkdir -p $des
-	echo -e "  - Creating ${des}/../info.txt" >&2
-	echo ${group} > ${des}/../info.txt
+	sampleDir=`dirname $des`
+	mkdir -p $sampleDir
+	echo -e "  - Creating ${sampleDir}/info.txt" >&2
+	echo ${group} > ${sampleDir}/info.txt
 
 	## Pooling
 	if [ ${#srcL[@]} -eq 1 ];then
