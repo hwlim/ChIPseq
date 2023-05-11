@@ -181,19 +181,13 @@ else
 	getPeakTags $tmpPeakMasked $target -tagAdjust 0 -tbp 0 -fixed \
 		> ${tmpTagCount}
 
+	# coordinate / line number / RPKM / strand / size / RPM
 	paste <( sort -k4,4 ${tmpPeakMasked} ) <( sort -k1,1 ${tmpTagCount} ) \
 		| gawk '{ printf "%s\t%d\t%d\tpeak.%d\t%.5f\t%s\t%d\t%.1f\n", $1,$2,$3, NR, $8*1000000/'${ttc}'*1000/($3-$2), $6,$3-$2, $8*1000000/'${ttc}' }' \
 		| sort -k8,8nr \
 		| cut -f 1-6 \
 		> $peakMasked
-
-	#paste ${tmpPeakMasked} ${tmpTagCount} \
-	#	| gawk '{ printf "%s\t%d\t%d\tpeak.%d\t%.5f\t%s\n", $1,$2,$3,NR,$8*1000000/'${ttc}'*1000/($3-$2),$6 }' \
-	#	| sort -k5,5nr \
-	#	> $peakMasked
 fi
-#cp ${tmpPeakMasked} .
-#cp ${tmpTagCount} .
 
 N0=`cat ${peakBed} | wc -l`
 N1=`cat ${peakMasked} | wc -l`
