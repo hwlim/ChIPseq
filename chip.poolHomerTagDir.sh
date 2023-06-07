@@ -24,7 +24,8 @@ Options:
 	-t: if set, dry run simply displaying pooling message, default=off
 	-b: if set, bsub are submitted for jobs, default=off
 	-r : If set, perform robust estimation of fragment length, default=OFF
-		because Homer gives unreliable fragment length when fragment length is close to the read length" >&2
+		because Homer gives unreliable fragment length when fragment length is close to the read length
+	-d: tag directory name, e.g. TSV or TSV.SE, default=TSV" >&2
 }
 
 if [ $# -eq 0 ];then
@@ -38,7 +39,8 @@ fi
 testOnly=FALSE
 bsub=FALSE
 robust=FALSE
-while getopts ":brt" opt; do
+tagDirName=TSV
+while getopts ":d:brt" opt; do
 	case $opt in
 		t)
 			testOnly=TRUE
@@ -48,6 +50,9 @@ while getopts ":brt" opt; do
 			;;
 		r)
 			robust=TRUE
+			;;
+		d)
+			tagDirName=$OPTARG
 			;;
 		\?)
 			echo "Invalid options: -$OPTARG" >&2
@@ -102,10 +107,10 @@ echo -ne "" > $log
 for group in ${groupL[@]}
 do
 	echo -e "Processin $group" >&2
-	des=${desDir}/${group}/TSV
+	des=${desDir}/${group}/${tagDirName}
 
 	## List of replicate tag directories
-	srcL=( `tail -n +2 $sampleInfo | grep -v -e ^$ -e "^#" | gawk '{ if($3 == "'$group'") printf "'$srcDir'/%s/TSV\n", $2 }'` )
+	srcL=( `tail -n +2 $sampleInfo | grep -v -e ^$ -e "^#" | gawk '{ if($3 == "'$group'") printf "'$srcDir'/%s/'${tagDirName}'\n", $2 }'` )
 	assertDirExist ${srcL[@]}
 
 	if [ -d $des ] && [ -f ${des}/Autocorrelation.png ];then
