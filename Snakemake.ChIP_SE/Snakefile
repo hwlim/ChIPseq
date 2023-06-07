@@ -95,6 +95,8 @@ bigWigDir_avg="3.1.bigWig_avg"
 ## Homer "tbp" option, number of read per position to consider
 ## If 0, all the reads are considered.
 ## If deduplication is done, 0 is strongly recommended.
+## Applied only when making tagDirectory.
+## Peak calling uses all reads (tbp=0) in the tag directory
 Homer_tbp	= 1	# Homer tbp
 
 ################################
