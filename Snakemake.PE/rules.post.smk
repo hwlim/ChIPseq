@@ -119,7 +119,8 @@ def get_spikein_ratio(chip, ctrl):
 
 rule dedup_align:
 	input:
-		filteredDir + "/{sampleName}.filtered.bam"
+		#filteredDir + "/{sampleName}.filtered.bam"
+		alignDir + "/{sampleName}/align.bam"
 	output:
 		dedupDir + "/{sampleName}/align.bam"
 	message:
@@ -129,36 +130,43 @@ rule dedup_align:
 	shell:
 		"""
 		module load Cutlery/1.0
-		cnr.dedupBam.sh -m {params.memory} -o {output} -n -r {input}
+		#cnr.dedupBam.sh -m {params.memory} -o {output} -n -r {input}
+		cnr.dedupBam.sh -m {params.memory} -o {output} -r {input}
 		"""
 
 
 rule check_baseFreq:
 	input:
-		filteredDir + "/{sampleName}.filtered.bam"
+		#filteredDir + "/{sampleName}.filtered.bam"
+		frag = sampleDir + "/{sampleName}/fragment.bed.gz",
 	output:
-		#read1 = baseFreqDir + "/{sampleName}.R1.freq.png",
-		#read2 = baseFreqDir + "/{sampleName}.R2.freq.png"
-		read1 = sampleDir + "/{sampleName}/QC/baseFreq.R1.png",
-		read2 = sampleDir + "/{sampleName}/QC/baseFreq.R2.png"
+		sampleDir + "/{sampleName}/QC/base_freq.png",
+		sampleDir + "/{sampleName}/QC/base_freq.html"
+		# read1 = sampleDir + "/{sampleName}/QC/baseFreq.R1.png",
+		# read2 = sampleDir + "/{sampleName}/QC/baseFreq.R2.png"
 	message:
 		"Checking baseFrequency... [{wildcards.sampleName}]"
 	shell:
 		"""
 		module load Cutlery/1.0
-		bamToBed.separate.sh -o {sampleDir}/{wildcards.sampleName}/QC/baseFreq {input}
-		checkBaseFreq.plot.sh -g {genomeFa} -n {wildcards.sampleName} -c {chrRegexTarget} -o {sampleDir}/{wildcards.sampleName}/QC/baesFreq.R1 {baseFreqDir}/{wildcards.sampleName}.R1.bed.gz
-		checkBaseFreq.plot.sh -g {genomeFa} -n {wildcards.sampleName} -c {chrRegexTarget} -o {sampleDir}/{wildcards.sampleName}/QC/baesFreq.R2 {baseFreqDir}/{wildcards.sampleName}.R2.bed.gz
-		rm {sampleDir}/{wildcards.sampleName}/QC/baseFreq.R1.bed.gz
-		rm {sampleDir}/{wildcards.sampleName}/QC/baseFreq.R2.bed.gz
+		checkBaseFreq.plot.sh -o {sampleDir}/{wildcards.sampleName}/QC/base_freq \
+			-n {wildcards.sampleName} -g {genomeFa} -c "{chrRegexTarget}" -m both -l 20 -f -i -v {input.frag}
+		# bamToBed.separate.sh -o {sampleDir}/{wildcards.sampleName}/QC/baseFreq {input}
+		# checkBaseFreq.plot.sh -g {genomeFa} -n {wildcards.sampleName} -c {chrRegexTarget} -o {sampleDir}/{wildcards.sampleName}/QC/baesFreq.R1 {baseFreqDir}/{wildcards.sampleName}.R1.bed.gz
+		# checkBaseFreq.plot.sh -g {genomeFa} -n {wildcards.sampleName} -c {chrRegexTarget} -o {sampleDir}/{wildcards.sampleName}/QC/baesFreq.R2 {baseFreqDir}/{wildcards.sampleName}.R2.bed.gz
+		# rm {sampleDir}/{wildcards.sampleName}/QC/baseFreq.R1.bed.gz
+		# rm {sampleDir}/{wildcards.sampleName}/QC/baseFreq.R2.bed.gz
 		"""
 
 
-
+## Fragments including target + spikein (optional) reads 
 rule make_fragment:
 	input:
 		#dedupDir + "/{sampleName}.dedup.bam"
-		dedupDir + "/{sampleName}/align.bam" if doDedup else filteredDir + "/{sampleName}.filtered.bam" 
+		# bam = dedupDir + "/{sampleName}/align.bam" if doDedup else filteredDir + "/{sampleName}.filtered.bam",
+		# bai = dedupDir + "/{sampleName}/align.bam.bai" if doDedup else filteredDir + "/{sampleName}.filtered.bam.bai"
+		bam = dedupDir + "/{sampleName}/align.bam" if doDedup else alignDir + "/{sampleName}/align.bam",
+		bai = dedupDir + "/{sampleName}/align.bam.bai" if doDedup else alignDir + "/{sampleName}/align.bam.bai"
 	output:
 		#fragDir + "/{sampleName}.frag.bed.gz"
 		sampleDir + "/{sampleName}/fragment.bed.gz"
@@ -169,7 +177,8 @@ rule make_fragment:
 	shell:
 		"""
 		module load Cutlery/1.0
-		bamToFragment.sh -o {output} -l -1 -s -m {params.memory} {input}
+		#bamToFragment.sh -o {output} -l -1 -s -m {params.memory} {input}
+		ngs.bamToFragment.py -c "{chrRegexAll}" -f 0x2 -F 0x400 {input.bam} | sort -S {params.memory} -k1,1 -k2,2n -k3,3n | gzip > {output}
 		"""
 
 

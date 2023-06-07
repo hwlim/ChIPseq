@@ -65,6 +65,7 @@ rule align_pe:
 			-o {alignDir}/{wildcards.sampleName}/align \
 			-t {threads} \
 			-p '{params.option}' \
+			-s \
 			{input}
 		"""
 #		STAR --runMode alignReads --genomeDir {params.index} \
@@ -96,15 +97,19 @@ rule make_align_stat_table:
 		star.getAlignStats.r {params.inputDir} > {output}
 		"""
 
-rule filter_align:
-	input:
-		alignDir+"/{sampleName}/align.bam"
-	output:
-		filteredDir + "/{sampleName}.filtered.bam"
-	message:
-		"Filtering... [{wildcards.sampleName}]"
-	shell:
-		"""
-		module load Cutlery/1.0
-		cnr.filterBam.sh  -o {output} -c "{chrRegexAll}" {input}
-		"""
+# ## Eliminate scaffold/random chromosomes
+# ## Retaining regular chromosomes and spikein (optional) chromosomes
+# rule filter_align:
+# 	input:
+# 		alignDir+"/{sampleName}/align.bam"
+# 	output:
+# 		bam = filteredDir + "/{sampleName}.filtered.bam",
+# 		bai = filteredDir + "/{sampleName}.filtered.bam.bai"
+# 	message:
+# 		"Filtering... [{wildcards.sampleName}]"
+# 	shell:
+# 		"""
+# 		module load Cutlery/1.0
+# 		cnr.filterBam.sh  -o {output.bam} -c "{chrRegexAll}" {input}
+# 		samtools index {output.bam}
+# 		"""
