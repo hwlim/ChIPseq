@@ -76,7 +76,8 @@ rule dedup_align:
 	input:
 		get_align_bam_for_dedup
 	output:
-		dedupDir + "/{sampleName}/align.bam"
+		bam = dedupDir + "/{sampleName}/align.bam",
+		bai = dedupDir + "/{sampleName}/align.bam.bai"
 	message:
 		"Deduplicating... [{wildcards.sampleName}]"
 	params:
@@ -84,7 +85,8 @@ rule dedup_align:
 	shell:
 		"""
 		module load Cutlery/1.0
-		cnr.dedupBam.sh -m {params.memory} -o {output} -r {input}
+		cnr.dedupBam.sh -m {params.memory} -o {output.bam} -r {input}
+		samtools index {output.bam}
 		"""
 
 
@@ -120,6 +122,40 @@ rule make_tagdir:
 		echo "{params.name}" > {sampleDir}/{wildcards.sampleName}/info.txt
 		"""
 #		mypipe.makeTagDir.sh -o {params.desDir} -n {params.name} -t {Homer_tbp} -c {chrRegexTarget} {input}
+
+
+rule make_fragment:
+	input:
+		bam = get_align_bam_for_tagdir,
+		bai = lambda wildcards: get_align_bam_for_tagdir(wildcards) + ".bai"
+	output:
+		sampleDir + "/{sampleName}/fragment.bed.gz"
+	message:
+		"Making fragment bed files... [{wildcards.sampleName}]"
+	shell:
+		"""
+		module load Cutlery/1.0
+		ngs.bamToFragment.py -c "{chrRegexAll}" -f 0x2 -F 0x400 {input.bam} | sort -S 8G -k1,1 -k2,2n -k3,3n | gzip > {output}
+		"""
+
+
+## Draw a plot of fragment length distribution
+## Automatically consider targer chromosomes only starting with "chr" excluding others such as "DM-chr"
+rule get_fragLenHist:
+	input:
+		sampleDir + "/{sampleName}/fragment.bed.gz"
+	output:
+		txt = sampleDir + "/{sampleName}/QC/fragLen.txt",
+		png = sampleDir + "/{sampleName}/QC/fragLen.png"
+	message:
+		"Checking fragment length... [{wildcards.sampleName}]"
+	params:
+		outPrefix = lambda wildcards, output: __import__("re").sub(".txt$","", output[0])
+	shell:
+		"""
+		module load Cutlery/1.0
+		ngs.fragLenHist.r -o {params.outPrefix} -n {wildcards.sampleName} {input}
+		"""
 
 
 def get_ctrl_name(sampleName):

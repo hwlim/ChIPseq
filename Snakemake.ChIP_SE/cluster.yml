@@ -34,6 +34,9 @@ downsample_bam:
     cpu         : 2
     memory      : 20000
 
+make_fragment:
+    memory      : 10000
+
 make_bigwig:
     memory      : 10000
 
@@ -59,14 +62,14 @@ run_meme_motif_rand5k:
 make_bigwig_avg:
     cpu         : 2
     memory      : 20000
-    name        : "{wildcards.groupName}"
+    name        : "{rule}.{wildcards.groupName}"
     output      : "logs/{rule}.{wildcards.groupName}.out"
     error       : "logs/{rule}.{wildcards.groupName}.err"
 
 make_bigwig_avg_subinput:
     cpu         : 2
     memory      : 20000
-    name        : "{wildcards.groupName}"
+    name        : "{rule}.{wildcards.groupName}"
     output      : "logs/{rule}.{wildcards.groupName}.out"
     error       : "logs/{rule}.{wildcards.groupName}.err"
 
