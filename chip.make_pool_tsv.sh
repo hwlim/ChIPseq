@@ -14,5 +14,20 @@ tsv=$1
 assertFileExist $tsv
 
 head -n 1 $tsv
-tail -n +2 $tsv | grep -v -e ^$ -e ^# | cut -f 3,7 | sort -k1,1 | uniq |  gawk '{ printf "%s\t%s\t%s\tNULL\tNULL\tNULL\t%s\n", $1, $1, $1, $2 }' 
+tail -n +2 $tsv | grep -v -e ^$ -e ^# \
+	| gawk -F "\t" '{
+				if(NF>7){
+					printf "%s\t%s\t%s\n", $3,$7,$8
+				}else{
+					printf "%s\t%s\n", $3,$7
+				}
+			}' \
+	| sort -k1,1 | uniq \
+	| gawk -F "\t" '{
+				if(NF>2){
+					printf "%s\t%s\t%s\tNULL\tNULL\tNULL\t%s\t%s\n", $1, $1, $1, $2, $3
+				}else{
+					printf "%s\t%s\t%s\tNULL\tNULL\tNULL\t%s\n", $1, $1, $1, $2
+				}
+			}' 
 
