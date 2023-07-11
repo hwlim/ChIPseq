@@ -17,7 +17,7 @@ Description: Make Homer data directory from BED file
 Options:
 	-o <outPrefix>: output prefix including path, required
 	-i <ctrl>: (optional) ctrl homer tag directory, default=NULL
-	-m <mask>: mask bed file for filtering such as ENCODE blacklist
+	-m <mask>: mask bed file for filtering such as ENCODE blacklist, default=NULL (no filtering)
 	-f <foldchange>: foldchange cut off for against control sample, default=4
 	-k <spikein>: spike-in factor to multiply to the foldchange cut off (-f). (target spikein cnt)/(Input spikein cnt), default= 1
 	-s <optStr>: additional option for 'findPeaks' of Homer
