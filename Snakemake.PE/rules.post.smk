@@ -11,7 +11,7 @@ if 'spikein_chrom_size' not in locals():
 
 
 ## Decide downsampling depth if any
-def get_downsample_depth(wildcards):
+def get_downsample_depth(sampleName):
 	'''
 	Get down sampling depth
 	Default value is from 'downSampleN
@@ -23,7 +23,7 @@ def get_downsample_depth(wildcards):
 		n = 0
 
 	if "DownSample" in samples:
-		tmp = samples.DownSample[samples.Name == wildcards.sampleName].tolist()[0]
+		tmp = samples.DownSample[samples.Name == sampleName].tolist()[0]
 		if tmp > 0:
 			n = tmp
 	
@@ -50,9 +50,9 @@ def get_ctrl_name(sampleName):
 	return ctrlName
 
 ## find bam file folder for single-end style homer tag directory creation
-def get_align_bam_for_tagdir(wildcards):
+def get_align_bam_for_tagdir(sampleName):
 	# return ordered [ctrl , target] list.
-	downDepth=get_downsample_depth(wildcards)
+	downDepth=get_downsample_depth(sampleName)
 	if doDedup:
 		srcDir = dedupDir
 	else:
@@ -60,13 +60,14 @@ def get_align_bam_for_tagdir(wildcards):
 		if downDepth > 0:
 			srcDir = downsampleDir
 		else:
-			srcDir = alignDir	
-	return srcDir + "/{sampleName}/align.bam"
+			srcDir = alignDir
+	bam = srcDir + "/" + sampleName + "/align.bam"
+	return bam
 
 ## find input homer tag directory for peak calling
-def get_peakcall_input_tagdir(sampleName):
+def get_peakcall_input_tagdir(sampleName, ctrl=True):
 	ctrlName = get_ctrl_name(sampleName)
-	if ctrlName.upper() == "NULL":
+	if ctrlName.upper() == "NULL" or not ctrl:
 		return [ sampleDir + "/" + sampleName + "/TSV.SE" ]
 	else:
 		return [ sampleDir + "/" + ctrlName + "/TSV.SE", sampleDir + "/" + sampleName + "/TSV.SE" ]
@@ -120,9 +121,11 @@ def get_spikein_ratio(chip, ctrl):
 rule dedup_align:
 	input:
 		#filteredDir + "/{sampleName}.filtered.bam"
-		alignDir + "/{sampleName}/align.bam"
+		bam = alignDir + "/{sampleName}/align.bam",
+		bai = alignDir + "/{sampleName}/align.bam.bai"
 	output:
-		dedupDir + "/{sampleName}/align.bam"
+		bam = dedupDir + "/{sampleName}/align.bam",
+		bai = dedupDir + "/{sampleName}/align.bam.bai"
 	message:
 		"Deduplicating... [{wildcards.sampleName}]"
 	params:
@@ -130,8 +133,8 @@ rule dedup_align:
 	shell:
 		"""
 		module load Cutlery/1.0
-		#cnr.dedupBam.sh -m {params.memory} -o {output} -n -r {input}
-		cnr.dedupBam.sh -m {params.memory} -o {output} -r {input}
+		cnr.dedupBam.sh -m {params.memory} -o {output.bam} -r {input.bam}
+		samtools index {output.bam}
 		"""
 
 
@@ -516,7 +519,7 @@ rule call_peak_hetchr_spikein_homer_ctr:
 
 rule make_tagdir_se:
 	input:
-		get_align_bam_for_tagdir
+		lambda wildcards: get_align_bam_for_tagdir(wildcards.sampleName)
 	output:
 		directory(sampleDir + "/{sampleName}/TSV.SE")
 	params:
@@ -559,6 +562,25 @@ rule call_peak_histone:
 		lambda wildcards: get_peakcall_input_tagdir(wildcards.sampleName)
 	output:
 		sampleDir + "/{sampleName}/HomerPeak.histone/peak.exBL.bed"
+	message:
+		"Calling histone peaks/SE ... [{wildcards.sampleName}]"
+	params:
+		mask = peak_mask,
+		outPrefix = lambda wildcards, output: __import__("re").sub(".exBL.bed$","", output[0]),
+		optStr = lambda wildcards, input:( "\"" + get_peakcall_opt(wildcards.sampleName) + "\"" + " -i" ) if len(input)>1 else "\"" + get_peakcall_opt(wildcards.sampleName) + "\""
+	shell:
+		"""
+		module load ChIPseq/1.0
+		chip.peakCallHistone.sh -o {params.outPrefix} -m {params.mask} -f {fc_histone} -s {params.optStr}  {input}
+		"""
+## Histone peak calling without using input sample
+# Goal: Create candidate peak regions for spike-in controlled peak calling using findDiffDomain.spike.r
+# NOTE: "-tbp 0" is implicitly set within chip.peakCallHistone.sh 
+rule call_peak_histone_wo_control:
+	input:
+		lambda wildcards: get_peakcall_input_tagdir(wildcards.sampleName, ctrl=False)
+	output:
+		sampleDir + "/{sampleName}/HomerPeak.histone.wo_ctrl/peak.exBL.bed"
 	message:
 		"Calling histone peaks/SE ... [{wildcards.sampleName}]"
 	params:
