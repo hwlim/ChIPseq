@@ -46,7 +46,8 @@ rule align_pe:
 	input:
 		get_fastq
 	output:
-		alignDir+"/{sampleName}/align.bam"
+		alignDir+"/{sampleName}/align.bam",
+		alignDir+"/{sampleName}/align.bam.bai"
 	message:
 		"Aligning... [{wildcards.sampleName}]"
 	params:
