@@ -150,7 +150,8 @@ do
 	else
 		if [ "$bsub" == "TRUE" ];then
 			## Parallel processing using HPC:lsf
-			bsub -W 24:00 -M 1000 -n 1 "module load samtools/1.9.0; module load R/3.5.0; module load homer/4.11;
+			bsub -W 24:00 -M 1000 -n 1 "
+			module load ChIPseq
 			ngs.poolHomerTagDir.sh -o $des $optStr ${srcL[@]};
 			drawHomerAutoCorr.r -t ${group} ${des};"
 		else
