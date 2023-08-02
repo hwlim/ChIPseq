@@ -571,7 +571,7 @@ rule call_peak_histone:
 	shell:
 		"""
 		module load ChIPseq/1.0
-		chip.peakCallHistone.sh -o {params.outPrefix} -m {params.mask} -f {fc_histone} -s {params.optStr}  {input}
+		chip.peakCallHistone.sh -o {params.outPrefix} -m {params.mask} -f {fc_histone} -s {params.optStr} {input}
 		"""
 ## Histone peak calling without using input sample
 # Goal: Create candidate peak regions for spike-in controlled peak calling using findDiffDomain.spike.r
@@ -590,7 +590,7 @@ rule call_peak_histone_wo_control:
 	shell:
 		"""
 		module load ChIPseq/1.0
-		chip.peakCallHistone.sh -o {params.outPrefix} -m {params.mask} -f {fc_histone} -s {params.optStr}  {input}
+		chip.peakCallHistone.sh -o {params.outPrefix} -m {params.mask} -f {fc_histone} -s {params.optStr} {input}
 		"""
 
 
