@@ -27,7 +27,8 @@ Options:
 Output:
 	- <outPrefix>.txt              Homer peak calling result
 	- <outPrefix>.bed              Homer peak in bed format
-	- <outPrefix>.exBL.bed         After blacklist filtering"
+	- <outPrefix>.exBL.bed         After blacklist filtering
+	- <outPrefix>.param.txt        peak calling parameter specified by -s"
 }
 
 if [ $# -eq 0 ];then
@@ -120,9 +121,11 @@ echo -e "Homer histone peak-calling
   - spikein = $spikein" >&2
 
 log=${outPrefix}.log
+param=${outPrefix}.param.txt
 peak0=${outPrefix}.txt
 peakBed=${outPrefix}.bed
 peakMasked=${outPrefix}.exBL.bed
+
 tmpPeakMasked=${TMPDIR}/__temp__.$$.bed
 tmpTagCount=${TMPDIR}/__temp__.$$.target
 
@@ -136,6 +139,7 @@ if [ "$spikein" != "1" ];then
 fi
 optStr="$optStr -F $foldchange"
 echo -e "  - optStr = $optStr\n" >&2
+echo -e "$optStr" > $param
 
 desDir=`dirname $outPrefix`
 mkdir -p $desDir
