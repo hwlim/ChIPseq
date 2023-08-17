@@ -121,6 +121,14 @@ hetChr_homer_spike 	= "hetChr.Homer.spikein.w%d_d%d_fc%.1f" % ( peakWindow_homer
 hetChr_homer_spike_ctr = "hetChr.Homer.spikein.ctr.w%d_d%d_fc%.1f" % ( peakWindow_homer, minDist_homer, peakFC )
 
 
+
+###################################################
+
+
+
+
+
+
 ## CODE used in the initial version
 #def getfq(wildcards):
 #	return "0.Fastq/" + samples_indexById.loc[wildcards.sampleId, ["Fq1","Fq2"]]
