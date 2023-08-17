@@ -115,7 +115,7 @@ assertDirExist $srcDir
 #	-m <mem>: Memory for sorting. default=5G
 #	-s : If set, coordinate-sorted and indexed
 
-groupL=`tail -n +2 $sampleInfo | grep -v -e ^$ -e ^# | cut -f 3 | sort | uniq`
+groupL=`cat $sampleInfo | grep -v -e ^$ -e "^#" -e ^Id | cut -f 3 | sort | uniq`
 
 echo -e "Pooling replicate bam files" >&2
 echo -e "  - sampleInfo: $sampleInfo" >&2
@@ -146,9 +146,9 @@ do
 
 	## List of replicate bam files
 	if [ "$bySampleDir" == "TRUE" ];then
-		srcL=( `tail -n +2 $sampleInfo | grep -v -e ^$ -e "^#" | gawk '{ if($3 == "'$group'") printf "'$srcDir'/%s/align.bam\n", $2 }'` )
+		srcL=( `cat $sampleInfo | grep -v -e ^$ -e "^#" -e ^Id | gawk '{ if($3 == "'$group'") printf "'$srcDir'/%s/align.bam\n", $2 }'` )
 	else
-		srcL=( `tail -n +2 $sampleInfo | grep -v -e ^$ -e "^#" | gawk '{ if($3 == "'$group'") printf "'$srcDir'/%s.bam\n", $2 }'` )
+		srcL=( `cat $sampleInfo | grep -v -e ^$ -e "^#" -e ^Id | gawk '{ if($3 == "'$group'") printf "'$srcDir'/%s.bam\n", $2 }'` )
 	fi
 	assertFileExist ${srcL[@]}
 

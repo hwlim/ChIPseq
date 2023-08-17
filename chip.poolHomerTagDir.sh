@@ -98,7 +98,7 @@ echo -e "  - bsub:   $bsub" >&2
 echo -e "  - robust: $robust" >&2
 echo -e "" >&2
 
-groupL=`tail -n +2 $sampleInfo | grep -v -e ^$ -e ^# -e ^Id | cut -f 3 | sort | uniq`
+groupL=`cat $sampleInfo | grep -v -e ^$ -e "^#" -e ^Id | cut -f 3 | sort | uniq`
 
 mkdir -p $desDir
 log=${desDir}/pool.log
@@ -110,7 +110,7 @@ do
 	des=${desDir}/${group}/${tagDirName}
 
 	## List of replicate tag directories
-	srcL=( `tail -n +2 $sampleInfo | grep -v -e ^$ -e "^#" | gawk '{ if($3 == "'$group'") printf "'$srcDir'/%s/'${tagDirName}'\n", $2 }'` )
+	srcL=( `cat $sampleInfo | grep -v -e ^$ -e "^#" -e ^Id | gawk '{ if($3 == "'$group'") printf "'$srcDir'/%s/'${tagDirName}'\n", $2 }'` )
 	assertDirExist ${srcL[@]}
 
 	if [ -d $des ] && [ -f ${des}/Autocorrelation.png ];then

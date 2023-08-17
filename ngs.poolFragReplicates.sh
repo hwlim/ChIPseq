@@ -90,7 +90,7 @@ assertDirExist $srcDir
 ###################################
 ## main code
 
-groupL=`tail -n +2 $sampleInfo | grep -v -e ^$ -e ^# | cut -f 3 | sort | uniq`
+groupL=`cat $sampleInfo | grep -v -e ^$ -e "^#" -e ^Id | cut -f 3 | sort | uniq`
 
 echo -e "Pooling replicate fragment bed files" >&2
 echo -e "  - sampleInfo: $sampleInfo" >&2
@@ -102,8 +102,8 @@ echo -e "  - bsub:   $bsub" >&2
 mkdir -p $desDir
 for group in ${groupL[@]}
 do
-	des=${desDir}/${group}.frag.bed.gz
-	log=${desDir}/${group}.frag.log
+	des=${desDir}/${group}/fragment.bed.gz
+	log=${desDir}/${group}/fragment.log
 
 	## Checking existing destination file
 	if [ -f $des ] && [ "$overwrite" != "TRUE" ];then
@@ -112,7 +112,7 @@ do
 	fi
 
 	## List of replicate bam files
-	srcL=( `tail -n +2 $sampleInfo | grep -v -e ^$ -e "^#" | gawk '{ if($3 == "'$group'") printf "'$srcDir'/%s.frag.bed.gz\n", $2 }'` )
+	srcL=( `cat $sampleInfo | grep -v -e ^$ -e "^#" -e ^Id | gawk '{ if($3 == "'$group'") printf "'$srcDir'/%s/fragment.bed.gz\n", $2 }'` )
 	assertFileExist ${srcL[@]}
 
 	## Merging to destination
@@ -125,6 +125,8 @@ do
 	if [ "$testRun" == "TRUE" ];then
 		continue
 	fi
+
+	mkdir -p ${desDir}/${group}
 
 	echo -ne "" > $log
 	for src in ${srcL[@]}

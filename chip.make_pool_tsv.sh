@@ -13,8 +13,8 @@ tsv=$1
 
 assertFileExist $tsv
 
-head -n 1 $tsv
-tail -n +2 $tsv | grep -v -e ^$ -e ^# \
+grep ^Id $tsv
+cat $tsv | grep -v -e ^$ -e "^#" -e ^Id \
 	| gawk -F "\t" '{
 				if(NF>7){
 					printf "%s\t%s\t%s\n", $3,$7,$8
