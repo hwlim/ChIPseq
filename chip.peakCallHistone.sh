@@ -18,8 +18,6 @@ Options:
 	-o <outPrefix>: output prefix including path, required
 	-i <ctrl>: (optional) ctrl homer tag directory, default=NULL
 	-m <mask>: mask bed file for filtering such as ENCODE blacklist, default=NULL (no filtering)
-	-f <foldchange>: foldchange cut off for against control sample, default=4
-	-k <spikein>: spike-in factor to multiply to the foldchange cut off (-f). (target spikein cnt)/(Input spikein cnt), default= 1
 	-s <optStr>: additional option for 'findPeaks' of Homer
 		in addition to internally pre-set option: \"-style histone -tbp 0 -norm 1000000 \"
 		such as -size or -minDist
@@ -42,11 +40,8 @@ fi
 outPrefix=NULL
 ctrl=NULL
 mask=NULL
-foldchange=4
-spikein=1
 optStr="-style histone -tbp 0 -norm 1000000 -strand both"
-#lengthParam=NULL,NULL
-while getopts ":o:i:m:f:k:s:" opt; do
+while getopts ":o:i:m:s:" opt; do
 	case $opt in
 		o)
 			outPrefix=$OPTARG
@@ -56,12 +51,6 @@ while getopts ":o:i:m:f:k:s:" opt; do
 			;;
 		m)
 			mask=$OPTARG
-			;;
-		f)
-			foldchange=$OPTARG
-			;;
-		k)
-			spikein=$OPTARG
 			;;
 		s)
 			optStr="$optStr $OPTARG"
@@ -117,8 +106,7 @@ echo -e "Homer histone peak-calling
   - blacklist = $mask
   - outPrefix = $outPrefix
   - TTC = $ttc
-  - fold-change = $foldchange
-  - spikein = $spikein" >&2
+  - option = $optStr" >&2
 
 log=${outPrefix}.log
 param=${outPrefix}.param.txt
@@ -129,16 +117,6 @@ peakMasked=${outPrefix}.exBL.bed
 tmpPeakMasked=${TMPDIR}/__temp__.$$.bed
 tmpTagCount=${TMPDIR}/__temp__.$$.target
 
-## optional fold-change cut off adjustment by spikein factor
-if [ "$spikein" != "1" ];then
-	foldchange=`echo -e "${foldchange}\t${spikein}" | gawk '{ printf "%f", $1 * $2 }'`
-	echo -e "  - Spikein factor applied, new fold-change threshold:
-	spikein factor = $spikein
-	new fold change = $foldchange
-" >&2
-fi
-optStr="$optStr -F $foldchange"
-echo -e "  - optStr = $optStr\n" >&2
 echo -e "$optStr" > $param
 
 desDir=`dirname $outPrefix`
@@ -152,8 +130,6 @@ else
 fi
 
 
-## To implement, how to calculate RPKM value efficiently for 5th column
-
 
 echo -e "Convergting to bed" >&2
 grep -v "^#" ${peak0} \
@@ -162,10 +138,11 @@ grep -v "^#" ${peak0} \
 
 echo -e "Blacking masking & merging" >&2
 if [ "$mask" != "NULL" ];then
-	intersectBed -a ${peakBed} -b $mask -v \
+	#intersectBed -a ${peakBed} -b $mask -v \
+	subtractBed -a ${peakBed} -b $mask  \
 		| sortBed \
 		| mergeBed \
-		| gawk '{ printf "%s\t%d\t%d\tpeak.%d\t0\t+\n", $1,$2,$3,NR }' \
+		| gawk '$3-$2>=500 { printf "%s\t%d\t%d\tpeak.%d\t0\t+\n", $1,$2,$3,NR }' \
 		> ${tmpPeakMasked}
 		#| sort -k4,4 \
 else
