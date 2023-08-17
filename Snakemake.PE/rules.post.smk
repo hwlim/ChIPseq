@@ -1,8 +1,8 @@
 if 'Homer_tbp' not in locals():
 	Homer_tbp=0
 
-if 'fc_histone' not in locals():
-	fc_histone=4
+# if 'fc_histone' not in locals():
+# 	fc_histone=4
 
 if 'spikein_chrom_size' not in locals():
 	spikein_chrom_size="NULL"
@@ -571,7 +571,7 @@ rule call_peak_histone:
 	shell:
 		"""
 		module load ChIPseq/1.0
-		chip.peakCallHistone.sh -o {params.outPrefix} -m {params.mask} -f {fc_histone} -s {params.optStr} {input}
+		chip.peakCallHistone.sh -o {params.outPrefix} -m {params.mask} -s {params.optStr} {input}
 		"""
 ## Histone peak calling without using input sample
 # Goal: Create candidate peak regions for spike-in controlled peak calling using findDiffDomain.spike.r
@@ -590,36 +590,36 @@ rule call_peak_histone_wo_control:
 	shell:
 		"""
 		module load ChIPseq/1.0
-		chip.peakCallHistone.sh -o {params.outPrefix} -m {params.mask} -f {fc_histone} -s {params.optStr} {input}
+		chip.peakCallHistone.sh -o {params.outPrefix} -m {params.mask} -s {params.optStr} {input}
 		"""
 
 
-## homer histone peak calling considering spikein
-rule call_peak_histone_spikein:
-	input:
-		tagDir = lambda wildcards: get_peakcall_input_tagdir(wildcards.sampleName),
-		spikeChip = sampleDir + "/{sampleName}/QC/spikeCnt.txt",
-		spikeCtrl = lambda wildcards: sampleDir + "/" + get_ctrl_name(wildcards.sampleName) + "/QC/spikeCnt.txt"
-	output:
-		sampleDir + "/{sampleName}/HomerPeak.histone.spikein/peak.exBL.bed"
-	message:
-		"Calling histone peaks/SE with spikein ... [{wildcards.sampleName}]"
-	params:
-		#spikeFactor = lambda wildcards: get_spikein_ratio(wildcards.sampleName, get_ctrl_name(wildcards.sampleName)),
-		outPrefix = lambda wildcards, output: __import__("re").sub(".exBL.bed$","", output[0]),
-		optStr = lambda wildcards, input:( "\"" + get_peakcall_opt(wildcards.sampleName) + "\"" + " -i" ) if len(input)>1 else "\"" + get_peakcall_opt(wildcards.sampleName) + "\""
-	shell:
-		"""
-		module load ChIPseq/1.0
-		spikeChip=`cat {input.spikeChip} | gawk '$1 == "SpikeinFrac"' | cut -f 2`
-		spikeCtrl=`cat {input.spikeCtrl} | gawk '$1 == "SpikeinFrac"' | cut -f 2`
-		if [ "$spikeChip" == "" ] || [ "$spikeCtrl" == "" ];then
-			echo -e "Error: empty spikein factor" >&2
-			exit 1
-		fi
-		spikeFactor=`echo -e "${{spikeChip}}\t${{spikeCtrl}}" | gawk '{{ printf "%f", $1 / $2 }}'`
-		chip.peakCallHistone.sh -o {params.outPrefix} -m {peak_mask} -f {fc_histone}  -k $spikeFactor -s {params.optStr} {input.tagDir}
-		"""
+# ## homer histone peak calling considering spikein
+# rule call_peak_histone_spikein:
+# 	input:
+# 		tagDir = lambda wildcards: get_peakcall_input_tagdir(wildcards.sampleName),
+# 		spikeChip = sampleDir + "/{sampleName}/QC/spikeCnt.txt",
+# 		spikeCtrl = lambda wildcards: sampleDir + "/" + get_ctrl_name(wildcards.sampleName) + "/QC/spikeCnt.txt"
+# 	output:
+# 		sampleDir + "/{sampleName}/HomerPeak.histone.spikein/peak.exBL.bed"
+# 	message:
+# 		"Calling histone peaks/SE with spikein ... [{wildcards.sampleName}]"
+# 	params:
+# 		#spikeFactor = lambda wildcards: get_spikein_ratio(wildcards.sampleName, get_ctrl_name(wildcards.sampleName)),
+# 		outPrefix = lambda wildcards, output: __import__("re").sub(".exBL.bed$","", output[0]),
+# 		optStr = lambda wildcards, input:( "\"" + get_peakcall_opt(wildcards.sampleName) + "\"" + " -i" ) if len(input)>1 else "\"" + get_peakcall_opt(wildcards.sampleName) + "\""
+# 	shell:
+# 		"""
+# 		module load ChIPseq/1.0
+# 		spikeChip=`cat {input.spikeChip} | gawk '$1 == "SpikeinFrac"' | cut -f 2`
+# 		spikeCtrl=`cat {input.spikeCtrl} | gawk '$1 == "SpikeinFrac"' | cut -f 2`
+# 		if [ "$spikeChip" == "" ] || [ "$spikeCtrl" == "" ];then
+# 			echo -e "Error: empty spikein factor" >&2
+# 			exit 1
+# 		fi
+# 		spikeFactor=`echo -e "${{spikeChip}}\t${{spikeCtrl}}" | gawk '{{ printf "%f", $1 / $2 }}'`
+# 		chip.peakCallHistone.sh -o {params.outPrefix} -m {peak_mask} -f {fc_histone}  -k $spikeFactor -s {params.optStr} {input.tagDir}
+# 		"""
 
 ## homer TF peak calling considering spikein
 rule call_peak_factor_spikein:
@@ -781,8 +781,6 @@ rule make_bigwig_ctr_rpm_spike:
 
 
 ################ Single-END style END #######################
-
-
 
 
 
