@@ -6,14 +6,13 @@ if [ -z ${COMMON_LIB_BASE+x} ]; then
 fi
 source $COMMON_LIB_BASE/commonBash.sh
 
-CHIP_PATH=~/bin/Pipeline/Snakemake.ChIP_SE
-#if [ -z ${CUTLERY+x} ]; then
-#	echo -e "Error: Environment variable CUTLERY is not defined" >&2
-#	exit 1
-#fi
+if [ -z ${CHIP_PATH+x} ]; then
+	echo -e "Error: Environment variable CHIP_PATH is not defined" >&2
+	exit 1
+fi
 
 echo -e "Initializing ChIP-seq:ChIP_SE analysis" >&2
 
 
-cp -i -v ${CHIP_PATH}/sample.tsv .
-cp -i -v ${CHIP_PATH}/Snakefile .
+cp -i -v ${CHIP_PATH}/Snakemake.ChIP_SE/sample.tsv .
+cp -i -v ${CHIP_PATH}/Snakemake.ChIP_SE/Snakefile .

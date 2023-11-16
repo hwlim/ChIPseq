@@ -3,7 +3,7 @@
 
 ## Sample information file with five columns: id / name / group / fq1 / fq2
 src_sampleInfo	= "./sample.tsv"
-cluster_yml		= os.environ["LIMLAB_BASE"] + "/Pipeline/Snakemake.PE/cluster.yml"
+cluster_yml		= os.environ["CHIP_PATH"] + "/Snakemake.ChIP_PE/cluster.yml"
 
 ## Genome folder depending on platform: CCHMC:HPC vs my desktop
 ## Mouse
@@ -173,5 +173,5 @@ rule all:
 #		expand(hetChr_homer_spike + "/{sampleName}.exBL.bed", sampleName=sampleNameTarget),
 #		expand(hetChr_homer_spike_ctr + "/{sampleName}.exBL.bed", sampleName=sampleNameTarget)
 
-include: os.environ["LIMLAB_BASE"] + "/Pipeline/Snakemake.PE/rules.pre.smk"
-include: os.environ["LIMLAB_BASE"] + "/Pipeline/Snakemake.PE/rules.post.smk"
+include: os.environ["CHIP_PATH"] + "/Snakemake.PE/rules.pre.smk"
+include: os.environ["CHIP_PATH"] + "/Snakemake.PE/rules.post.smk"
