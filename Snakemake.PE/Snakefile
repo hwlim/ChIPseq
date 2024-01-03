@@ -56,7 +56,7 @@ star_option	= "--alignSJDBoverhangMin 999 --alignIntronMax 1 --alignMatesGapMax 
 ## Job flags
 doTrim		= False
 doDedup		= True
-
+robustFragLen	= False
 ########################
 ## Other parameteres
 ## Homer "tbp" option, number of read per position to consider
@@ -159,9 +159,9 @@ with open(os.path.expanduser(cluster_yml), 'r') as fh:
 sampleNameTarget=samples.Name[samples.Ctrl != "NULL"].tolist()
 rule all:
 	input:
-#		alignDir + "/alignStat.txt",
-		qcDir + "/spikein.txt"
-#		expand(sampleDir + "/{sampleName}/QC/fragLen.png", sampleName=samples.Name.tolist()),
+		qcDir + "/alignStat.txt",
+		qcDir + "/spikein.txt",
+		expand(sampleDir + "/{sampleName}/QC/fragLen.png", sampleName=samples.Name.tolist()),
 #		expand(sampleDir + "/{sampleName}/igv.ctr.rpm.bw", sampleName=samples.Name.tolist()),
 #		expand(sampleDir + "/{sampleName}/igv.ctr.rpsm.bw", sampleName=samples.Name.tolist()),
 #		expand(sampleDir + "/{sampleName}/igv.frag.rpm.bw", sampleName=samples.Name.tolist()),
@@ -172,6 +172,11 @@ rule all:
 #		expand(sampleDir + "/{sampleName}/igv.frag.rpsm.subInput.bw", sampleName=samples.Name.tolist()),
 #		expand(hetChr_homer_spike + "/{sampleName}.exBL.bed", sampleName=sampleNameTarget),
 #		expand(hetChr_homer_spike_ctr + "/{sampleName}.exBL.bed", sampleName=sampleNameTarget)
+		expand(sampleDir + "/{sampleName}/HomerPeak.factor/peak.exBL.1rpm.bed", sampleName=samplesFactor),
+		expand(sampleDir + "/{sampleName}/HomerPeak.histone/peak.exBL.bed", sampleName=samplesHistone),
+		expand(sampleDir + "/{sampleName}/HomerPeak.factor/Motif/Homer.all/homerResults.html", sampleName=samplesFactor),
+		expand(sampleDir + "/{sampleName}/HomerPeak.factor/Motif/MEME.random5k/meme-chip.html", sampleName=samplesFactor),
+		expand(sampleDir + "/{sampleName}/igv.ctr.rpm.bw", sampleName=samplesAll)
 
 include: os.environ["CHIP_PATH"] + "/Snakemake.PE/rules.pre.smk"
 include: os.environ["CHIP_PATH"] + "/Snakemake.PE/rules.post.smk"
