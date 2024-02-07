@@ -7,6 +7,10 @@ if 'Homer_tbp' not in locals():
 if 'spikein_chrom_size' not in locals():
 	spikein_chrom_size="NULL"
 
+if 'species_macs' not in locals():
+	print("Warning: species_macs is not defined; using hs (default)")
+	species_macs="hs"
+
 ########## Auxilary functions definition start #################
 
 
@@ -555,6 +559,23 @@ rule call_peak_factor:
 		"""
 #		chip.peakCallFactor.sh -o {params.desDir}/HomerPeak.factor -i {input.ctrl} -m {params.mask} -s "-size 200" {input}
 
+## Peak calling in factor mode using resized fragment
+rule call_peaks_factor_no_ctrl:
+	input:
+		lambda wildcards: get_peakcall_input_tagdir(wildcards.sampleName, ctrl=False)
+	output:
+		sampleDir + "/{sampleName}/HomerPeak.factor.wo_ctrl/peak.exBL.1rpm.bed"
+	params:
+		mask = peak_mask,
+		outPrefix = lambda wildcards, output: __import__("re").sub(".exBL.1rpm.bed$","", output[0]),
+		optStr = lambda wildcards, input:( "\"-size 200 " + get_peakcall_opt(wildcards.sampleName) + "\"" + " -i" ) if len(input)>1 else "\"-size 200 " + get_peakcall_opt(wildcards.sampleName) + "\""
+	message:
+		"Peak calling using Homer... [{wildcards.sampleName}]"
+	shell:
+		"""
+		module load ChIPseq/1.0
+		chip.peakCallFactor.sh -o {params.outPrefix} -m {params.mask} -s {params.optStr} {input}
+		"""
 
 ## NOTE: "-tbp 0" is implicitly set within chip.peakCallHistone.sh 
 rule call_peak_histone:
@@ -752,6 +773,92 @@ rule draw_peak_heatmap_histone:
 		"""
 
 
+################ Single-END style END #######################
+
+
+################ MACS Peak Calling in PE mode #######################
+## Return bam file (with full path) for a given sample name
+# Return control bam file if mode == "ctrl"
+# NOTE: needs to handle no-ctrl case
+def get_bam_for_macs(sampleName, mode="target"):
+	if doDedup:
+		srcDir = dedupDir
+	else:
+		srcDir = alignDir
+
+	if mode == "target":
+		name = sampleName
+	elif mode == "ctrl":
+		name = get_ctrl_name(sampleName)
+	else:
+		raise NameError("Invalid mode %s; must be target or ctrl", mode)
+
+	bam = srcDir + "/" + name + "/align.bam"
+	return bam
+
+
+rule call_peak_macs_factor:
+	input:
+		target = lambda wildcards: get_bam_for_macs(wildcards.sampleName, mode="target"),
+		ctrl = lambda wildcards: get_bam_for_macs(wildcards.sampleName, mode="ctrl")
+	output:
+		peak = sampleDir + "/{sampleName}/MACS2.factor/{sampleName}_summits.exBL.bed",
+		log = sampleDir + "/{sampleName}/MACS2.factor/{sampleName}.log"
+	message:
+		"Calling TF peaks/SE ... [{wildcards.sampleName}]"
+	params:
+		mask = peak_mask,
+		outDir = lambda wildcards, output: __import__("os").path.dirname(output[0])
+	shell:
+		"""
+		module purge
+		module load MACS/2.2.8
+		module load bedtools/2.27.0
+		macs3 callpeak -t {input.target} -c {input.ctrl} -f BAMPE -n {wildcards.sampleName} --outdir {params.outDir} -g {species_macs} --keep-dup all --call-summits 2>&1 | tee {output.log}
+		intersectBed -a {params.outDir}/{wildcards.sampleName}_summits.bed -b {params.mask} -v > {output.peak}
+		"""
+
+## Peak calling in factor mode using resized fragment
+rule call_peak_macs_factor_wo_ctrl:
+	input:
+		target = lambda wildcards: get_bam_for_macs(wildcards.sampleName, mode="target")
+	output:
+		peak = sampleDir + "/{sampleName}/MACS2.factor.wo_ctrl/{sampleName}_summits.exBL.bed",
+		log = sampleDir + "/{sampleName}/MACS2.factor.wo_ctrl/{sampleName}.log"
+	message:
+		"Calling TF peaks/SE ... [{wildcards.sampleName}]"
+	params:
+		mask = peak_mask,
+		outDir = lambda wildcards, output: __import__("os").path.dirname(output[0])
+	shell:
+		"""
+		module purge
+		module load MACS/2.2.8
+		module load bedtools/2.27.0
+		macs3 callpeak -t {input.target} -f BAMPE -n {wildcards.sampleName} --outdir {params.outDir} -g {species_macs} --keep-dup all --call-summits 2>&1 | tee {output.log}
+		intersectBed -a {params.outDir}/{wildcards.sampleName}_summits.bed -b {params.mask} -v > {output.peak}
+		"""
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ##### Rules for spike-in bigwig files ########################
 
@@ -780,49 +887,18 @@ rule make_bigwig_ctr_rpm_spike:
 
 
 
-################ Single-END style END #######################
-
-
-
-'''
-## Peak calling using Homer
-## Rule from CUT&RUN pipeline
-
-def get_peakcall_input(wildcards):
-	# return ordered [ctrl , target] list. if no ctrl, simply [target].
-	ctrlName = samples.Ctrl[samples.Name == wildcards.sampleName]
-	ctrlName = ctrlName.tolist()[0]
-	if ctrlName.upper() == "NULL":
-		return [ homerDir + "/" + wildcards.sampleName + "/TSV" ]
-	else:
-		return [ homerDir + "/" + ctrlName + "/TSV", homerDir + "/" + wildcards.sampleName + "/TSV" ]
-
-rule call_peaks:
-	input:
-		get_peakcall_input
-		#target 	= homerDir + "/{sampleName}/TSV",
-		#ctrl 	= "test"
-		#ctrl 	= "get_ctrl"
-	output:
-		homerDir + "/{sampleName}/HomerPeak/peak.homer.exBL.1rpm.bed"
-	params:
-		mask = peak_mask,
-		peakDir = homerDir + "/{sampleName}/HomerPeak",
-		optStr = lambda wildcards, input: "-i" if len(input)>1 else ""
-	message:
-		"Peak calling using Homer... [{wildcards.sampleName}]"
-	shell:
-		"""
-		module load Cutlery/1.0
-		cnr.peakCallTF.sh -o {params.peakDir} -m {params.mask} -s \"-fragLength 100\" {params.optStr} {input}
-		"""
-'''
 
 
 
 
 
-################################################################
+
+
+###################################################################
+# DEPRECATED RULES BELOW
+
+
+
 ## *** Note *****
 ## get_scalefactor function is deterministic, i.e Snakemake run this function to generate command lines to submit
 ## Therefore, when spikein.txt does not exist, this rule will invoke error.
