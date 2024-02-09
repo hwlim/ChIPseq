@@ -814,8 +814,36 @@ rule call_peak_macs_factor:
 		module purge
 		module load MACS/2.2.8
 		module load bedtools/2.27.0
-		macs3 callpeak -t {input.target} -c {input.ctrl} -f BAMPE -n {wildcards.sampleName} --outdir {params.outDir} -g {species_macs} --keep-dup all --call-summits 2>&1 | tee {output.log}
+		macs3 callpeak -t {input.target} -c {input.ctrl} -f BAMPE -n {wildcards.sampleName} \
+			--outdir {params.outDir} -g {species_macs} --keep-dup all --call-summits \
+			2>&1 | tee {output.log}
 		intersectBed -a {params.outDir}/{wildcards.sampleName}_summits.bed -b {params.mask} -v > {output.peak}
+		"""
+
+## MACS peak calling with relaxed criteria using p-value for IDR analysis
+rule call_peak_macs_factor_relax:
+	input:
+		target = lambda wildcards: get_bam_for_macs(wildcards.sampleName, mode="target"),
+		ctrl = lambda wildcards: get_bam_for_macs(wildcards.sampleName, mode="ctrl")
+	output:
+		peak = sampleDir + "/{sampleName}/MACS2.factor.relax/{sampleName}_summits.exBL.bed",
+		peak2 = sampleDir + "/{sampleName}/MACS2.factor.relax/{sampleName}_peaks.sorted.narrowPeak",
+		log = sampleDir + "/{sampleName}/MACS2.factor.relax/{sampleName}.log"
+	message:
+		"Calling TF peaks/SE ... [{wildcards.sampleName}]"
+	params:
+		mask = peak_mask,
+		outDir = lambda wildcards, output: __import__("os").path.dirname(output[0])
+	shell:
+		"""
+		module purge
+		module load MACS/2.2.8
+		module load bedtools/2.27.0
+		macs3 callpeak -t {input.target} -c {input.ctrl} -f BAMPE -n {wildcards.sampleName} \
+			--outdir {params.outDir} -g {species_macs} --keep-dup all --call-summits -p 0.001 \
+			2>&1 | tee {output.log}
+		intersectBed -a {params.outDir}/{wildcards.sampleName}_summits.bed -b {params.mask} -v > {output.peak}
+		sort -k8,8nr {params.outDir}/{wildcards.sampleName}_peaks.narrowPeak > {output.peak2}
 		"""
 
 ## Peak calling in factor mode using resized fragment
