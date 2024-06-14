@@ -157,6 +157,10 @@ with open(os.path.expanduser(cluster_yml), 'r') as fh:
 
 
 sampleNameTarget=samples.Name[samples.Ctrl != "NULL"].tolist()
+samplesAll	= samples.Name.tolist()
+samplesFactor	= samples.Name[ samples.PeakMode=="factor" ].tolist()
+samplesHistone	= samples.Name[ samples.PeakMode=="histone" ].tolist()
+
 rule all:
 	input:
 		qcDir + "/alignStat.txt",
