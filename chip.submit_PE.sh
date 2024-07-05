@@ -31,10 +31,10 @@ fi
 #snakemake -np
 #exit 0
 mkdir -p logs
-bsub -W ${totalWaitTime} -eo submit.err -oo submit.out \
+bsub -W ${totalWaitTime} -eo submit.err -oo submit.out -q rhel9\
 	"module load python3/3.6.3
 	snakemake -j $nJob \
 		--latency-wait 60 \
 		--cluster-config $config \
-		--cluster 'bsub -W {cluster.walltime} -n {cluster.cpu} -M {cluster.memory} -J $$.{cluster.name} -R {cluster.resource} -eo {cluster.error} -oo {cluster.output}'"
+		--cluster 'bsub -q rhel9 -W {cluster.walltime} -n {cluster.cpu} -M {cluster.memory} -J $$.{cluster.name} -R {cluster.resource} -eo {cluster.error} -oo {cluster.output}'"
 
