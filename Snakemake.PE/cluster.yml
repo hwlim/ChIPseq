@@ -6,7 +6,7 @@
 __default__:
     cpu         : 1
     memory      : 10000
-    walltime    : "12:00"
+    walltime    : "24:00"
     name        : "{rule}.{wildcards.sampleName}"
     output      : "logs/{rule}.{wildcards.sampleName}.out"
     error       : "logs/{rule}.{wildcards.sampleName}.err"
@@ -20,8 +20,18 @@ trim_pe:
 align_pe:
     cpu         : 4
     memory      : 50000
-    walltime    : "24:00"
-    resource    : "\"span[hosts=1]\""
+
+csort_bam:
+    cpu         : 4
+    memory      : 10000
+
+run_csem:
+    cpu         : 4
+    memory      : 10000
+
+csort_csem:
+    cpu         : 4
+    memory      : 10000
 
 check_baseFreq:
     memory      : 6000

@@ -46,8 +46,8 @@ rule align_pe:
 	input:
 		get_fastq
 	output:
-		alignDir+"/{sampleName}/align.bam",
-		alignDir+"/{sampleName}/align.bam.bai"
+		alignDir+"/{sampleName}/align.sortByName.bam"
+		#alignDir+"/{sampleName}/align.bam.bai"
 	message:
 		"Aligning... [{wildcards.sampleName}]"
 	params:
@@ -66,8 +66,8 @@ rule align_pe:
 			-o {alignDir}/{wildcards.sampleName}/align \
 			-t {threads} \
 			-p '{params.option}' \
-			-s \
 			{input}
+		mv {alignDir}/{wildcards.sampleName}/align.bam {alignDir}/{wildcards.sampleName}/align.sortByName.bam
 		"""
 #		STAR --runMode alignReads --genomeDir {params.index} \
 #			--genomeLoad NoSharedMemory \
@@ -85,18 +85,99 @@ def get_align_dir(bamList):
 
 rule make_align_stat_table:
 	input:
-		expand(alignDir+"/{sampleName}/align.bam", sampleName=samples.Name.tolist())
+		expand(alignDir+"/{sampleName}/align.sortByName.bam", sampleName=samples.Name.tolist())
 	output:
 		qcDir + "/alignStat.txt"
 	params:
-		inputDir = get_align_dir(expand(alignDir+"/{sampleName}/align.bam", sampleName=samples.Name.tolist()))
+		inputDir = get_align_dir(expand(alignDir+"/{sampleName}/align.sortByName.bam", sampleName=samples.Name.tolist()))
 	message:
 		"Creating alignment stat file"
 	shell:
 		"""
-		module load ChIPseq/1.0
+		#module load ChIPseq/1.0
+		module purge
+		module load R/4.4.0
 		star.getAlignStats.r {params.inputDir} > {output}
 		"""
+
+
+rule csort_bam:
+	input:
+		bam=alignDir+"/{sampleName}/align.sortByName.bam"
+	output:
+		bam = alignDir+"/{sampleName}/align.bam",
+		bai = alignDir+"/{sampleName}/align.bam.bai"
+	message:
+		"Sorting by coordinate... [{wildcards.sampleName}]"
+	threads:
+		cluster["csort_bam"]["cpu"]
+	shell:
+		"""
+		module load ChIPseq/1.0
+		samtools sort -o {output.bam} -T ${{TMPDIR}}/csort_bam.{wildcards.sampleName}.${{RANDOM}} -@ {threads} -m 2G {input.bam}
+		samtools index {output.bam}
+		"""
+
+##########################################
+## Rule to handle multimapper using CSEM
+
+## Run CSEM for postprocessing of multimapper
+rule run_csem:
+	input:
+		bam = alignDir+"/{sampleName}/align.sortByName.bam"
+	output:
+		bam = alignDir+"/{sampleName}/CSEM/align.bam"
+	message:
+		"Running CSEM... [{wildcards.sampleName}]"
+	params:
+		#outDir = lambda wildcards, output: __import__("os").path.dirname(output[0]),
+		prefix = lambda wildcards, output: __import__("re").sub(".bam$", "", output[0])
+	threads:
+		cluster["run_csem"]["cpu"]
+	shell:
+		"""
+		#module load ChIPseq/1.0
+		module purge
+		module load R/4.4.0
+		module load bedtools/2.30.0
+		module load csem_limlab/06272024
+		ngs.run_csem.sh -o {params.prefix} -t {threads} -n {wildcards.sampleName} {input.bam}
+		"""
+
+## Unify CSEM bam file
+rule unify_csem:
+	input:
+		alignDir+"/{sampleName}/CSEM/align.bam"
+	output:
+		alignDir+"/{sampleName}/CSEM/align.uniq.bam"
+	message:
+		"Unifying CSEM results... [{wildcards.sampleName}]"
+	params:
+		outDir = lambda wildcards, output: __import__("os").path.dirname(output[0]),
+		prefix = lambda wildcards, output: __import__("re").sub(".bam$", "", output[0])
+	shell:
+		"""
+		module load ChIPseq/1.0
+		ngs.unifyCSEM.py -o {output} {input}
+		"""
+
+# ## coordinate-sort unified CSEM bam file
+# rule csort_csem:
+# 	input:
+# 		bam = alignDir+"/{sampleName}/CSEM/align.uniq.bam"
+# 	output:
+# 		bam = alignDir+"/{sampleName}/CSEM/align.uniq.sorted.bam",
+# 		bai = alignDir+"/{sampleName}/CSEM/align.uniq.sorted.bam.bai"
+# 	message:
+# 		"Sorting by coordinate... [{wildcards.sampleName}]"
+# 	threads:
+# 		cluster["csort_csem"]["cpu"]
+# 	shell:
+# 		"""
+# 		module load ChIPseq/1.0
+# 		samtools sort -o {output.bam} -T ${{TMPDIR}}/csort_csem.{wildcards.sampleName}.${{RANDOM}} -@ {threads} -m 2G {input.bam}
+# 		samtools index {output.bam}
+# 		"""
 
 # ## Eliminate scaffold/random chromosomes
 # ## Retaining regular chromosomes and spikein (optional) chromosomes

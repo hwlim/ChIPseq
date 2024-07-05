@@ -11,6 +11,10 @@ if 'species_macs' not in locals():
 	print("Warning: species_macs is not defined; using hs (default)")
 	species_macs="hs"
 
+if 'do_csem' not in locals():
+	print("Warning: do_csem is not defined; setting False")
+	do_csem=False
+
 ########## Auxilary functions definition start #################
 
 
@@ -121,31 +125,49 @@ def get_spikein_ratio(chip, ctrl):
 
 ########## Rules Start #################
 
-
-rule dedup_align:
-	input:
-		#filteredDir + "/{sampleName}.filtered.bam"
-		bam = alignDir + "/{sampleName}/align.bam",
-		bai = alignDir + "/{sampleName}/align.bam.bai"
-	output:
-		bam = dedupDir + "/{sampleName}/align.bam",
-		bai = dedupDir + "/{sampleName}/align.bam.bai"
-	message:
-		"Deduplicating... [{wildcards.sampleName}]"
-	params:
-		memory = "%dG" % ( cluster["dedup_align"]["memory"]/1000 - 2 )
-	shell:
-		"""
-		module load Cutlery/1.0
-		cnr.dedupBam.sh -m {params.memory} -o {output.bam} -r {input.bam}
-		samtools index {output.bam}
-		"""
+if do_csem:
+	rule dedup_align:
+		input:
+			#filteredDir + "/{sampleName}.filtered.bam"
+			bam = alignDir + "/{sampleName}/CSEM/align.uniq.bam"
+		output:
+			bam = dedupDir + "/{sampleName}/align.bam",
+			bai = dedupDir + "/{sampleName}/align.bam.bai"
+		message:
+			"Deduplicating... [{wildcards.sampleName}]"
+		params:
+			memory = "%dG" % ( cluster["dedup_align"]["memory"]/1000 - 2 )
+		shell:
+			"""
+			module load Cutlery/1.0
+			cnr.dedupBam.sh -m {params.memory} -o {output.bam} -r {input.bam}
+			samtools index {output.bam}
+			"""
+else:
+	rule dedup_align:
+		input:
+			#filteredDir + "/{sampleName}.filtered.bam"
+			bam = alignDir + "/{sampleName}/align.bam",
+			bai = alignDir + "/{sampleName}/align.bam.bai"
+		output:
+			bam = dedupDir + "/{sampleName}/align.bam",
+			bai = dedupDir + "/{sampleName}/align.bam.bai"
+		message:
+			"Deduplicating... [{wildcards.sampleName}]"
+		params:
+			memory = "%dG" % ( cluster["dedup_align"]["memory"]/1000 - 2 )
+		shell:
+			"""
+			module load Cutlery/1.0
+			cnr.dedupBam.sh -m {params.memory} -o {output.bam} -r {input.bam}
+			samtools index {output.bam}
+			"""
 
 
 rule check_baseFreq:
 	input:
 		#filteredDir + "/{sampleName}.filtered.bam"
-		frag = sampleDir + "/{sampleName}/fragment.bed.gz",
+		frag = sampleDir + "/{sampleName}/fragment.bed.gz"
 	output:
 		sampleDir + "/{sampleName}/QC/base_freq.png",
 		sampleDir + "/{sampleName}/QC/base_freq.html"
@@ -222,7 +244,9 @@ rule make_spikeintable:
 		outPrefix = lambda wildcards, output: __import__("re").sub(".txt$","", output[0])
 	shell:
 		"""
-		module load Cutlery/1.0
+		#module load Cutlery/1.0
+		module purge
+		module load R/4.4.0
 		ngs.makeSpikeCntTable.r -o {params.outPrefix} {input}
 		"""
 
@@ -240,9 +264,13 @@ rule get_fragLenHist:
 		outPrefix = lambda wildcards, output: __import__("re").sub(".txt$","", output[0])
 	shell:
 		"""
-		module load Cutlery/1.0
+		#module load Cutlery/1.0
+		module purge
+		module load R/4.4.0
 		ngs.fragLenHist.r -o {params.outPrefix} -n {wildcards.sampleName} {input}
 		"""
+
+
 
 ## bigwig file: resized fragment in RPM scale
 ## Draw a plot of fragment length distribution
@@ -259,7 +287,11 @@ rule make_bigwig_ctr_rpm:
 		memory = "%dG" % (  cluster["make_bigwig"]["memory"]/1000 - 2 )
 	shell:
 		"""
+		module purge
 		module load Cutlery/1.0
+		#module load R/4.4.0
+		#module load bedtools/2.30.0
+		#module load ucsctools/v380
 		cnr.fragToBigWig.sh -g {chrom_size} -c "{chrRegexTarget}" -r 150 -m {params.memory} -o {output} {input}
 		"""
 
