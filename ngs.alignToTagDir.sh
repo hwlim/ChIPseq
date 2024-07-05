@@ -19,7 +19,7 @@ Options:
 
 ###################################
 ## option and input file handling
-outiDir=NULL
+outDir=NULL
 tbp=0
 chrRegex=NULL
 robust=FALSE
