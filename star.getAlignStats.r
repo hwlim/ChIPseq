@@ -7,6 +7,9 @@ suppressPackageStartupMessages(library('RColorBrewer', quiet=TRUE))
 #suppressPackageStartupMessages(library('robustbase', quiet=TRUE))
 suppressPackageStartupMessages(library('optparse', quiet=TRUE))
 #suppressPackageStartupMessages(library('KernSmooth', quiet=TRUE))
+library(ggplot2)
+library(cowplot)
+library(reshape2)
 
 source(sprintf("%s/basicR.r", Sys.getenv("COMMON_LIB_BASE")))
 # command line option handling
@@ -42,21 +45,11 @@ outPrefix = opt$outPrefix
 
 
 if( FALSE ){
-	gtf="../genes.uSymbol.gtf"
 	srcDirL=c(
-		"1.STAR/FGC1420_s_4_CGTACTAG_AGAGTAGA/",
-		"1.STAR/FGC1420_s_4_CGTACTAG_GCGTAAGA/"
+		"../1.1.Align/DE_H3K9me3_Control_A6",
+		"../1.1.Align/DE_H3K9me3_Control_H5",
+		"../1.1.Align/DE_H3K9me3_FOXA123KD_A6"
 	)
-	
-	srcDirL=c(
-		"ATAC_Day00_AAGAGGCA_AGAGTAGA_1",
-		"ATAC_Day00_AAGAGGCA_AGAGTAGA_2",
-		"ATAC_Day00_AAGAGGCA_CTCTCTAT_1",
-		"ATAC_Day00_AAGAGGCA_CTCTCTAT_2",
-		"ATAC_Day00_AAGAGGCA_GTAAGGAG_1"
-	)
-
-	srcDirL=c("hPSC_Input_Control_A6", "DE_H3K9me3_Control_A6")
 
 }
 
@@ -112,13 +105,25 @@ for( srcDir in srcDirL ){
 		df.stat = rbind(df.stat, as.numeric(stat))
 	}
 }
+df.stat = data.frame(df.stat)
+rownames(df.stat) = basename(srcDirL)
+colnames(df.stat) = names(fieldL)
+df.frac = df.stat[,grep("%$", names(df.stat))]
+colnames(df.frac) = sub("%$","", colnames(df.frac))
+
 
 if( !is.null(outPrefix) ){
-	library(ggplot2)
-	library(cowplot)
+	## Single barplot
+	df.melt = melt(data.frame(Sample=rownames(df.frac), df.frac))
+	colnames(df.melt) = c("Sample","Alignment","Percent")
+	df.melt$Alignment = factor(df.melt$Alignment, levels=colnames(df.frac))
+	g = ggplot(df.melt, aes(fill=Alignment, y=Percent, x=Sample)) +
+		geom_bar(position="stack", stat="identity") +
+		coord_flip()
+	ggsave(sprintf("%s.single.pdf", outPrefix),  g, width=9, height=max(4, 2 + 0.2*length(srcDirL)))
 
-	rownames(df.stat) = srcDirL
-	colnames(df.stat) = names(fieldL)
+
+	## Multipple barplots stratified by alignment type / failure
 	df.stat = data.frame(Sample = rownames(df.stat), df.stat)
 	df.stat$Sample = factor(df.stat$Sample, levels=df.stat$Sample)
 
@@ -165,7 +170,7 @@ if( !is.null(outPrefix) ){
 	}else{
 		w.unit = 0.1
 	}
-	ggsave(sprintf("%s.png", outPrefix), g, height=6, width=(1+w.unit*length(srcDirL))*3)
+	ggsave(sprintf("%s.split.pdf", outPrefix), g, height=6, width=(1+w.unit*length(srcDirL))*3)
 	write.table(df.stat, sprintf("%s.txt", outPrefix), row.names=FALSE, col.names=TRUE, quote=FALSE, sep="\t")
 }
 
