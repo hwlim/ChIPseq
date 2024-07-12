@@ -17,14 +17,14 @@ if 'do_csem' not in locals():
 
 ########## Auxilary functions definition start #################
 
+'''
+## Downsampling is not yet implemented in PE
 
 ## Decide downsampling depth if any
 def get_downsample_depth(sampleName):
-	'''
-	Get down sampling depth
-	Default value is from 'downSampleN
-	If 'DownSample' column exists in sample.tsv file, it has priority
-	'''
+	# Get down sampling depth
+	# Default value is from 'downSampleN
+	# If 'DownSample' column exists in sample.tsv file, it has priority
 	if "downSampleN" in locals():
 		n = downSampleN
 	else:
@@ -39,6 +39,7 @@ def get_downsample_depth(sampleName):
 		return n
 	else:
 		raise RuntimeError('Invalid down sampling depth: %s' % n)
+'''
 
 
 ## find control sample name for peak calling using target sample name
@@ -58,18 +59,16 @@ def get_ctrl_name(sampleName):
 	return ctrlName
 
 ## find bam file folder for single-end style homer tag directory creation
-def get_align_bam_for_tagdir(sampleName):
+def get_bam_for_tagdir(sampleName):
 	# return ordered [ctrl , target] list.
-	downDepth=get_downsample_depth(sampleName)
 	if doDedup:
-		srcDir = dedupDir
+		bam = dedupDir + "/" + sampleName + "/align.bam"
 	else:
-		#if "DownSample" in samples and samples.DownSample[samples.Name == wildcards.sampleName].tolist()[0] > 0:
-		if downDepth > 0:
-			srcDir = downsampleDir
+		if do_csem:
+			bam = dedupDir + "/" + sampleName + "/CSEM/align.uniq.bam"
 		else:
-			srcDir = alignDir
-	bam = srcDir + "/" + sampleName + "/align.bam"
+			bam = alignDir + "/" + sampleName + "/align.bam"
+
 	return bam
 
 ## find input homer tag directory for peak calling
@@ -555,7 +554,7 @@ rule call_peak_hetchr_spikein_homer_ctr:
 
 rule make_tagdir_se:
 	input:
-		lambda wildcards: get_align_bam_for_tagdir(wildcards.sampleName)
+		lambda wildcards: get_bam_for_tagdir(wildcards.sampleName)
 	output:
 		directory(sampleDir + "/{sampleName}/TSV.SE")
 	params:
@@ -774,7 +773,7 @@ rule draw_peak_heatmap_factor:
 			touch {params.outPrefix}.png
 			exit 0
 		fi
-		drawBigWigHeatmap.r -t {wildcards.sampleName} -m 0,0.5,2,0.5 -w 2000 -b 20 -s 3,6 \
+		drawBigWigHeatmap.r -t {wildcards.sampleName} -m 0,0.5,2,0.5 -w 2000 -b 20 -s 3,6 -q redblue \
 			-o {params.outPrefix} \
 			{input.bed} {input.bw}
 		"""
@@ -898,17 +897,6 @@ rule call_peak_macs_factor_wo_ctrl:
 		macs3 callpeak -t {input.target} -f BAMPE -n {wildcards.sampleName} --outdir {params.outDir} -g {species_macs} --keep-dup all --call-summits 2>&1 | tee {output.log}
 		intersectBed -a {params.outDir}/{wildcards.sampleName}_summits.bed -b {params.mask} -v > {output.peak}
 		"""
-
-
-
-
-
-
-
-
-
-
-
 
 
 
