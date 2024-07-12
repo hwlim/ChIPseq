@@ -89,7 +89,8 @@ rule make_align_stat_table:
 	output:
 		qcDir + "/alignStat.txt"
 	params:
-		inputDir = get_align_dir(expand(alignDir+"/{sampleName}/align.sortByName.bam", sampleName=samples.Name.tolist()))
+		inputDir = get_align_dir(expand(alignDir+"/{sampleName}/align.sortByName.bam", sampleName=samples.Name.tolist())),
+		outPrefix = lambda wildcards, output: __import__("re").sub(".txt$","", output[0])
 	message:
 		"Creating alignment stat file"
 	shell:
@@ -97,7 +98,7 @@ rule make_align_stat_table:
 		#module load ChIPseq/1.0
 		module purge
 		module load R/4.4.0
-		star.getAlignStats.r {params.inputDir} > {output}
+		star.getAlignStats.r -o {params.outPrefix} {params.inputDir}
 		"""
 
 
