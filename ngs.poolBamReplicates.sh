@@ -38,6 +38,7 @@ Input:
 			└── group2
 			     └── align.bam
 Options:
+	-m: memory for LSF, default=1000
 	-t: if set, print pooling plan lisintg src and des files
 		No actual pooling job, just for simulation
 	-s: if set, input bam files are stratified by sample folders as shown in Case 2
@@ -56,13 +57,17 @@ fi
 
 ###################################
 ## option and input file handling
+memory=1000
 bsub=FALSE
 unsortedBam=FALSE
 overwrite=FALSE
 testOnly=FALSE
 bySampleDir=FALSE
-while getopts ":bsuft" opt; do
+while getopts ":m:bsuft" opt; do
 	case $opt in
+		m)
+			memory=$OPTARG
+			;;
 		b)
 			bsub=TRUE
 			;;
@@ -181,7 +186,7 @@ do
 
 	if [ "$bsub" == "TRUE" ];then
 		## Parallel processing using HPC:lsf
-		bsub -W 24:00 -n 1 "module load samtools/1.9.0; ngs.concateBamFiles.sh $optStr -o $des ${srcL[@]}"
+		bsub -W 24:00 -M $memory -n 1 "module purge; module load samtools/1.9.0; ngs.concateBamFiles.sh $optStr -o $des ${srcL[@]}"
 	else
 		## Sequential processing
 		ngs.concateBamFiles.sh $optStr -o $des ${srcL[@]}
