@@ -14,5 +14,5 @@ fi
 echo -e "Initializing ChIP-seq:ChIP_SE analysis" >&2
 
 
-cp -i -v ${CHIP_PATH}/Snakemake.ChIP_SE/sample.tsv .
-cp -i -v ${CHIP_PATH}/Snakemake.ChIP_SE/Snakefile .
+cp -i -v ${CHIP_PATH}/Snakemake.SE/sample.tsv .
+cp -i -v ${CHIP_PATH}/Snakemake.SE/Snakefile .
