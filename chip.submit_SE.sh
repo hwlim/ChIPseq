@@ -14,7 +14,7 @@ if [ -z ${CHIP_PATH+x} ]; then
 	exit 1
 fi
 
-config=${CHIP_PATH}/Snakemake.ChIP_SE/cluster.yml
+config=${CHIP_PATH}/Snakemake.SE/cluster.yml
 
 assertFileExist $config
 assertFileExist ./Snakefile
