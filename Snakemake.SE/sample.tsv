@@ -1,3 +1,13 @@
+# sample information file for ChIP-seq analysis pipeline
+# Columns
+#	Id: unique sample ID
+#	Name: unique sample name to be used for analysis output
+#	Group: sample Group
+#	Fq1/2: Read1 and 2 of fastq files
+#	Ctrl: sample "Name" to use as a control for peak calling
+#	PeakMode: factor or histone for peak calling mode
+#	DownSample: Optional column for downsampling to use highly unbalanced sequencing depth across samples.
+#	PeakOpt: option string for chip.peakCallFactor.sh or chip.peakCallHistone.sh
 Id	Name	Group	Fq1	Fq2	Ctrl	PeakMode	DownSample	PeakOpt
 H9_IgG	H9_IgG	H9_IgG	SRR6177932_1.fastq.gz	SRR6177932_2.fastq.gz	NULL	NULL	20000000	NULL
 H9_Oct4	H9_Oct4	H9_Oct4	SRR6177948_1.fastq.gz	SRR6177948_2.fastq.gz	H9_IgG	factor	20000000	NULL
