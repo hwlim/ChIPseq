@@ -201,6 +201,14 @@ do
 			src=${srcDir}/${sample}/HomerPeak.${mode}/heatmap.exBL.1rpm.png
 			des=${desDir}/Peak.${mode}/${sample}.1rpm.heatmap.png
 			exportFile $src $des FALSE FALSE
+
+			src=${srcDir}/${sample}/HomerPeak.${mode}.wo_ctrl/peak.exBL.bed
+			des=${desDir}/Peak.${mode}.wo_ctrl/${sample}.all.bed
+			exportFile $src $des FALSE FALSE
+
+			src=${srcDir}/${sample}/HomerPeak.${mode}.wo_ctrl/peak.exBL.1rpm.bed
+			des=${desDir}/Peak.${mode}.wo_ctrl/${sample}.1rpm.bed
+			exportFile $src $des FALSE FALSE
 		done
 	else
 		echo -e "2) Skipping peak files & heatmaps" >&2
