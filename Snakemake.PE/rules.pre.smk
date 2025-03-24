@@ -25,6 +25,8 @@ rule trim_pe:
 	shell:
 		"""
 		# Note: Needs to be implemented as a quantum transaction
+		module purge
+		module load cutadapt/2.1.0
 		cutadapt -a {params.adapter} -A {params.adapter} --minimum-length {params.minLen} -q {params.minQual} \
 			-o __temp__.$$.1.fq.gz -p __temp__.$$.2.fq.gz {input.fq1} {input.fq2} 2>&1 | tee {log}
 		mv __temp__.$$.1.fq.gz {output.fq1}
@@ -60,6 +62,7 @@ rule align_pe:
 		cluster["align_pe"]["cpu"]
 	shell:
 		"""
+		module purge
 		module load ChIPseq/1.0
 		module load {params.star_module}
 		star.align.sh -g {params.index} \
@@ -95,7 +98,6 @@ rule make_align_stat_table:
 		"Creating alignment stat file"
 	shell:
 		"""
-		#module load ChIPseq/1.0
 		module purge
 		module load R/4.4.0
 		star.getAlignStats.r -o {params.outPrefix} {params.inputDir}
@@ -114,6 +116,7 @@ rule csort_bam:
 		cluster["csort_bam"]["cpu"]
 	shell:
 		"""
+		module purge
 		module load ChIPseq/1.0
 		samtools sort -o {output.bam} -T ${{TMPDIR}}/csort_bam.{wildcards.sampleName}.${{RANDOM}} -@ {threads} -m 2G {input.bam}
 		samtools index {output.bam}
@@ -137,7 +140,6 @@ rule run_csem:
 		cluster["run_csem"]["cpu"]
 	shell:
 		"""
-		#module load ChIPseq/1.0
 		module purge
 		module load R/4.4.0
 		module load bedtools/2.30.0
@@ -158,6 +160,7 @@ rule unify_csem:
 		prefix = lambda wildcards, output: __import__("re").sub(".bam$", "", output[0])
 	shell:
 		"""
+		module purge
 		module load ChIPseq/1.0
 		ngs.unifyCSEM.py -o {output} {input}
 		"""

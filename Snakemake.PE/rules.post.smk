@@ -138,6 +138,7 @@ if do_csem:
 			memory = "%dG" % ( cluster["dedup_align"]["memory"]/1000 - 2 )
 		shell:
 			"""
+			module purge
 			module load Cutlery/1.0
 			cnr.dedupBam.sh -m {params.memory} -o {output.bam} -r {input.bam}
 			samtools index {output.bam}
@@ -157,6 +158,7 @@ else:
 			memory = "%dG" % ( cluster["dedup_align"]["memory"]/1000 - 2 )
 		shell:
 			"""
+			module purge
 			module load Cutlery/1.0
 			cnr.dedupBam.sh -m {params.memory} -o {output.bam} -r {input.bam}
 			samtools index {output.bam}
@@ -176,6 +178,7 @@ rule check_baseFreq:
 		"Checking baseFrequency... [{wildcards.sampleName}]"
 	shell:
 		"""
+		module purge
 		module load Cutlery/1.0
 		checkBaseFreq.plot.sh -o {sampleDir}/{wildcards.sampleName}/QC/base_freq \
 			-n {wildcards.sampleName} -g {genomeFa} -c "{chrRegexTarget}" -m both -l 20 -f -i -v {input.frag}
@@ -204,6 +207,7 @@ rule make_fragment:
 		"Making fragment bed files... [{wildcards.sampleName}]"
 	shell:
 		"""
+		module purge
 		module load Cutlery/1.0
 		#bamToFragment.sh -o {output} -l -1 -s -m {params.memory} {input}
 		ngs.bamToFragment.py -c "{chrRegexAll}" -f 0x2 -F 0x400 {input.bam} | sort -S {params.memory} -k1,1 -k2,2n -k3,3n | gzip > {output}
@@ -228,6 +232,7 @@ rule count_spikein:
 		"Counting spikein tags... [{wildcards.sampleName}]"
 	shell:
 		"""
+		module purge
 		module load Cutlery/1.0
 		ngs.countSpikein.sh -p {spikePrefix} -n {wildcards.sampleName} {input} > {output}
 		"""
@@ -243,7 +248,6 @@ rule make_spikeintable:
 		outPrefix = lambda wildcards, output: __import__("re").sub(".txt$","", output[0])
 	shell:
 		"""
-		#module load Cutlery/1.0
 		module purge
 		module load R/4.4.0
 		ngs.makeSpikeCntTable.r -o {params.outPrefix} {input}
@@ -263,7 +267,6 @@ rule get_fragLenHist:
 		outPrefix = lambda wildcards, output: __import__("re").sub(".txt$","", output[0])
 	shell:
 		"""
-		#module load Cutlery/1.0
 		module purge
 		module load R/4.4.0
 		ngs.fragLenHist.r -o {params.outPrefix} -n {wildcards.sampleName} {input}
@@ -325,6 +328,7 @@ rule make_bigwig_ctr_rpsm:
 		memory = "%dG" % ( cluster["make_bigwig"]["memory"]/1000 - 2 )
 	shell:
 		"""
+		module purge
 		module load Cutlery/1.0
 		scaleFactor=`cat {input.spikeinCnt} | gawk '{{ if($1=="ScaleFactor") print $2 }}'`
 		if [ "$scaleFactor" == "" ];then
@@ -347,6 +351,7 @@ rule make_bigwig_frag_rpsm:
 		memory = "%dG" % (  cluster["make_bigwig"]["memory"]/1000 - 2 )
 	shell:
 		"""
+		module purge
 		module load Cutlery/1.0
 		scaleFactor=`cat {input.spikeinCnt} | gawk '{{ if($1=="ScaleFactor") print $2 }}'`
 		if [ "$scaleFactor" == "" ];then
@@ -371,6 +376,7 @@ rule make_bigwig_ctr_rpm_subinput:
 	#	memory = "%dG" % (  cluster["make_bigwig_subtract"]["memory"]/1000 - 1 )
 	shell:
 		"""
+		module purge
 		module load Cutlery/1.0
 		bigWigSubtract.sh -g {chrom_size} -m 5G -t -1000 {output} {input.chip} {input.ctrl}
 		"""
@@ -387,6 +393,7 @@ rule make_bigwig_frag_rpm_subinput:
 	#	memory = "%dG" % (  cluster["make_bigwig_subtract"]["memory"]/1000 - 1 )
 	shell:
 		"""
+		module purge
 		module load Cutlery/1.0
 		bigWigSubtract.sh -g {chrom_size} -m 5G -t -1000 {output} {input.chip} {input.ctrl}
 		"""
@@ -404,6 +411,7 @@ rule make_bigwig_ctr_rpsm_subinput:
 	#	memory = "%dG" % (  cluster["make_bigwig_subtract"]["memory"]/1000 - 1 )
 	shell:
 		"""
+		module purge
 		module load Cutlery/1.0
 		bigWigSubtract.sh -g {chrom_size} -m 5G -t -1000 {output} {input.chip} {input.ctrl}
 		"""
@@ -420,6 +428,7 @@ rule make_bigwig_frag_rpsm_subinput:
 	#	memory = "%dG" % (  cluster["make_bigwig_subtract"]["memory"]/1000 - 1 )
 	shell:
 		"""
+		module purge
 		module load Cutlery/1.0
 		bigWigSubtract.sh -g {chrom_size} -m 5G -t -1000 {output} {input.chip} {input.ctrl}
 		"""
@@ -483,6 +492,7 @@ rule call_peak_hetchr:
 		"Peak calling for heterochromatin by fold-change ... [{wildcards.sampleName}]"
 	shell:
 		"""
+		module purge
 		module load ChIPseq
 		spikeChip=`cat {input.spikeChip} | gawk '$1 == "Spikein"' | cut -f 2`
 		spikeCtrl=`cat {input.spikeCtrl} | gawk '$1 == "Spikein"' | cut -f 2`
@@ -509,6 +519,7 @@ rule call_peak_hetchr_spikein_homer:
 		"Peak calling for heterochromatin by Homer/frag ... [{wildcards.sampleName}]"
 	shell:
 		"""
+		module purge
 		module load ChIPseq
 		spikeChip=`cat {input.spikeChip} | gawk '$1 == "Spikein"' | cut -f 2`
 		spikeCtrl=`cat {input.spikeCtrl} | gawk '$1 == "Spikein"' | cut -f 2`
@@ -535,6 +546,7 @@ rule call_peak_hetchr_spikein_homer_ctr:
 		"Peak calling for heterochromatin by Homer/ctr ... [{wildcards.sampleName}]"
 	shell:
 		"""
+		module purge
 		module load ChIPseq
 		spikeChip=`cat {input.spikeChip} | gawk '$1 == "Spikein"' | cut -f 2`
 		spikeCtrl=`cat {input.spikeCtrl} | gawk '$1 == "Spikein"' | cut -f 2`
@@ -564,6 +576,7 @@ rule make_tagdir_se:
 		"Making Homer tag directory/SE... [{wildcards.sampleName}]"
 	shell:
 		"""
+		module purge
 		module load ChIPseq/1.0
 		ngs.alignToTagDir.sh -o {output} -t {Homer_tbp} -c {chrRegexTarget} {params.optStr} {input}
 		drawHomerAutoCorr.r -t {params.name} -o {output}/Autocorrelation.png {output}
@@ -585,6 +598,7 @@ rule call_peak_factor:
 		optStr = lambda wildcards, input:( "\"-size 200 " + get_peakcall_opt(wildcards.sampleName) + "\"" + " -i" ) if len(input)>1 else "\"-size 200 " + get_peakcall_opt(wildcards.sampleName) + "\""
 	shell:
 		"""
+		module purge
 		module load ChIPseq/1.0
 		chip.peakCallFactor.sh -o {params.outPrefix} -m {params.mask} -s {params.optStr} {input}
 		"""
@@ -604,6 +618,7 @@ rule call_peaks_factor_no_ctrl:
 		"Peak calling using Homer... [{wildcards.sampleName}]"
 	shell:
 		"""
+		module purge
 		module load ChIPseq/1.0
 		chip.peakCallFactor.sh -o {params.outPrefix} -m {params.mask} -s {params.optStr} {input}
 		"""
@@ -622,6 +637,7 @@ rule call_peak_histone:
 		optStr = lambda wildcards, input:( "\"" + get_peakcall_opt(wildcards.sampleName) + "\"" + " -i" ) if len(input)>1 else "\"" + get_peakcall_opt(wildcards.sampleName) + "\""
 	shell:
 		"""
+		module purge
 		module load ChIPseq/1.0
 		chip.peakCallHistone.sh -o {params.outPrefix} -m {params.mask} -s {params.optStr} {input}
 		"""
@@ -641,6 +657,7 @@ rule call_peak_histone_wo_control:
 		optStr = lambda wildcards, input:( "\"" + get_peakcall_opt(wildcards.sampleName) + "\"" + " -i" ) if len(input)>1 else "\"" + get_peakcall_opt(wildcards.sampleName) + "\""
 	shell:
 		"""
+		module purge
 		module load ChIPseq/1.0
 		chip.peakCallHistone.sh -o {params.outPrefix} -m {params.mask} -s {params.optStr} {input}
 		"""
@@ -689,6 +706,7 @@ rule call_peak_factor_spikein:
 		optStr = lambda wildcards, input:( "\"" + get_peakcall_opt(wildcards.sampleName) + "\"" + " -i" ) if len(input)>1 else "\"" + get_peakcall_opt(wildcards.sampleName) + "\""
 	shell:
 		"""
+		module purge
 		module load ChIPseq/1.0
 		spikeChip=`cat {input.spikeChip} | gawk '$1 == "SpikeinFrac"' | cut -f 2`
 		spikeCtrl=`cat {input.spikeCtrl} | gawk '$1 == "SpikeinFrac"' | cut -f 2`
@@ -712,6 +730,7 @@ rule run_homer_motif:
 		outPrefix =  lambda wildcards, output: __import__("os").path.dirname(output[0])
 	shell:
 		"""
+		module purge
 		module load Motif/1.0
 
 		n_loci=`cat {input} | wc -l`
@@ -766,6 +785,7 @@ rule draw_peak_heatmap_factor:
 		outPrefix = lambda wildcards, output: __import__("re").sub(".png$","", output[0])
 	shell:
 		"""
+		module purge
 		module load Cutlery/1.0
 		n_loci=`cat {input.bed} | wc -l`
 		if [ $n_loci -eq 0 ];then
@@ -791,6 +811,7 @@ rule draw_peak_heatmap_histone:
 		outPrefix = lambda wildcards, output: __import__("re").sub(".png$","", output[0])
 	shell:
 		"""
+		module purge
 		module load Cutlery/1.0
 		n_loci=`cat {input.bed} | wc -l`
 		if [ $n_loci -eq 0 ];then
@@ -925,6 +946,7 @@ rule make_bigwig_ctr_rpm_spike:
 		memory = "%dG" % (  cluster["make_bigwig"]["memory"]/1000 - 2 )
 	shell:
 		"""
+		module purge
 		module load Cutlery/1.0
 		ngs.fragToSpikeBigWig.sh -g {spikein_chrom_size} -p "{spikePrefix}" -r 150 -m {params.memory} -o {output} {input}
 		"""
