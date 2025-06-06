@@ -309,6 +309,7 @@ rule make_bigwig_frag_rpm:
 		memory = "%dG" % (  cluster["make_bigwig"]["memory"]/1000 - 2 )
 	shell:
 		"""
+		module purge
 		module load Cutlery/1.0
 		cnr.fragToBigWig.sh -g {chrom_size} -c "{chrRegexTarget}" -m {params.memory} -o {output} {input}
 		"""
