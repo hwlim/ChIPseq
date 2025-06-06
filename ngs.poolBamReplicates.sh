@@ -186,7 +186,7 @@ do
 
 	if [ "$bsub" == "TRUE" ];then
 		## Parallel processing using HPC:lsf
-		bsub -W 24:00 -M $memory -n 1 "module purge; module load samtools/1.9.0; ngs.concateBamFiles.sh $optStr -o $des ${srcL[@]}"
+		bsub -q rhel9 -W 24:00 -M $memory -n 1 "module purge; module load samtools/1.9.0; ngs.concateBamFiles.sh $optStr -o $des ${srcL[@]}"
 	else
 		## Sequential processing
 		ngs.concateBamFiles.sh $optStr -o $des ${srcL[@]}
