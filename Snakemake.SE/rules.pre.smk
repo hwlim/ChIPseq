@@ -21,6 +21,8 @@ rule trim_se:
 	shell:
 		"""
 		# Note: Needs to be implemented as a quantum transaction
+		module purge
+		module load ChIPseq/1.0
 		cutadapt -a {params.adapter} --minimum-length {params.minLen} -q {params.minQual} \
 			-o __temp__.$$.1.fq.gz {input.fq1} 2>&1 | tee {log}
 		mv __temp__.$$.1.fq.gz {output.fq1}
@@ -49,6 +51,8 @@ rule trim_pe:
 		trimDir + "/{sampleId}.trim.log"
 	shell:
 		"""
+		module purge
+		module load ChIPseq/1.0
 		cutadapt -a {params.adapter} -A {params.adapter} --minimum-length {params.minLen} -q {params.minQual} \
 			-o __temp__.$$.1.fq.gz -p __temp__.$$.2.fq.gz {input.fq1} {input.fq2} 2>&1 | tee {log}
 		mv __temp__.$$.1.fq.gz {output.fq1}
@@ -94,6 +98,7 @@ rule align_star:
 		cluster["align_star"]["cpu"]
 	shell:
 		"""
+		module purge
 		module load ChIPseq/1.0
 		module load {params.star_module}
 		star.align.sh -g {params.index} \

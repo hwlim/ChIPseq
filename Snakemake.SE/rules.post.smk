@@ -56,6 +56,7 @@ rule downsample_bam:
 		"Downsampling... [{wildcards.sampleName}]"
 	shell:
 		"""
+		module purge
 		module load ChIPseq/1.0
 		bamDownsample.sh -n {params.depth} {input} > {output}
 		"""
@@ -84,7 +85,8 @@ rule dedup_align:
 		memory = "%dG" % ( cluster["dedup_align"]["memory"]/1000 - 2 )
 	shell:
 		"""
-		module load Cutlery/1.0
+		module purge
+		module load ChIPseq/1.0
 		ngs.dedupBam.sh -m {params.memory} -o {output.bam} -r {input}
 		samtools index {output.bam}
 		"""
@@ -116,6 +118,7 @@ rule make_tagdir:
 		"Making Homer tag directory... [{wildcards.sampleName}]"
 	shell:
 		"""
+		module purge
 		module load ChIPseq/1.0
 		ngs.alignToTagDir.sh -o {output} -t {Homer_tbp} -c {chrRegexTarget} {params.optStr} {input}
 		drawHomerAutoCorr.r -t {params.name} -o {output}/Autocorrelation.png {output}
@@ -134,7 +137,8 @@ rule make_fragment:
 		"Making fragment bed files... [{wildcards.sampleName}]"
 	shell:
 		"""
-		module load Cutlery/1.0
+		module purge
+		module load ChIPseq/1.0
 		ngs.bamToFragment.py -c "{chrRegexAll}" -f 0x2 -F 0x400 {input.bam} | sort -S 8G -k1,1 -k2,2n -k3,3n | gzip > {output}
 		"""
 
@@ -153,7 +157,8 @@ rule get_fragLenHist:
 		outPrefix = lambda wildcards, output: __import__("re").sub(".txt$","", output[0])
 	shell:
 		"""
-		module load Cutlery/1.0
+		module purge
+		module load ChIPseq/1.0
 		ngs.fragLenHist.r -o {params.outPrefix} -n {wildcards.sampleName} {input}
 		"""
 
@@ -200,10 +205,10 @@ rule call_peak_factor:
 		optStr = lambda wildcards, input:( "\"-size 200 " + get_peakcall_opt(wildcards.sampleName) + "\"" + " -i" ) if len(input)>1 else "\"-size 200 " + get_peakcall_opt(wildcards.sampleName) + "\""
 	shell:
 		"""
+		module purge
 		module load ChIPseq/1.0
 		chip.peakCallFactor.sh -o {params.desDir}/HomerPeak.factor/peak -m {params.mask} -s {params.optStr} {input}
 		"""
-#		chip.peakCallFactor.sh -o {params.desDir}/HomerPeak.factor -i {input.ctrl} -m {params.mask} -s "-size 200" {input}
 
 
 ## NOTE: "-tbp 0" is implicitly set within chip.peakCallHistone.sh 
@@ -222,6 +227,7 @@ rule call_peak_histone:
 		optStr = lambda wildcards, input:( "\"" + get_peakcall_opt(wildcards.sampleName) + "\"" + " -i" ) if len(input)>1 else "\"" + get_peakcall_opt(wildcards.sampleName) + "\""
 	shell:
 		"""
+		module purge
 		module load ChIPseq/1.0
 		chip.peakCallHistone.sh -o {params.desDir}/HomerPeak.histone/peak -m {params.mask} -s {params.optStr} {input}
 		"""
@@ -236,6 +242,7 @@ rule run_homer_motif:
 		"Running Homer motif search... [{wildcards.sampleName}]"
 	shell:
 		"""
+		module purge
 		module load Motif/1.0
 		runHomerMotifSingle.sh -g {genome} -s 200 -p 4 -b /data/limlab/Resource/Homer.preparse \
 			-o {sampleDir}/{wildcards.sampleName}/Motif/Homer.all {input}
@@ -268,7 +275,8 @@ rule draw_peak_heatmap_factor:
 		"Drawing peak profile heatmap... [{wildcards.sampleName}]"
 	shell:
 		"""
-		module load Cutlery/1.0
+		module purge
+		module load ChIPseq/1.0
 		drawBigWigHeatmap.r -t {wildcards.sampleName} -m 0,0.5,2,0.5 -w 2000 -b 20 -s 3,6 \
 			-o {sampleDir}/{wildcards.sampleName}/HomerPeak.factor/heatmap.exBL.1rpm \
 			{input.bed} {input.bw}
@@ -285,7 +293,8 @@ rule draw_peak_heatmap_histone:
 		"Drawing peak profile heatmap... [{wildcards.sampleName}]"
 	shell:
 		"""
-		module load Cutlery/1.0
+		module purge
+		module load ChIPseq/1.0
 		drawBigWigHeatmap.r -t {wildcards.sampleName} -m 0,0.5,2,0.5 -w 10000 -b 20 -c NFR,NUC -s 3,6 \
 			-o {sampleDir}/{wildcards.sampleName}/HomerPeak.histone/heatmap.exBL \
 			{input.bed} {input.bw}
@@ -316,6 +325,7 @@ rule make_bigwig:
 		"Making bigWig files... [{wildcards.sampleName}]"
 	shell:
 		"""
+		module purge
 		module load ChIPseq/1.0
 		chip.tagDirToBigWig.sh -g {chrom_size} -o {output} {input}
 		"""
@@ -332,7 +342,8 @@ rule make_bigwig_ctr_rpm_subinput:
 		"Making bigWig files, subInput ... [{wildcards.sampleName}]"
 	shell:
 		"""
-		module load Cutlery/1.0
+		module purge
+		module load ChIPseq/1.0
 		bigWigSubtract.sh -g {chrom_size} -m 5G -t -1000 {output} {input.chip} {input.ctrl}
 		"""
 
@@ -352,6 +363,7 @@ rule make_bigwig_avg:
 		memory = "9G"
 	shell:
 		"""
+		module purge
 		module load ChIPseq/1.0
 		N=`ls {input} | wc -l`
 		if [ $N -gt 1 ];then
@@ -388,6 +400,7 @@ rule make_bigwig_avg_subinput:
 	#	memory = "%dG" % (  cluster["make_bigwig_subtract"]["memory"]/1000 - 1 )
 	shell:
 		"""
-		module load Cutlery/1.0
+		module purge
+		module load ChIPseq/1.0
 		bigWigSubtract.sh -g {chrom_size} -m {params.memory} -t -1000 {output} {input.chip} {input.ctrl}
 		"""
