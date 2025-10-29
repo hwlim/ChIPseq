@@ -195,7 +195,7 @@ rule unify_csem:
 # 		"Filtering... [{wildcards.sampleName}]"
 # 	shell:
 # 		"""
-# 		module load Cutlery/1.0
-# 		cnr.filterBam.sh  -o {output.bam} -c "{chrRegexAll}" {input}
+# 		module load ChIPseq/1.0
+# 		ngs.filterBam.sh  -o {output.bam} -c "{chrRegexAll}" {input}
 # 		samtools index {output.bam}
 # 		"""

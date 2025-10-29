@@ -85,7 +85,7 @@ rule dedup_align:
 	shell:
 		"""
 		module load Cutlery/1.0
-		cnr.dedupBam.sh -m {params.memory} -o {output.bam} -r {input}
+		ngs.dedupBam.sh -m {params.memory} -o {output.bam} -r {input}
 		samtools index {output.bam}
 		"""
 

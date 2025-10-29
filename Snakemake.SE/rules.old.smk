@@ -78,7 +78,7 @@ rule filter_align:
 	shell:
 		"""
 		module load CnR/1.0
-		cnr.filterBam.sh  -o {output} -c "{chrRegexAll}" {input}
+		ngs.filterBam.sh  -o {output} -c "{chrRegexAll}" {input}
 		"""
 
 rule dedup_align:
@@ -93,7 +93,7 @@ rule dedup_align:
 	shell:
 		"""
 		module load CnR/1.0
-		cnr.dedupBam.sh -m {params.memory} -o {output} -r {input}
+		ngs.dedupBam.sh -m {params.memory} -o {output} -r {input}
 		"""
 
 rule check_baseFreq:
@@ -180,7 +180,7 @@ rule make_bigwig:
 	shell:
 		"""
 		module load CnR/1.0
-		cnr.fragToBigWig.sh -g {chrom_size} -m {params.memory} -o {output} {input}
+		ngs.fragToBigWig.sh -g {chrom_size} -m {params.memory} -o {output} {input}
 		"""
 
 def get_bigwig_input(wildcards):
@@ -233,7 +233,7 @@ rule make_tagdir:
 	shell:
 		"""
 		module load CnR/1.0
-		cnr.makeHomerDir.sh -c {chrRegexTarget} -o {output} -n {params.name} {input}
+		ngs.makeHomerDir.sh -c {chrRegexTarget} -o {output} -n {params.name} {input}
 		"""
 
 def get_hetchr_ctrl(sampleName):
@@ -373,9 +373,9 @@ rule make_bigwig_scaled:
 			echo -e "Error: empty scale factor" >&2
 			exit 1
 		fi
-		cnr.fragToBigWig.sh -g {chrom_size} -m 5G -s $scaleFactor -o {output} {input.bed}
+		ngs.fragToBigWig.sh -g {chrom_size} -m 5G -s $scaleFactor -o {output} {input.bed}
 		"""
-#		cnr.fragToBigWig.sh -g {chrom_size} -m {params.memory} -s {params.scaleFactor} -o {output} {input.bed}
+#		ngs.fragToBigWig.sh -g {chrom_size} -m {params.memory} -s {params.scaleFactor} -o {output} {input.bed}
 
 def get_bigwig_scaled_input(wildcards):
 	# return ordered [ctrl , target] list.
