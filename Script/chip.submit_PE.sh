@@ -31,8 +31,11 @@ assertFileExist ./Snakefile
 #snakemake -np
 #exit 0
 mkdir -p logs
-bsub -W ${totalWaitTime} -eo submit.err -oo submit.out -q rhel9\
-	"module load python3/3.6.3
+bsub -W ${totalWaitTime} -eo submit.err -oo submit.out -q rhel9 \
+	"
+	module purge
+	module load anaconda3
+	source activate snakemake-7.18.2
 	snakemake -j $nJob \
 		--latency-wait 60 \
 		--cluster-config $config \

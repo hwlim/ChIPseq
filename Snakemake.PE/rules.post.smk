@@ -139,7 +139,7 @@ if do_csem:
 		shell:
 			"""
 			module purge
-			module load ChIPseq/1.0
+			module load Cutlery/1.0
 			ngs.dedupBam.sh -m {params.memory} -o {output.bam} -r {input.bam}
 			samtools index {output.bam}
 			"""
@@ -159,11 +159,29 @@ else:
 		shell:
 			"""
 			module purge
-			module load ChIPseq/1.0
+			module load Cutlery/1.0
 			ngs.dedupBam.sh -m {params.memory} -o {output.bam} -r {input.bam}
 			samtools index {output.bam}
 			"""
 
+
+## Fragments including target + spikein (optional) reads 
+rule make_bedgraph:
+	input:
+		bam = dedupDir + "/{sampleName}/align.bam" if doDedup else alignDir + "/{sampleName}/align.bam",
+		bai = dedupDir + "/{sampleName}/align.bam.bai" if doDedup else alignDir + "/{sampleName}/align.bam.bai"
+	output:
+		bedGraph = dedupDir + "/{sampleName}/cov.bedGraph"
+	params:
+		memory = "%dG" % ( cluster["make_bedgraph"]["memory"]/1000 - 2 )
+	message:
+		"Making bedgraph files... [{wildcards.sampleName}]"
+	shell:
+		"""
+		module purge
+		module load Cutlery/1.0
+		bedtools genomecov -ibam {input.bam} -bga -pc > {output.bedGraph}
+		"""
 
 rule check_baseFreq:
 	input:
@@ -179,7 +197,7 @@ rule check_baseFreq:
 	shell:
 		"""
 		module purge
-		module load ChIPseq/1.0
+		module load Cutlery/1.0
 		checkBaseFreq.plot.sh -o {sampleDir}/{wildcards.sampleName}/QC/base_freq \
 			-n {wildcards.sampleName} -g {genomeFa} -c "{chrRegexTarget}" -m both -l 20 -f -i -v {input.frag}
 		# bamToBed.separate.sh -o {sampleDir}/{wildcards.sampleName}/QC/baseFreq {input}
@@ -208,7 +226,7 @@ rule make_fragment:
 	shell:
 		"""
 		module purge
-		module load ChIPseq/1.0
+		module load Cutlery/1.0
 		#bamToFragment.sh -o {output} -l -1 -s -m {params.memory} {input}
 		ngs.bamToFragment.py -c "{chrRegexAll}" -f 0x2 -F 0x400 {input.bam} | sort -S {params.memory} -k1,1 -k2,2n -k3,3n | gzip > {output}
 		"""
@@ -233,7 +251,7 @@ rule count_spikein:
 	shell:
 		"""
 		module purge
-		module load ChIPseq/1.0
+		module load Cutlery/1.0
 		ngs.countSpikein.sh -p {spikePrefix} -n {wildcards.sampleName} {input} > {output}
 		"""
 
@@ -290,7 +308,7 @@ rule make_bigwig_ctr_rpm:
 	shell:
 		"""
 		module purge
-		module load ChIPseq/1.0
+		module load Cutlery/1.0
 		#module load R/4.4.0
 		#module load bedtools/2.30.0
 		#module load ucsctools/v380
@@ -310,7 +328,7 @@ rule make_bigwig_frag_rpm:
 	shell:
 		"""
 		module purge
-		module load ChIPseq/1.0
+		module load Cutlery/1.0
 		ngs.fragToBigWig.sh -g {chrom_size} -c "{chrRegexTarget}" -m {params.memory} -o {output} {input}
 		"""
 
@@ -330,7 +348,7 @@ rule make_bigwig_ctr_rpsm:
 	shell:
 		"""
 		module purge
-		module load ChIPseq/1.0
+		module load Cutlery/1.0
 		scaleFactor=`cat {input.spikeinCnt} | gawk '{{ if($1=="ScaleFactor") print $2 }}'`
 		if [ "$scaleFactor" == "" ];then
 			echo -e "Error: empty scale factor" >&2
@@ -353,7 +371,7 @@ rule make_bigwig_frag_rpsm:
 	shell:
 		"""
 		module purge
-		module load ChIPseq/1.0
+		module load Cutlery/1.0
 		scaleFactor=`cat {input.spikeinCnt} | gawk '{{ if($1=="ScaleFactor") print $2 }}'`
 		if [ "$scaleFactor" == "" ];then
 			echo -e "Error: empty scale factor" >&2
@@ -378,7 +396,7 @@ rule make_bigwig_ctr_rpm_subinput:
 	shell:
 		"""
 		module purge
-		module load ChIPseq/1.0
+		module load Cutlery/1.0
 		bigWigSubtract.sh -g {chrom_size} -m 5G -t -1000 {output} {input.chip} {input.ctrl}
 		"""
 
@@ -395,7 +413,7 @@ rule make_bigwig_frag_rpm_subinput:
 	shell:
 		"""
 		module purge
-		module load ChIPseq/1.0
+		module load Cutlery/1.0
 		bigWigSubtract.sh -g {chrom_size} -m 5G -t -1000 {output} {input.chip} {input.ctrl}
 		"""
 
@@ -413,7 +431,7 @@ rule make_bigwig_ctr_rpsm_subinput:
 	shell:
 		"""
 		module purge
-		module load ChIPseq/1.0
+		module load Cutlery/1.0
 		bigWigSubtract.sh -g {chrom_size} -m 5G -t -1000 {output} {input.chip} {input.ctrl}
 		"""
 
@@ -430,7 +448,7 @@ rule make_bigwig_frag_rpsm_subinput:
 	shell:
 		"""
 		module purge
-		module load ChIPseq/1.0
+		module load Cutlery/1.0
 		bigWigSubtract.sh -g {chrom_size} -m 5G -t -1000 {output} {input.chip} {input.ctrl}
 		"""
 
@@ -447,7 +465,7 @@ rule make_bigwig_divide:
 	#	memory = "%dG" % (  cluster["make_bigwig_subtract"]["memory"]/1000 - 1 )
 	shell:
 		"""
-		module load ChIPseq/1.0
+		module load Cutlery/1.0
 		bigWigDivide.sh -g {chrom_size} -m 5G -s log -a 1 -o {output} {input}
 		"""
 
@@ -462,8 +480,8 @@ rule make_tagdir:
 		"Making Homer tag directory... [{wildcards.sampleName}]"
 	shell:
 		"""
-		module load ChIPseq/1.0
-		ngs.makeHomerDir.sh -c {chrRegexTarget} -o {output} -n {params.name} {input}
+		module load Cutlery/1.0
+		cnr.makeHomerDir.sh -c {chrRegexTarget} -o {output} -n {params.name} {input}
 		"""
 
 
@@ -719,6 +737,99 @@ rule call_peak_factor_spikein:
 		chip.peakCallFactor.sh -o {params.outPrefix} -m {peak_mask} -f 4 -k $spikeFactor -s {params.optStr} {input}
 		"""
 
+## MACS peak calling vs control: NUC
+rule call_peak_macs_histone:
+	input:
+		target = lambda wildcards: get_bam_for_macs(wildcards.sampleName, mode="target"),
+		ctrl = lambda wildcards: get_bam_for_macs(wildcards.sampleName, mode="ctrl")
+	output:
+		peak = sampleDir + "/{sampleName}/MACS2.histone/{sampleName}_broad.exBL.bed",
+		log = sampleDir + "/{sampleName}/MACS2.histone/{sampleName}.log",
+		targetBdg = sampleDir + "/{sampleName}/MACS2.histone/{sampleName}_treat_pileup.bdg",
+		ctrlBdg = sampleDir + "/{sampleName}/MACS2.histone/{sampleName}_control_lambda.bdg"
+	message:
+		"Calling histone peaks using MACS.. [{wildcards.sampleName}]"
+	params:
+		mask = peak_mask,
+		outDir = lambda wildcards, output: __import__("os").path.dirname(output[0])
+	shell:
+		"""
+		module purge
+		module load MACS/2.2.9.1
+		module load bedtools/2.27.0
+		macs2 callpeak -t {input.target} -c {input.ctrl} \
+		-n {wildcards.sampleName} --outdir {params.outDir} \
+		-g {species_macs} \
+		-f BAMPE -B \
+		--broad --keep-dup all \
+		--SPMR 2>&1 | tee {output.log}
+
+		grep -v '^#' {sampleDir}/{wildcards.sampleName}/MACS2.histone/{wildcards.sampleName}_peaks.xls \
+			| tail -n +3 \
+			| intersectBed -a stdin -b {params.mask} -v \
+			| gawk '$1 ~ /{chrRegexTarget}/ {{ printf "%s\\t%d\\t%d\\t%s\\t%s\\t+\\n", $1,$2,$3,$9,$4 }}' \
+			| sort -k5,5nr \
+			> {output.peak}
+		"""
+
+## make fold change bigwig
+rule make_foldChange_bigWig_macs:
+	input:
+		target = sampleDir + "/{sampleName}/MACS2.histone/{sampleName}_treat_pileup.bdg",
+		ctrl = sampleDir + "/{sampleName}/MACS2.histone/{sampleName}_control_lambda.bdg"
+	output:
+		bw = sampleDir + "/{sampleName}/MACS2.histone/igv.log2_FC.bw",
+		log = sampleDir + "/{sampleName}/MACS2.histone/log2_FC_bw.log"
+	message:
+		"Making fold change bigwig.. [{wildcards.sampleName}]"
+	shell:
+		"""
+		module purge
+		module load MACS/2.2.9.1
+		module load ucsctools/v466
+		macs2 bdgcmp \
+		-t {input.target} \
+		-c {input.ctrl} \
+		-o {sampleDir}/{wildcards.sampleName}/MACS2.histone/log2_FC_unsorted.bdg \
+		-m logLR \
+		-p 0.00001 2>&1 | tee {output.log}
+
+		sort -k1,1 -k2,2n {sampleDir}/{wildcards.sampleName}/MACS2.histone/log2_FC_unsorted.bdg > {sampleDir}/{wildcards.sampleName}/MACS2.histone/log2_FC_sorted.bdg
+		
+		bedGraphToBigWig {sampleDir}/{wildcards.sampleName}/MACS2.histone/log2_FC_sorted.bdg {chrom_size} {output.bw}
+
+		rm {sampleDir}/{wildcards.sampleName}/MACS2.histone/log2_FC_unsorted.bdg
+		rm {sampleDir}/{wildcards.sampleName}/MACS2.histone/log2_FC_sorted.bdg
+		"""
+
+## make p-value bigwig
+rule make_pVal_bigWig_macs:
+	input:
+		target = sampleDir + "/{sampleName}/MACS2.histone/{sampleName}_treat_pileup.bdg",
+		ctrl = sampleDir + "/{sampleName}/MACS2.histone/{sampleName}_control_lambda.bdg"
+	output:
+		bw = sampleDir + "/{sampleName}/MACS2.histone/igv.p_val.bw",
+		log = sampleDir + "/{sampleName}/MACS2.histone/p_val_bw.log"
+	message:
+		"Making p-val bigwig.. [{wildcards.sampleName}]"
+	shell:
+		"""
+		module purge
+		module load MACS/2.2.9.1
+		module load ucsctools/v466
+		macs2 bdgcmp \
+		-t {input.target} \
+		-c {input.ctrl} \
+		-o {sampleDir}/{wildcards.sampleName}/MACS2.histone/log2_p_val_unsorted.bdg \
+		-m ppois 2>&1 | tee {output.log}
+
+		sort -k1,1 -k2,2n {sampleDir}/{wildcards.sampleName}/MACS2.histone/log2_p_val_unsorted.bdg > {sampleDir}/{wildcards.sampleName}/MACS2.histone/log2_p_val_sorted.bdg
+		
+		bedGraphToBigWig {sampleDir}/{wildcards.sampleName}/MACS2.histone/log2_p_val_sorted.bdg {chrom_size} {output.bw}
+
+		rm {sampleDir}/{wildcards.sampleName}/MACS2.histone/log2_p_val_unsorted.bdg
+		rm {sampleDir}/{wildcards.sampleName}/MACS2.histone/log2_p_val_sorted.bdg
+		"""
 
 rule run_homer_motif:
 	input:
@@ -787,7 +898,7 @@ rule draw_peak_heatmap_factor:
 	shell:
 		"""
 		module purge
-		module load ChIPseq/1.0
+		module load Cutlery/1.0
 		n_loci=`cat {input.bed} | wc -l`
 		if [ $n_loci -eq 0 ];then
 			echo -e "Warning: no peak found, creating empty heatmap"
@@ -813,7 +924,7 @@ rule draw_peak_heatmap_histone:
 	shell:
 		"""
 		module purge
-		module load ChIPseq/1.0
+		module load Cutlery/1.0
 		n_loci=`cat {input.bed} | wc -l`
 		if [ $n_loci -eq 0 ];then
 			echo -e "Warning: no peak found, creating empty heatmap"
@@ -865,12 +976,16 @@ rule call_peak_macs_factor:
 	shell:
 		"""
 		module purge
-		module load MACS/2.2.8
+		module load MACS/2.2.9.1
 		module load bedtools/2.27.0
 		macs3 callpeak -t {input.target} -c {input.ctrl} -f BAMPE -n {wildcards.sampleName} \
 			--outdir {params.outDir} -g {species_macs} --keep-dup all --call-summits \
 			2>&1 | tee {output.log}
-		intersectBed -a {params.outDir}/{wildcards.sampleName}_summits.bed -b {params.mask} -v > {output.peak}
+
+		intersectBed -a {params.outDir}/{wildcards.sampleName}_summits.bed -b {params.mask} -v \
+			| gawk '$1 ~ /{chrRegexTarget}/ {{ printf "%s\\t%d\\t%d\\t%s\\t%s\\t+\\n", $1,$2,$3,$4,$5 }}' \
+			| sort -k5,5nr \
+			> {output.peak}
 		"""
 
 ## MACS peak calling with relaxed criteria using p-value for IDR analysis
@@ -890,13 +1005,21 @@ rule call_peak_macs_factor_relax:
 	shell:
 		"""
 		module purge
-		module load MACS/2.2.8
+		module load MACS/2.2.9.1
 		module load bedtools/2.27.0
 		macs3 callpeak -t {input.target} -c {input.ctrl} -f BAMPE -n {wildcards.sampleName} \
 			--outdir {params.outDir} -g {species_macs} --keep-dup all --call-summits -p 0.001 \
 			2>&1 | tee {output.log}
-		intersectBed -a {params.outDir}/{wildcards.sampleName}_summits.bed -b {params.mask} -v > {output.peak}
-		sort -k8,8nr {params.outDir}/{wildcards.sampleName}_peaks.narrowPeak > {output.peak2}
+
+		intersectBed -a {params.outDir}/{wildcards.sampleName}_summits.bed -b {params.mask} -v \
+			| gawk '$1 ~ /{chrRegexTarget}/ {{ printf "%s\\t%d\\t%d\\t%s\\t%s\\t+\\n", $1,$2,$3,$4,$5 }}' \
+			| sort -k5,5nr \
+			> {output.peak}
+
+		intersectBed -a {params.outDir}/{wildcards.sampleName}_peaks.narrowPeak -b {params.mask} -v \
+		| gawk '{{ if($1 ~ /'$chrRegexTarget'/) print $0"\t+" }}' \
+		| sort -k5,5nr \
+		> {output.peak2}
 		"""
 
 ## Peak calling in factor mode using resized fragment
@@ -914,10 +1037,13 @@ rule call_peak_macs_factor_wo_ctrl:
 	shell:
 		"""
 		module purge
-		module load MACS/2.2.8
+		module load MACS/2.2.9.1
 		module load bedtools/2.27.0
 		macs3 callpeak -t {input.target} -f BAMPE -n {wildcards.sampleName} --outdir {params.outDir} -g {species_macs} --keep-dup all --call-summits 2>&1 | tee {output.log}
-		intersectBed -a {params.outDir}/{wildcards.sampleName}_summits.bed -b {params.mask} -v > {output.peak}
+		intersectBed -a {params.outDir}/{wildcards.sampleName}_summits.bed -b {params.mask} -v \
+			| gawk '$1 ~ /{chrRegexTarget}/ {{ printf "%s\\t%d\\t%d\\t%s\\t%s\\t+\\n", $1,$2,$3,$4,$5 }}' \
+			| sort -k5,5nr \
+			> {output.peak}
 		"""
 
 
@@ -948,7 +1074,7 @@ rule make_bigwig_ctr_rpm_spike:
 	shell:
 		"""
 		module purge
-		module load ChIPseq/1.0
+		module load Cutlery/1.0
 		ngs.fragToSpikeBigWig.sh -g {spikein_chrom_size} -p "{spikePrefix}" -r 150 -m {params.memory} -o {output} {input}
 		"""
 
@@ -1000,7 +1126,7 @@ rule make_bigwig_scaled:
 #		scaleFactor = get_scalefactor
 	shell:
 		"""
-		module load ChIPseq/1.0
+		module load Cutlery/1.0
 		scaleFactor=`cat {input.spikeinCnt} | gawk '$1=="'{wildcards.sampleName}'"' | cut -f 6`
 		if [ "$scaleFactor" == "" ];then
 			echo -e "Error: empty scale factor" >&2
@@ -1027,7 +1153,7 @@ rule make_bigwig_scaled_subtract:
 	#	memory = "%dG" % (  cluster["make_bigwig_subtract"]["memory"]/1000 - 1 )
 	shell:
 		"""
-		module load ChIPseq/1.0
+		module load Cutlery/1.0
 		bigWigSubtract.sh -g {chrom_size} -m 5G -t -1000 {output} {input}
 		"""
 
@@ -1042,7 +1168,7 @@ rule make_bigwig_scaled_divide:
 	#	memory = "%dG" % (  cluster["make_bigwig_subtract"]["memory"]/1000 - 1 )
 	shell:
 		"""
-		module load ChIPseq/1.0
+		module load Cutlery/1.0
 		bigWigDivide.sh -g {chrom_size} -m 5G -s log -a 1 -o {output} {input}
 		"""
 '''
@@ -1065,7 +1191,7 @@ rule make_bigwig_sub_avg:
 		memory = "5G"
 	shell:
 		"""
-		module load ChIPseq/1.0
+		module load Cutlery/1.0
 		makeBigWigAverage.sh -g {chrom_size} -m {params.memory} -o {output} {input}
 		"""
 
@@ -1084,7 +1210,7 @@ rule make_bigwig_scaled_sub_avg:
 		memory = "5G"
 	shell:
 		"""
-		module load ChIPseq/1.0
+		module load Cutlery/1.0
 		makeBigWigAverage.sh -g {chrom_size} -m {params.memory} -o {output} {input}
 		"""
 
@@ -1103,7 +1229,7 @@ rule make_bigwig_scaled_div_avg:
 		memory = "5G"
 	shell:
 		"""
-		module load ChIPseq/1.0
+		module load Cutlery/1.0
 		makeBigWigAverage.sh -g {chrom_size} -m {params.memory} -o {output} {input}
 		"""
 '''
