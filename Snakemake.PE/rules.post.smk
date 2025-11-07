@@ -139,7 +139,7 @@ if do_csem:
 		shell:
 			"""
 			module purge
-			module load Cutlery/1.0
+			module load ChIPseq/1.0
 			ngs.dedupBam.sh -m {params.memory} -o {output.bam} -r {input.bam}
 			samtools index {output.bam}
 			"""
@@ -159,29 +159,10 @@ else:
 		shell:
 			"""
 			module purge
-			module load Cutlery/1.0
+			module load ChIPseq/1.0
 			ngs.dedupBam.sh -m {params.memory} -o {output.bam} -r {input.bam}
 			samtools index {output.bam}
 			"""
-
-
-## Fragments including target + spikein (optional) reads 
-rule make_bedgraph:
-	input:
-		bam = dedupDir + "/{sampleName}/align.bam" if doDedup else alignDir + "/{sampleName}/align.bam",
-		bai = dedupDir + "/{sampleName}/align.bam.bai" if doDedup else alignDir + "/{sampleName}/align.bam.bai"
-	output:
-		bedGraph = dedupDir + "/{sampleName}/cov.bedGraph"
-	params:
-		memory = "%dG" % ( cluster["make_bedgraph"]["memory"]/1000 - 2 )
-	message:
-		"Making bedgraph files... [{wildcards.sampleName}]"
-	shell:
-		"""
-		module purge
-		module load Cutlery/1.0
-		bedtools genomecov -ibam {input.bam} -bga -pc > {output.bedGraph}
-		"""
 
 rule check_baseFreq:
 	input:
@@ -197,7 +178,7 @@ rule check_baseFreq:
 	shell:
 		"""
 		module purge
-		module load Cutlery/1.0
+		module load ChIPseq/1.0
 		checkBaseFreq.plot.sh -o {sampleDir}/{wildcards.sampleName}/QC/base_freq \
 			-n {wildcards.sampleName} -g {genomeFa} -c "{chrRegexTarget}" -m both -l 20 -f -i -v {input.frag}
 		# bamToBed.separate.sh -o {sampleDir}/{wildcards.sampleName}/QC/baseFreq {input}
@@ -226,7 +207,7 @@ rule make_fragment:
 	shell:
 		"""
 		module purge
-		module load Cutlery/1.0
+		module load ChIPseq/1.0
 		#bamToFragment.sh -o {output} -l -1 -s -m {params.memory} {input}
 		ngs.bamToFragment.py -c "{chrRegexAll}" -f 0x2 -F 0x400 {input.bam} | sort -S {params.memory} -k1,1 -k2,2n -k3,3n | gzip > {output}
 		"""
@@ -251,7 +232,7 @@ rule count_spikein:
 	shell:
 		"""
 		module purge
-		module load Cutlery/1.0
+		module load ChIPseq/1.0
 		ngs.countSpikein.sh -p {spikePrefix} -n {wildcards.sampleName} {input} > {output}
 		"""
 
@@ -308,7 +289,7 @@ rule make_bigwig_ctr_rpm:
 	shell:
 		"""
 		module purge
-		module load Cutlery/1.0
+		module load ChIPseq/1.0
 		#module load R/4.4.0
 		#module load bedtools/2.30.0
 		#module load ucsctools/v380
@@ -328,7 +309,7 @@ rule make_bigwig_frag_rpm:
 	shell:
 		"""
 		module purge
-		module load Cutlery/1.0
+		module load ChIPseq/1.0
 		ngs.fragToBigWig.sh -g {chrom_size} -c "{chrRegexTarget}" -m {params.memory} -o {output} {input}
 		"""
 
@@ -348,7 +329,7 @@ rule make_bigwig_ctr_rpsm:
 	shell:
 		"""
 		module purge
-		module load Cutlery/1.0
+		module load ChIPseq/1.0
 		scaleFactor=`cat {input.spikeinCnt} | gawk '{{ if($1=="ScaleFactor") print $2 }}'`
 		if [ "$scaleFactor" == "" ];then
 			echo -e "Error: empty scale factor" >&2
@@ -371,7 +352,7 @@ rule make_bigwig_frag_rpsm:
 	shell:
 		"""
 		module purge
-		module load Cutlery/1.0
+		module load ChIPseq/1.0
 		scaleFactor=`cat {input.spikeinCnt} | gawk '{{ if($1=="ScaleFactor") print $2 }}'`
 		if [ "$scaleFactor" == "" ];then
 			echo -e "Error: empty scale factor" >&2
@@ -396,7 +377,7 @@ rule make_bigwig_ctr_rpm_subinput:
 	shell:
 		"""
 		module purge
-		module load Cutlery/1.0
+		module load ChIPseq/1.0
 		bigWigSubtract.sh -g {chrom_size} -m 5G -t -1000 {output} {input.chip} {input.ctrl}
 		"""
 
@@ -413,7 +394,7 @@ rule make_bigwig_frag_rpm_subinput:
 	shell:
 		"""
 		module purge
-		module load Cutlery/1.0
+		module load ChIPseq/1.0
 		bigWigSubtract.sh -g {chrom_size} -m 5G -t -1000 {output} {input.chip} {input.ctrl}
 		"""
 
@@ -431,7 +412,7 @@ rule make_bigwig_ctr_rpsm_subinput:
 	shell:
 		"""
 		module purge
-		module load Cutlery/1.0
+		module load ChIPseq/1.0
 		bigWigSubtract.sh -g {chrom_size} -m 5G -t -1000 {output} {input.chip} {input.ctrl}
 		"""
 
@@ -448,7 +429,7 @@ rule make_bigwig_frag_rpsm_subinput:
 	shell:
 		"""
 		module purge
-		module load Cutlery/1.0
+		module load ChIPseq/1.0
 		bigWigSubtract.sh -g {chrom_size} -m 5G -t -1000 {output} {input.chip} {input.ctrl}
 		"""
 
@@ -465,7 +446,7 @@ rule make_bigwig_divide:
 	#	memory = "%dG" % (  cluster["make_bigwig_subtract"]["memory"]/1000 - 1 )
 	shell:
 		"""
-		module load Cutlery/1.0
+		module load ChIPseq/1.0
 		bigWigDivide.sh -g {chrom_size} -m 5G -s log -a 1 -o {output} {input}
 		"""
 
@@ -480,7 +461,7 @@ rule make_tagdir:
 		"Making Homer tag directory... [{wildcards.sampleName}]"
 	shell:
 		"""
-		module load Cutlery/1.0
+		module load ChIPseq/1.0
 		cnr.makeHomerDir.sh -c {chrRegexTarget} -o {output} -n {params.name} {input}
 		"""
 
@@ -898,7 +879,7 @@ rule draw_peak_heatmap_factor:
 	shell:
 		"""
 		module purge
-		module load Cutlery/1.0
+		module load ChIPseq/1.0
 		n_loci=`cat {input.bed} | wc -l`
 		if [ $n_loci -eq 0 ];then
 			echo -e "Warning: no peak found, creating empty heatmap"
@@ -924,7 +905,7 @@ rule draw_peak_heatmap_histone:
 	shell:
 		"""
 		module purge
-		module load Cutlery/1.0
+		module load ChIPseq/1.0
 		n_loci=`cat {input.bed} | wc -l`
 		if [ $n_loci -eq 0 ];then
 			echo -e "Warning: no peak found, creating empty heatmap"
@@ -1074,7 +1055,7 @@ rule make_bigwig_ctr_rpm_spike:
 	shell:
 		"""
 		module purge
-		module load Cutlery/1.0
+		module load ChIPseq/1.0
 		ngs.fragToSpikeBigWig.sh -g {spikein_chrom_size} -p "{spikePrefix}" -r 150 -m {params.memory} -o {output} {input}
 		"""
 
@@ -1126,7 +1107,7 @@ rule make_bigwig_scaled:
 #		scaleFactor = get_scalefactor
 	shell:
 		"""
-		module load Cutlery/1.0
+		module load ChIPseq/1.0
 		scaleFactor=`cat {input.spikeinCnt} | gawk '$1=="'{wildcards.sampleName}'"' | cut -f 6`
 		if [ "$scaleFactor" == "" ];then
 			echo -e "Error: empty scale factor" >&2
@@ -1153,7 +1134,7 @@ rule make_bigwig_scaled_subtract:
 	#	memory = "%dG" % (  cluster["make_bigwig_subtract"]["memory"]/1000 - 1 )
 	shell:
 		"""
-		module load Cutlery/1.0
+		module load ChIPseq/1.0
 		bigWigSubtract.sh -g {chrom_size} -m 5G -t -1000 {output} {input}
 		"""
 
@@ -1168,7 +1149,7 @@ rule make_bigwig_scaled_divide:
 	#	memory = "%dG" % (  cluster["make_bigwig_subtract"]["memory"]/1000 - 1 )
 	shell:
 		"""
-		module load Cutlery/1.0
+		module load ChIPseq/1.0
 		bigWigDivide.sh -g {chrom_size} -m 5G -s log -a 1 -o {output} {input}
 		"""
 '''
@@ -1191,7 +1172,7 @@ rule make_bigwig_sub_avg:
 		memory = "5G"
 	shell:
 		"""
-		module load Cutlery/1.0
+		module load ChIPseq/1.0
 		makeBigWigAverage.sh -g {chrom_size} -m {params.memory} -o {output} {input}
 		"""
 
@@ -1210,7 +1191,7 @@ rule make_bigwig_scaled_sub_avg:
 		memory = "5G"
 	shell:
 		"""
-		module load Cutlery/1.0
+		module load ChIPseq/1.0
 		makeBigWigAverage.sh -g {chrom_size} -m {params.memory} -o {output} {input}
 		"""
 
@@ -1229,7 +1210,7 @@ rule make_bigwig_scaled_div_avg:
 		memory = "5G"
 	shell:
 		"""
-		module load Cutlery/1.0
+		module load ChIPseq/1.0
 		makeBigWigAverage.sh -g {chrom_size} -m {params.memory} -o {output} {input}
 		"""
 '''

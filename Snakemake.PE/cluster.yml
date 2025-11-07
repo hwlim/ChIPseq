@@ -39,9 +39,6 @@ check_baseFreq:
 dedup_align:
     memory      : 6000
 
-make_bedgraph:
-    memory      : 10000
-
 make_bigwig:
     memory      : 10000
 
