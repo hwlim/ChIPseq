@@ -462,7 +462,7 @@ rule make_tagdir:
 	shell:
 		"""
 		module load ChIPseq/1.0
-		cnr.makeHomerDir.sh -c {chrRegexTarget} -o {output} -n {params.name} {input}
+		ngs.makeHomerDir.sh -c {chrRegexTarget} -o {output} -n {params.name} {input}
 		"""
 
 
