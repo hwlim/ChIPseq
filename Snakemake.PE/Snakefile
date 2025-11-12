@@ -19,7 +19,7 @@ genomeFa	= "/data/limlab/Resource/GenomeData/hg/hg38/Genome/genome.fa"
 chrom_size	= "/data/limlab/Resource/GenomeData/hg/hg38/Genome/chrom.size"
 peak_mask	= "/data/limlab/Resource/GenomeData/hg/hg38/ENCODE-blacklist.bed"
 genome		= "hg38"
-star_index	= "/Volumes/limlab/Resource/STAR_Index/2.7.4/hg38_allChr_v29"
+star_index	= "/data/limlab/Resource/STAR_Index/2.7.4/hg38_allChr_v29"
 
 
 ## Other STAR Index. Beware of STAR version
@@ -70,6 +70,7 @@ fastqDir	= "0.Fastq"
 trimDir		= "0.Fastq.Trim"
 alignDir	= "1.1.Align"
 filteredDir	= "1.2.Align.filtered"
+downsampleDir	=	"1.2.Align.downSample"
 dedupDir	= "1.3.Align.dedup"
 qcDir		= "2.QualityControl"
 sampleDir	= "3.Samples"
@@ -124,8 +125,8 @@ hetChr_homer_spike_ctr = "hetChr.Homer.spikein.ctr.w%d_d%d_fc%.1f" % ( peakWindo
 
 ###################################################
 
-
-
+## EDD config file
+edd_config = os.environ["CHIP_PATH"] + "/Script/edd.conf"
 
 
 
@@ -180,6 +181,7 @@ rule all:
 		expand(sampleDir + "/{sampleName}/HomerPeak.histone/peak.exBL.bed", sampleName=samplesHistone),
 		expand(sampleDir + "/{sampleName}/HomerPeak.factor/Motif/Homer.all/homerResults.html", sampleName=samplesFactor),
 		expand(sampleDir + "/{sampleName}/HomerPeak.factor/Motif/MEME.random5k/meme-chip.html", sampleName=samplesFactor),
+		expand(sampleDir + "/{sampleName}/EDD/{file}", file = ["igv.log_ratio.bw","peak.exBL.bed"], sampleName=samplesHistone),
 		expand(sampleDir + "/{sampleName}/igv.ctr.rpm.bw", sampleName=samplesAll)
 
 include: os.environ["CHIP_PATH"] + "/Snakemake.PE/rules.pre.smk"
