@@ -1031,8 +1031,8 @@ rule call_peak_macs_factor_wo_ctrl:
 	input:
 		target = lambda wildcards: get_bam_for_peak(wildcards.sampleName, mode="target")
 	output:
-		peak = sampleDir + "/{sampleName}/MACS2.factor.wo_ctrl/summits.exBL.bed",
-		log = sampleDir + "/{sampleName}/MACS2.factor.wo_ctrl/MACS2.log"
+		peak = sampleDir + "/{sampleName}/MACS2.factor.wo_ctrl/macs_summits.exBL.bed",
+		log = sampleDir + "/{sampleName}/MACS2.factor.wo_ctrl/macs.log"
 	message:
 		"Calling TF peaks/SE ... [{wildcards.sampleName}]"
 	params:
@@ -1043,21 +1043,16 @@ rule call_peak_macs_factor_wo_ctrl:
 		module purge
 		module load MACS/2.2.9.1
 		module load bedtools/2.27.0
-		macs2 callpeak -t {input.target} -f BAMPE -n {wildcards.sampleName} \
+		macs2 callpeak -t {input.target} -f BAMPE -n macs \
 			--outdir {params.outDir} -g {species_macs} \
 			--keep-dup all --call-summits 2>&1 \
-			| tee {sampleDir}/{wildcards.sampleName}/MACS2.factor.wo_ctrl/{wildcards.sampleName}.log
+			| tee {output.log}
 		
-		intersectBed -a {params.outDir}/{wildcards.sampleName}_summits.bed -b {params.mask} -v \
+		intersectBed -a {params.outDir}/macs_summits.bed -b {params.mask} -v \
 			| gawk '$1 ~ /{chrRegexTarget}/ {{ printf "%s\\t%d\\t%d\\t%s\\t%s\\t+\\n", $1,$2,$3,$4,$5 }}' \
 			| sort -k5,5nr \
-			> {sampleDir}/{wildcards.sampleName}/MACS2.factor.wo_ctrl/{wildcards.sampleName}_summits.exBL.bed
-		
-		mv {sampleDir}/{wildcards.sampleName}/MACS2.factor.wo_ctrl/{wildcards.sampleName}_summits.exBL.bed {output.peak}
-		mv {sampleDir}/{wildcards.sampleName}/MACS2.factor.wo_ctrl/{wildcards.sampleName}_peaks.narrowPeak {sampleDir}/{wildcards.sampleName}/MACS2.factor.wo_ctrl/peaks.narrowPeak
-		mv {sampleDir}/{wildcards.sampleName}/MACS2.factor.wo_ctrl/{wildcards.sampleName}_peaks.xls {sampleDir}/{wildcards.sampleName}/MACS2.factor.wo_ctrl/peaks.xls
-		mv {sampleDir}/{wildcards.sampleName}/MACS2.factor.wo_ctrl/{wildcards.sampleName}_summits.bed {sampleDir}/{wildcards.sampleName}/MACS2.factor.wo_ctrl/summits.bed
-		mv {sampleDir}/{wildcards.sampleName}/MACS2.factor.wo_ctrl/{wildcards.sampleName}.log {output.log}
+			> {output.peak}
+
 		"""
 
 
