@@ -37,7 +37,6 @@ check_baseFreq:
     memory      : 6000
 
 dedup_align:
-    cpu         : 4
     memory      : 6000
 
 make_bigwig:
