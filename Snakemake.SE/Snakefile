@@ -9,7 +9,7 @@
 
 ## Sample information file with five columns: id / name / group / fq1 / fq2
 src_sampleInfo	= "sample.tsv"
-cluster_yml		= os.environ["CHIP_PATH"] + "/Snakemake.SE/cluster.yml"
+cluster_yml		= os.environ["CHIP_SEQ_PATH"] + "/Snakemake.SE/cluster.yml"
 
 ## Genome folder depending on platform: CCHMC:HPC vs my desktop
 #import socket
@@ -149,5 +149,5 @@ rule all:
 		#expand(bigWigDir_avg + "/{groupName}.avg.bw" groupName=groupsAll),
 		#expand(bigWigDir_avg + "/{groupName}.avg.subInput.bw" groupName=groupsChIP)
 
-include: os.environ["CHIP_PATH"] + "/Snakemake.SE/rules.pre.smk"
-include: os.environ["CHIP_PATH"] + "/Snakemake.SE/rules.post.smk"
+include: os.environ["CHIP_SEQ_PATH"] + "/Snakemake.SE/rules.pre.smk"
+include: os.environ["CHIP_SEQ_PATH"] + "/Snakemake.SE/rules.post.smk"
