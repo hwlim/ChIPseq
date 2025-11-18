@@ -9,12 +9,12 @@ source $COMMON_LIB_BASE/commonBash.sh
 nJob=50
 totalWaitTime="48:00"
 #timestamp=$(date +%Y%m%d_%H%M%S)
-if [ -z ${CHIP_PATH+x} ]; then
-	echo -e "Error: Environment variable CHIP_PATH is not defined" >&2
+if [ -z ${CHIP_SEQ_PATH+x} ]; then
+	echo -e "Error: Environment variable CHIP_SEQ_PATH is not defined" >&2
 	exit 1
 fi
 
-config=${CHIP_PATH}/Snakemake.PE/cluster.yml
+config=${CHIP_SEQ_PATH}/Snakemake.PE/cluster.yml
 
 assertFileExist $config
 assertFileExist ./Snakefile
