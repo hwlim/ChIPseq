@@ -31,6 +31,8 @@ star_index	= "/data/limlab/Resource/STAR_Index/2.7.4/hg38_allChr_v29"
 ## spikein chromosome size file for bigwig file generation (and potentially something else) in spikein genome
 spikein_chrom_size = "/data/limlab/Resource/GenomeData/dm/dm6/Genome/chrom.size"
 
+meme_db = "/data/limlab/Resource/meme_motif_db/Merged_By_Lim.meme"
+
 
 ## Other essential pameters
 adapter			= "AGATCGGAAGAGC"	# illumina universal adapter

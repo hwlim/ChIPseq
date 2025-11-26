@@ -881,7 +881,7 @@ rule run_meme_motif_rand5k:
 			exit 0
 		fi
 
-		runMemeChipSingle.sh -g {genomeFa} -s 200 -p 4 -r 5000 -d ~/bin/Motif/MEME_DB/Merged_By_Lim.meme \
+		runMemeChipSingle.sh -g {genomeFa} -s 200 -p 4 -r 5000 -d {meme_db} \
 			-o {params.outPrefix} {input}
 		"""
 
