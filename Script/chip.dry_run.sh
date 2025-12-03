@@ -9,14 +9,16 @@ fi
 module purge
 module load anaconda3
 source activate snakemake-7.18.2
+export XDG_CACHE_HOME=/scratch/$USER/snakemake-cache
 
 if [ -e "config.yml" ]; then
 	echo -e "Performing dry-run in Cutlery default mode..." >&2
 	snakemake -np -s ${CUTLERY}/Snakemake/Snakefile_Default
 else
 	echo -e "Performing dry-run in Cutlery advanced mode..." >&2
-	snakemake -np
+	snakemake -np 
 fi
 
-source deactivate
+unset XDG_CACHE_HOME
+conda deactivate
 module purge
