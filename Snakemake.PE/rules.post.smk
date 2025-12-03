@@ -432,6 +432,37 @@ rule make_bigwig_frag_rpsm_subinput:
 		bigWigSubtract.sh -g {chrom_size} -m 5G -t -1000 {output} {input.chip} {input.ctrl}
 		"""
 
+# bigwig files stratified by fragment length
+rule make_bigwig_frag_nfr:
+	input:
+		frag = sampleDir + "/{sampleName}/fragment.bed.gz",
+		chrom = chrom_size
+	output:
+		sampleDir + "/{sampleName}/igv.nfr.con.bw",
+	message:
+		"Making bigWig files... [{wildcards.sampleName}]"
+	shell:
+		"""
+		module purge
+		module load ChIPseq/1.0
+		ngs.fragToBigWig.sh -g {input.chrom} -c "{chrRegexTarget}" -l 0 -L 119 -m 5G -o {output} {input.frag}
+		"""
+
+rule make_bigwig_frag_nuc:
+	input:
+		frag = sampleDir + "/{sampleName}/fragment.bed.gz",
+		chrom = chrom_size
+	output:
+		sampleDir + "/{sampleName}/igv.nuc.con.bw"
+	message:
+		"Making bigWig files... [{wildcards.sampleName}]"
+	shell:
+		"""
+		module purge
+		module load ChIPseq/1.0
+		ngs.fragToBigWig.sh -g {input.chrom} -c "{chrRegexTarget}" -l 151 -L 1000000 -m 5G -o {output} {input.frag}
+		"""
+
 '''
 ## RPM-scaled bigWig input-divided log2FC
 rule make_bigwig_divide:
