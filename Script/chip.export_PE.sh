@@ -171,7 +171,7 @@ do
 	if [ "$exportBW" == "y" ] || [ "$exportBW" == "Y" ];then
 		echo -e "1) Exporting bigwig files" >&2
 		#mkdir -p ${desDir}/BigWig
-		for prefix in "" .ctr.rpm .ctr.rpsm .frag.rpm .frag.rpsm
+		for prefix in "" .ctr.rpm .ctr.rpsm .frag.rpm .frag.rpsm .nfr.con .nuc.con
 		do
 			for suffix in "" ".subInput"
 			do
