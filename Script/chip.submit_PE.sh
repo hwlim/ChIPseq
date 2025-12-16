@@ -38,6 +38,7 @@ bsub -W ${totalWaitTime} -eo submit.err -oo submit.out -q rhel9 <<- EOF
 	export XDG_CACHE_HOME=/scratch/$USER/snakemake-cache
 	snakemake -j $nJob \
 		--latency-wait 60 \
+		--rerun-incomplete \
 		--cluster-config $config \
 		--cluster 'bsub -q rhel9 -W {cluster.walltime} -n {cluster.cpu} -M {cluster.memory} -J $$.{cluster.name} -R {cluster.resource} -eo {cluster.error} -oo {cluster.output}'
 	unset XDG_CACHE_HOME
