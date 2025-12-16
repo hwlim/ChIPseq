@@ -150,7 +150,8 @@ else:
 			bai = alignDir + "/{sampleName}/align.bam.bai"
 		output:
 			bam = dedupDir + "/{sampleName}/align.bam",
-			bai = dedupDir + "/{sampleName}/align.bam.bai"
+			bai = dedupDir + "/{sampleName}/align.bam.bai",
+			metric = dedupDir + "/{sampleName}/align.metric"
 		message:
 			"Deduplicating... [{wildcards.sampleName}]"
 		params:
@@ -162,6 +163,23 @@ else:
 			ngs.dedupBam.sh -m {params.memory} -o {output.bam} -r {input.bam}
 			samtools index {output.bam}
 			"""
+
+rule make_dedup_stat_table:
+	input:
+		expand(dedupDir + "/{sampleName}/align.metric", sampleName=samplesAll)
+	output:
+		qcDir + "/dedupStat.html"
+	message:
+		"Making dedup. stat table..."
+	params:
+		outPrefix = lambda wildcards, output: __import__("re").sub(".html$","", output[0])
+	shell:
+		"""
+		module purge
+		module load ChIPseq
+		ngs.getDedupStat.sh {input} > {params.outPrefix}.txt
+		ngs.drawDedupStat.r -o {params.outPrefix} -s {src_sampleInfo} {params.outPrefix}.txt
+		"""
 
 rule check_baseFreq:
 	input:
@@ -883,7 +901,7 @@ rule run_homer_motif:
 
 		n_loci=`cat {input} | wc -l`
 		if [ $n_loci -eq 0 ];then
-			echo -e "Warning: no peak found, creating empty heatmap"
+			echo -e "Warning: no peak found, creating empty file"
 			touch {params.outPrefix}/homerResults.html
 			exit 0
 		fi
@@ -911,7 +929,7 @@ rule run_meme_motif_rand5k:
 
 		n_loci=`cat {input} | wc -l`
 		if [ $n_loci -eq 0 ];then
-			echo -e "Warning: no peak found, creating empty heatmap"
+			echo -e "Warning: no peak found, creating empty file"
 			touch {params.outPrefix}/meme-chip.html
 			exit 0
 		fi
