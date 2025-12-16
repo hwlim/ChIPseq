@@ -207,8 +207,12 @@ rule make_fragment:
 		"""
 		module purge
 		module load ChIPseq/1.0
-		#bamToFragment.sh -o {output} -l -1 -s -m {params.memory} {input}
-		ngs.bamToFragment.py -c "{chrRegexAll}" -f 0x2 -F 0x400 {input.bam} | sort -S {params.memory} -k1,1 -k2,2n -k3,3n | gzip > {output}
+
+		tmp_out=`mktemp`
+		trap 'if [ -f ${{tmp_out}} ];then rm -f ${{tmp_out}}; fi' EXIT
+
+		ngs.bamToFragment.py -c "{chrRegexAll}" -f 0x2 -F 0x400 {input.bam} | sort -S {params.memory} -k1,1 -k2,2n -k3,3n | gzip > ${{tmp_out}}
+		mv ${{tmp_out}} {output}
 		"""
 
 
