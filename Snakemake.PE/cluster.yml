@@ -60,6 +60,11 @@ make_fragment:
 make_fragment_ctr:
     memory      : 10000
 
+make_dedup_stat_table:
+    name        : "{rule}"
+    output      : "logs/{rule}.out"
+    error       : "logs/{rule}.err"
+
 make_spikeintable:
     name        : "{rule}"
     output      : "logs/{rule}.out"
