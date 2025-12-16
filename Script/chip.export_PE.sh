@@ -149,7 +149,18 @@ exportBW=${exportBW:-Y}
 exportPeak=${exportPeak:-Y}
 exportMotif=${exportMotif:-Y}
 
-## Export
+## Export summary QC
+if [ "$exportQC" == "y" ] || [ "$exportQC" == "Y" ];then
+	echo -e "Exporting summary QC" >&2
+	for src in 2.QualityControl/*.{pdf,png,txt,html}
+	do
+		srcFile=`basename $src`
+		des=${desDir}/QualityControl/${srcFile}
+		exportFile $src $des FALSE FALSE
+	done
+fi
+
+## Export per sample
 echo -e "" >&2
 for samplePath in ${sampleL[@]}
 do
