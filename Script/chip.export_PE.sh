@@ -161,7 +161,7 @@ do
 		echo -e "0) Exporting fragment length distribution" >&2
 		#mkdir -p ${desDir}/QualityControl
 		src=${srcDir}/${sample}/QC/fragLen.png
-		des=${desDir}/QualityControl/${sample}.fragLen.png
+		des=${desDir}/QualityControl/FragLen/${sample}.fragLen.png
 		exportFile $src $des FALSE FALSE
 	else
 		echo -e "0) Skipping fragment length distribution" >&2
