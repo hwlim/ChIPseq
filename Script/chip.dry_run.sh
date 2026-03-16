@@ -12,10 +12,10 @@ source activate snakemake-7.18.2
 export XDG_CACHE_HOME=/scratch/$USER/snakemake-cache
 
 if [ -e "config.yml" ]; then
-	echo -e "Performing dry-run in Cutlery default mode..." >&2
+	echo -e "Performing dry-run in a default mode..." >&2
 	snakemake -np -s ${CUTLERY}/Snakemake/Snakefile_Default
 else
-	echo -e "Performing dry-run in Cutlery advanced mode..." >&2
+	echo -e "Performing dry-run in an advanced mode..." >&2
 	snakemake -np 
 fi
 
