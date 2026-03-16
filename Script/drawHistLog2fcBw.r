@@ -23,13 +23,16 @@ source(sprintf("%s/basicR.r", Sys.getenv("COMMON_LIB_BASE")))
 # command line option handling
 option_list <- list(
 	make_option(c("-t","--title"), default=NULL, help="Main Title [default: source file name]"),
-	make_option(c("-o","--outPrefix"), default="hist.logfc", help="Output file, with .png extension. [default: hist.logfc]")
+	make_option(c("-o","--outPrefix"), default="hist.logfc", help="Output prefix. [default: hist.logfc]")
 )
 parser <- OptionParser(usage = "%prog [options] dataFile", option_list=option_list,
 	description = "Description:
-	For a give list of one-column text files, perform Venn diagram analysis.
+	Draw a histogram using a log2FC bedgraph
+	Originally developed to check the distribution of the values in the bedgraph file from ngs.fragToBigWigLog2FC.sh
+Input:
+	- bedGraph file
 Output:
-	- <outPrefix>.<pdf,png?: Density plot of log2FC" )
+	- <outPrefix>.<pdf,png>: Density plot of log2FC" )
 arguments <- parse_args(parser, positional_arguments = TRUE)
 if(length(arguments$args) == 0) {
 	print_help(parser)
