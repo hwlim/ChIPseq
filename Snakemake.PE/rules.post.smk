@@ -485,6 +485,26 @@ rule make_bigwig_frag_nuc:
 		ngs.fragToBigWig.sh -g {input.chrom} -c "{chrRegexTarget}" -l 151 -L 1000000 -m 5G -o {output} {input.frag}
 		"""
 
+rule make_bigwig_ctr_rpm_log2fc:
+	input:
+		chip = sampleDir + "/{sampleName}/fragment.bed.gz",
+		ctrl = lambda wildcards: sampleDir + "/" + get_ctrl_name(wildcards.sampleName) + "/fragment.bed.gz"
+	output:
+		sampleDir + "/{sampleName}/igv.ctr.rpm.log2fc.bw",
+	message:
+		"Making bigWig files, igv.ctr.rpm.log2fc.bw ... [{wildcards.sampleName}]"
+	params:
+		outPrefix = lambda wildcards, output: __import__("re").sub(".bw$","", output[0])
+	shell:
+		"""
+		module purge
+		module load ChIPseq/1.0
+		ngs.fragToBigWigLog2FC.sh -o {output} -c {chrRegexTarget} -g {chrom_size} -w 10000 -a 0.01 -m 5G -r 100 -k {input.chip} {input.ctrl}
+		drawHistLog2fcBw.r -o {params.outPrefix} -t {wildcards.sampleName} {params.outPrefix}.bg.gz
+		"""
+
+
+
 '''
 ## RPM-scaled bigWig input-divided log2FC
 rule make_bigwig_divide:
@@ -1008,10 +1028,14 @@ def get_bam_for_peak(sampleName, mode="target"):
 		name = sampleName
 	elif mode == "ctrl":
 		name = get_ctrl_name(sampleName)
+		if name == "NULL":
+			import warnings
+			warnings.warn("Control sample is NULL for " + sampleName)
 	else:
 		raise NameError("Invalid mode %s; must be target or ctrl", mode)
 
 	bam = srcDir + "/" + name + "/align.bam"
+
 	return bam
 
 
@@ -1109,6 +1133,28 @@ rule call_peak_macs_factor_wo_ctrl:
 		"""
 
 
+rule macs_run_homer_motif:
+	input:
+		sampleDir + "/{sampleName}/MACS2.factor/macs_summits.exBL.bed",
+	output:
+		sampleDir + "/{sampleName}/MACS2.factor/Motif/Homer.all/homerResults.html"
+	message:
+		"Running Homer motif search... [{wildcards.sampleName}]"
+	params:
+		outDir = lambda wildcards, output: __import__("os").path.dirname(output[0])
+	shell:
+		"""
+		module purge
+		module load Motif/1.0
+		n=`cat {input} | wc -l`
+		if [ $n -eq 0 ];then
+			mkdir -p {params.outDir}
+			touch {params.outDir}/homerResults.html
+			exit 0
+		fi
+		runHomerMotifSingle.sh -g {genome} -s 200 -p 4 -b /data/limlab/Resource/Homer.preparse \
+			-o {params.outDir} {input}
+		"""
 
 
 

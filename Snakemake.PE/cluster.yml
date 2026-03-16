@@ -54,6 +54,9 @@ make_bigwig_ctr_rpsm_subinput:
 make_bigwig_frag_rpsm_subinput:
     memory      : 30000
 
+make_bigwig_ctr_rpm_log2fc:
+    memory      : 30000
+
 make_fragment:
     memory      : 10000
 
