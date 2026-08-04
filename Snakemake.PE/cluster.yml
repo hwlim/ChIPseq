@@ -101,3 +101,30 @@ make_foldChange_bigWig_macs:
 
 make_pVal_bigWig_macs:
     memory      : 30000
+
+make_group_peak_yml:
+    memory      : 1000
+    name        : "{rule}.{wildcards.groupName}"
+    output      : "logs/{rule}.{wildcards.groupName}.out"
+    error       : "logs/{rule}.{wildcards.groupName}.err"
+
+call_peak_group:
+    cpu         : 2
+    memory      : 10000
+    name        : "{rule}.{wildcards.groupName}"
+    output      : "logs/{rule}.{wildcards.groupName}.out"
+    error       : "logs/{rule}.{wildcards.groupName}.err"
+
+run_homer_motif_group:
+    cpu         : 4
+    memory      : 10000
+    name        : "{rule}.{wildcards.groupName}"
+    output      : "logs/{rule}.{wildcards.groupName}.out"
+    error       : "logs/{rule}.{wildcards.groupName}.err"
+
+run_meme_motif_group_rand5k:
+    cpu         : 4
+    memory      : 10000
+    name        : "{rule}.{wildcards.groupName}"
+    output      : "logs/{rule}.{wildcards.groupName}.out"
+    error       : "logs/{rule}.{wildcards.groupName}.err"

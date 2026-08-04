@@ -15,6 +15,9 @@ if 'do_csem' not in locals():
 	print("Warning: do_csem is not defined; setting False")
 	do_csem=False
 
+if 'GroupPeakDir' not in locals():
+	GroupPeakDir="4.GroupPeak"
+
 ########## Auxilary functions definition start #################
 
 '''
@@ -56,6 +59,29 @@ def get_ctrl_name(sampleName):
 		print("%s not exist" % ctrlName, file=sys.stderr)
 	"""
 	return ctrlName
+
+## ============================================================
+## Group-wise (factor) peak calling helpers
+## ============================================================
+
+## Target (ChIP) sample Names in a group
+def get_group_target_samples(group):
+	return samples.Name[ samples.Group == group ].tolist()
+
+## Control (Input) sample Names for a group -- unique, NULL dropped
+def get_group_ctrl_samples(group):
+	ctrls = samples.Ctrl[ samples.Group == group ].tolist()
+	return [ c for c in dict.fromkeys(ctrls) if c.upper() != "NULL" ]
+
+## Candidate peaks (called WITHOUT control) from the group's target samples
+def get_group_candidate_peaks(group):
+	return [ sampleDir + "/" + s + "/HomerPeak.factor.wo_ctrl/peak.exBL.1rpm.bed"
+			for s in get_group_target_samples(group) ]
+
+## Fragment beds for target AND control samples of a group
+def get_group_fragments(group):
+	names = get_group_target_samples(group) + get_group_ctrl_samples(group)
+	return [ sampleDir + "/" + s + "/fragment.bed.gz" for s in names ]
 
 ## find bam file folder for single-end style homer tag directory creation
 def get_bam_for_tagdir(sampleName):
@@ -732,6 +758,113 @@ rule call_peak_histone_wo_control:
 		module purge
 		module load ChIPseq/1.0
 		chip.peakCallHistone.sh -o {params.outPrefix} -m {params.mask} -s {params.optStr} {input}
+		"""
+
+
+## ============================================================
+## Group-wise (factor) peak calling using replicates via DESeq2
+## ============================================================
+
+## Write the DESeq2 config for a group
+rule make_group_peak_yml:
+	input:
+		peaks = lambda wildcards: get_group_candidate_peaks(wildcards.groupName),
+		frags = lambda wildcards: get_group_fragments(wildcards.groupName)
+	output:
+		GroupPeakDir + "/{groupName}/findDiffPeak.DESeq2.yml"
+	message:
+		"Writing group-peak config... [{wildcards.groupName}]"
+	params:
+		genome = genome
+	shell:
+		"""
+		module purge
+		module load ChIPseq/1.0
+
+		chip.make_group_peak_yml.py \
+			--group {wildcards.groupName} \
+			--sample-tsv {src_sampleInfo} \
+			--sample-dir {sampleDir} \
+			--genome {params.genome} \
+			-o {output}
+		"""
+
+## Group-wise peak calling via DESeq2 using replicates
+rule call_peak_group:
+	input:
+		yml   = GroupPeakDir + "/{groupName}/findDiffPeak.DESeq2.yml",
+		peaks = lambda wildcards: get_group_candidate_peaks(wildcards.groupName),
+		frags = lambda wildcards: get_group_fragments(wildcards.groupName)
+	output:
+		txt = GroupPeakDir + "/{groupName}/Diff.FC2.0_FDR0.050/data.all.txt",
+		up  = GroupPeakDir + "/{groupName}/Diff.FC2.0_FDR0.050/peak.Up.bed"
+	message:
+		"Group-wise peak calling (DESeq2)... [{wildcards.groupName}]"
+	shell:
+		"""
+		module purge
+		module load ChIPseq/1.0
+
+		cd {GroupPeakDir}/{wildcards.groupName}
+		findDiffPeak.DESeq2.r findDiffPeak.DESeq2.yml
+		"""
+
+
+## ============================================================
+## De-novo motif discovery on group-wise (factor) peaks
+## Uses the group-enriched ("Up") peaks from the DESeq2 result,
+## mirroring the single-sample run_homer_motif / run_meme_motif_rand5k rules
+## ============================================================
+
+rule run_homer_motif_group:
+	input:
+		GroupPeakDir + "/{groupName}/Diff.FC2.0_FDR0.050/peak.Up.bed"
+	output:
+		GroupPeakDir + "/{groupName}/Diff.FC2.0_FDR0.050/Motif/Homer.all/homerResults.html"
+	message:
+		"Running Homer motif search for group... [{wildcards.groupName}]"
+	params:
+		outPrefix = lambda wildcards, output: __import__("os").path.dirname(output[0])
+	shell:
+		"""
+		module purge
+		module load Motif/1.0
+
+		n_loci=`cat {input} | wc -l`
+		if [ $n_loci -eq 0 ];then
+			echo -e "Warning: no peak found, creating empty file"
+			touch {params.outPrefix}/homerResults.html
+			exit 0
+		fi
+
+		runHomerMotifSingle.sh -g {genome} -s 200 -p 4 -b /data/limlab/Resource/Homer.preparse \
+			-o {params.outPrefix} {input}
+		"""
+
+
+rule run_meme_motif_group_rand5k:
+	input:
+		GroupPeakDir + "/{groupName}/Diff.FC2.0_FDR0.050/peak.Up.bed"
+	output:
+		GroupPeakDir + "/{groupName}/Diff.FC2.0_FDR0.050/Motif/MEME.random5k/meme-chip.html"
+	message:
+		"Running MEME-ChIP motif search for group (random 5k peaks) [{wildcards.groupName}]"
+	params:
+		outPrefix = lambda wildcards, output: __import__("os").path.dirname(output[0])
+	shell:
+		"""
+		module purge
+		module load MotifMEME/1.0
+
+		n_loci=`cat {input} | wc -l`
+		if [ $n_loci -eq 0 ];then
+			echo -e "Warning: no peak found, creating empty file"
+			touch {params.outPrefix}/meme-chip.html
+			exit 0
+		fi
+
+		runMemeChipSingle.sh -g {genomeFa} -s 200 -p 4 -r 5000 -d {meme_db} \
+			-o {params.outPrefix} {input}
 		"""
 
 

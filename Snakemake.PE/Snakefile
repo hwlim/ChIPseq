@@ -13,6 +13,7 @@ chrom_size	= "/data/limlab/Resource/GenomeData/mm/mm10/Genome/chrom.size"
 peak_mask	= "/data/limlab/Resource/GenomeData/mm/mm10/ENCODE-blacklist.bed"
 genome		= "mm10"
 star_index	= "/data/limlab/Resource/STAR_Index/2.7.4/mm10_allChr_vM20"
+species_macs	= "mm"
 '''
 ## Human
 genomeFa	= "/data/limlab/Resource/GenomeData/hg/hg38/Genome/genome.fa"
@@ -20,6 +21,7 @@ chrom_size	= "/data/limlab/Resource/GenomeData/hg/hg38/Genome/chrom.size"
 peak_mask	= "/data/limlab/Resource/GenomeData/hg/hg38/ENCODE-blacklist.bed"
 genome		= "hg38"
 star_index	= "/data/limlab/Resource/STAR_Index/2.7.4/hg38_allChr_v29"
+species_macs	= "hs"
 
 
 ## Other STAR Index. Beware of STAR version
@@ -75,6 +77,7 @@ filteredDir	= "1.2.Align.filtered"
 dedupDir	= "1.3.Align.dedup"
 qcDir		= "2.QualityControl"
 sampleDir	= "3.Samples"
+GroupPeakDir	= "4.GroupPeak"
 
 
 '''
@@ -163,11 +166,14 @@ samplesAll	= samples.Name.tolist()
 samplesFactor	= samples.Name[ samples.PeakMode=="factor" ].tolist()
 samplesHistone	= samples.Name[ samples.PeakMode=="histone" ].tolist()
 
+## Group-wise peak calling: groups whose PeakMode is "factor"
+groupsFactor	= samples.Group[ samples.PeakMode=="factor" ].unique().tolist()
+
 rule all:
 	input:
 		qcDir + "/alignStat.txt",
 		qcDir + "/spikein.txt",
-		qcDir + "/dedupStat.html"
+		qcDir + "/dedupStat.html",
 		expand(sampleDir + "/{sampleName}/QC/fragLen.png", sampleName=samples.Name.tolist()),
 #		expand(sampleDir + "/{sampleName}/igv.ctr.rpm.bw", sampleName=samples.Name.tolist()),
 #		expand(sampleDir + "/{sampleName}/igv.ctr.rpsm.bw", sampleName=samples.Name.tolist()),
@@ -180,12 +186,16 @@ rule all:
 #		expand(hetChr_homer_spike + "/{sampleName}.exBL.bed", sampleName=sampleNameTarget),
 #		expand(hetChr_homer_spike_ctr + "/{sampleName}.exBL.bed", sampleName=sampleNameTarget)
 		expand(sampleDir + "/{sampleName}/HomerPeak.factor/peak.exBL.1rpm.bed", sampleName=samplesFactor),
+		expand(sampleDir + "/{sampleName}/HomerPeak.factor.wo_ctrl/peak.exBL.1rpm.bed", sampleName=samplesFactor),
 		expand(sampleDir + "/{sampleName}/HomerPeak.histone/peak.exBL.bed", sampleName=samplesHistone),
 		expand(sampleDir + "/{sampleName}/HomerPeak.factor/Motif/Homer.all/homerResults.html", sampleName=samplesFactor),
 		expand(sampleDir + "/{sampleName}/HomerPeak.factor/Motif/MEME.random5k/meme-chip.html", sampleName=samplesFactor),
 		expand(sampleDir + "/{sampleName}/EDD/{file}", file = ["igv.log_ratio.bw","peak.exBL.bed"], sampleName=samplesHistone),
-		expand(sampleDir + "/{sampleName}/igv.ctr.rpm.bw", sampleName=samplesAll)
+		expand(sampleDir + "/{sampleName}/igv.ctr.rpm.bw", sampleName=samplesAll),
+		expand(GroupPeakDir + "/{group}/Diff.FC2.0_FDR0.050/data.all.txt", group=groupsFactor),
+		expand(GroupPeakDir + "/{group}/Diff.FC2.0_FDR0.050/Motif/Homer.all/homerResults.html", group=groupsFactor),
+		expand(GroupPeakDir + "/{group}/Diff.FC2.0_FDR0.050/Motif/MEME.random5k/meme-chip.html", group=groupsFactor)
 
 include: os.environ["CHIP_SEQ_PATH"] + "/Snakemake.PE/validate.smk"
 include: os.environ["CHIP_SEQ_PATH"] + "/Snakemake.PE/rules.pre.smk"
-include: os.environ["CHIP_CHIP_SEQ_PATHPATH"] + "/Snakemake.PE/rules.post.smk"
+include: os.environ["CHIP_SEQ_PATH"] + "/Snakemake.PE/rules.post.smk"
